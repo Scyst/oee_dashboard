@@ -1,0 +1,28 @@
+CREATE TABLE part_logs (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    log_date DATE NOT NULL,
+    shift NVARCHAR(10) NOT NULL,
+    log_time TIME NOT NULL,
+    part_no NVARCHAR(50) NOT NULL,
+    fg_count INT DEFAULT 0,
+    ng_count INT DEFAULT 0,
+    rework_count INT DEFAULT 0,
+    hold_count INT DEFAULT 0
+);
+
+CREATE TABLE scrap_logs (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    log_date DATE NOT NULL,
+    shift NVARCHAR(10) NOT NULL,
+    log_time TIME NOT NULL,
+    part_no NVARCHAR(50) NOT NULL,
+    scrap_count INT DEFAULT 0
+);
+
+CREATE INDEX idx_part_logs ON part_logs (log_date, shift, log_time, part_no);
+CREATE INDEX idx_scrap_logs ON scrap_logs (log_date, shift, log_time, part_no);
+CREATE INDEX idx_stop_logs ON stop_logs (log_date, shift, log_time, stop_cause);
+
+ALTER TABLE part_logs ADD updated_at DATETIME DEFAULT GETDATE();
+ALTER TABLE stop_logs ADD updated_at DATETIME DEFAULT GETDATE();
+ALTER TABLE scrap_logs ADD updated_at DATETIME DEFAULT GETDATE();
