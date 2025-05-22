@@ -16,8 +16,9 @@ body {
     color: #fff;
     line-height: 1.5;
     padding: 10px;
-    width: 100%;
+    width: fit-content;
     height: fit-content;
+    min-width: calc(100vw - 20px);
 }
 
 .Header {
@@ -40,76 +41,49 @@ body {
 .assis-tool {
     background-color: #0D0D0D;   
     border: 1px solid #545454;
-    padding: 10px;
+    padding: 15px;
     text-align: center;
     height: 145px;
     width: 200px;
 }
 
+/*.assis-tool {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #111;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+}*/
+
+.tool-buttons {
+    margin-top: 0px;
+    display: flex;
+    gap: 0px;
+}
+
+.tool-buttons button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 3px;
+}
+
+.tool-buttons img {
+    width: 30px;
+    height: 30px;
+    filter: invert(100%);
+}
+
+
+.assis-tool p {
+    line-height: 2;
+    font-size: 18px;
+}
+
 #datetime {
     padding-top: 7px;
-}
-
-.oee-piechart {
-    display: flex;
-    align-content: center;
-    gap: 5px;
-    padding-top: 5px;
-    height: 180px;
-    min-width: fit-content;
-}
-
-.pie-chart {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 5px;
-    height: 100%;
-    width: 100%;
-    min-width: 1250px;
-}
-
-.pie-chart fieldset {
-    background-color: #0D0D0D;
-    width: calc(25% - 5px);
-    height: 100%;
-    border: 1px solid #545454;
-    border-radius: 10px;
-    position: relative;
-    display: inline-block;
-    text-align: right;
-    vertical-align: top;
-}
-
-.piechart-wrapper {
-    height: 150px;
-    width: 150px;
-    /*margin-top: 10px;
-    margin-right: 10px;*/
-    position: absolute;
-    right: 0px;
-    margin-right: 12px;
-    margin-top: 10px;
-}
-
-.pie-chart canvas {
-
-}
-
-.error-message {
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    /*background: rgba(255, 255, 255, 0.9);
-    padding: 10px 20px;
-    border: 1px solid red;
-    border-radius: 8px;*/
-    color: red;
-    font-size: 32px;
-    font-weight: bold;
-    display: none; /* hidden by default */
-    z-index: 10;
 }
 
 .add-data {
@@ -122,64 +96,6 @@ body {
     width: 200px;
 }
 
-.oee-linechart {
-    display: flex;
-    align-content: center;
-    gap: 5px;
-    padding-top: 5px;
-    height: 170px;
-    min-width: fit-content;
-}
-
-.line-chart {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 5px;
-    height: 100%;
-    width: 100%;
-    min-width: 1250px;
-}
-
-.oee-linechart .line-chart fieldset {
-    background-color: #0D0D0D;
-    width: calc(25% - 5px)!important;
-    height: 100%;
-    border: 1px solid #545454;
-    border-radius: 10px;
-    position: relative;
-    display: inline-block;
-    text-align: right;
-    vertical-align: top;
-}
-
-.linechart-wrapper {
-    height: 75%;
-    width: 100%;
-    /*margin-top: 10px;
-    margin-right: 10px;*/
-    position: absolute;
-    right: 5px;
-    margin-right: 0px;
-    margin-top: 0px;
-    bottom: 0;
-}
-
-.line-chart canvas {
-}
-
-.chart-error {
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -5%);
-    color: red;
-    font-size: 20px;
-    font-weight: bold;
-    /* display: none; */
-    z-index: 10;
-}
-
 
 .dowload-data {
     background-color: #0D0D0D;
@@ -189,64 +105,6 @@ body {
     text-align: center;
     height: 100%;
     width: 200px;
-}
-
-.stop_scarp-barchart {
-    display: flex;
-    align-content: center;
-    gap: 5px;
-    padding-top: 5px;
-    height: calc(100vh - 515px);
-    min-height: 170px;
-    min-width: fit-content;
-}
-
-.bar-chart {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 5px;
-    height: 100%;
-    width: 100%;
-    min-width: 1250px;
-}
-
-.stop_scarp-barchart .bar-chart fieldset {
-    position: relative;
-    width: calc(50% - 3px) !important;
-    height: 100%;
-    background-color: #0D0D0D;
-    border: 1px solid #545454;
-    border-radius: 10px;
-    display: inline-block;
-    text-align: right;
-    vertical-align: top;
-}
-
-.barchart-wrapper {
-    height: 75%;
-    width: 100%;
-    /*margin-top: 10px;
-    margin-right: 10px;*/
-    position: absolute;
-    right: 5px;
-    margin-right: 0px;
-    margin-top: 0px;
-    bottom: 0;
-}
-
-.bar-chart canvas {
-}
-
-.add-filters {
-    background-color: #0D0D0D;
-    border: 1px solid #545454;
-    border-radius: 10px;
-    padding: 10px;
-    text-align: center;
-    height: calc(100vh - 515px);
-    width: 200px;
-    height: 100%;
 }
 
 .align_legend {
@@ -278,6 +136,16 @@ body {
     border-radius: 2px;
 }
 
+.add-filters {
+    background-color: #0D0D0D;
+    border: 1px solid #545454;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    height: calc(100vh - 515px);
+    width: 200px;
+    height: 100%;
+}
 
 /* Container styles */
 .dashboard {
@@ -297,6 +165,7 @@ body {
 /* Titles */
 h1, h2 {
     color: #00ffcc;
+    padding: 2px;
 }
 
 h3 {
@@ -374,6 +243,7 @@ input, select {
     background-color: #222;
     color: #fff;
     margin: 5px auto;
+    height: 30px;
 }
 
 /* Responsive Date & Filter Row */
@@ -383,24 +253,6 @@ input, select {
     align-items: center;
     margin-bottom: 15px;
     gap: 10px;
-}
-
-/* Table style */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #1e1e1e;
-}
-
-th, td {
-    padding: 10px;
-    border: 1px solid #333;
-    text-align: left;
-}
-
-th {
-    background-color: #333;
-    color: #00ffcc;
 }
 
 /* Footer or Last Updated Time */
