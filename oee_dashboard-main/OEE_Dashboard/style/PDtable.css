@@ -40,8 +40,14 @@
     background-color: #2a2a2a;
 }
 
+.production-history td:first-child {
+    font-weight: bold;
+    text-align: center;
+}
+
 .production-history td:last-child {
     font-weight: bold;
+    text-align: center;
 }
 
 /* Table style */

@@ -15,7 +15,7 @@ function hideErrors() {
 function PieshowError(chartId, messageId) {
     const canvas = document.getElementById(chartId);
     const errorMsg = document.getElementById(messageId);
-    if (canvas) canvas.style.opacity = "0.4";
+    if (canvas) canvas.style.opacity = "1"; //0.4
     //if (errorMsg) errorMsg.style.display = "block"; //default
     if (errorMsg) errorMsg.style.display = "none"; //testRun
 }

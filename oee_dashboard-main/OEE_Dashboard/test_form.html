@@ -5,7 +5,8 @@
     <title>OEE API Test Form</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style/style.css">
     <link rel="stylesheet" href="style/piechart.css">
     <link rel="stylesheet" href="style/linechart.css">
@@ -155,39 +156,51 @@
 
             <!-- Filter -->
             <div>
-                <input type="text" id="searchInput" placeholder="Search" onkeyup="filterTable()" />
+                <input type="text" id="searchInput" placeholder="Search Part No." oninput="filterTable()" />
+
+                <select id="product" onchange="filterTable()">
+                    <option value="">All Models</option>
+                    <option value="M20">M20</option>
+                    <!-- Add more model options as needed -->
+                </select>
+
+                <select id="status" onchange="filterTable()">
+                    <option value="">All Types</option>
+                    <option value="FG">FG</option>
+                    <option value="NG">NG</option>
+                    <option value="Hold">Hold</option>
+                    <option value="Rework">Rework</option>
+                </select>
+
+                
             </div>
 
-            <!-- Add Form -->
+            <!-- Add Form <input type="date" id="date" onchange="filterTable()" />-->
             <div>
-                <input type="text" id="product" placeholder="Product Name">
-                <input type="number" id="quantity" placeholder="Quantity">
-                <input type="text" id="status" placeholder="Status">
-                <input type="date" id="date">
+                <button onclick="exportToExcel()">Export to Excel</button>
+                <button onclick="exportToPDF()">Export to PDF</button>
                 <button onclick="openModal('partModal')">Add</button>
             </div>
         </div>
         <div class="table-wrapper" style="height: calc( 100% - 130px);">
             <!-- Table -->
-            <table id="partTable" border="1" >
+            <table id="partTable" border="1">
                 <thead>
                     <tr>
+                        <th style="width: 50px; text-align: center;">ID</th>
                         <th>Date</th>
                         <th>Time</th>
+                        <th>Line</th>
                         <th>Model</th>
                         <th>Part No.</th>
-                        <th>Value</th>
-                        <th>Type</th>
-                        <th>Actions</th>
+                        <th>Quatity</th>
+                        <th style="width: 150px;">Type</th>
+                        <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="partTableBody" >
+                <tbody id="partTableBody">
                 </tbody>
             </table>
-        </div>
-        <div style=" width: fit-content; margin: 2px auto;">
-            <button onclick="exportToExcel()">Export to Excel</button>
-            <button onclick="exportToPDF()">Export to PDF</button>
         </div>
     </div>
 
@@ -316,7 +329,7 @@
 
     <script src="script/datetime.js"></script>
     <script src="script/export_data.js"></script>
-    <script src="script/auto_updateDB.js"></script>
+    <!--<script src="script/auto_updateDB.js"></script>-->
     <script src="script/fetch_line&barchart.js"></script>
     <script src="script/fetch_piechart.js"></script>
     <script src="script/OEE_piechart.js"></script>

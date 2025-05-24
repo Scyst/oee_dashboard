@@ -1,52 +1,65 @@
-async function fetchParts() {
-    //const res = await fetch('api/get_parts.php'); //this is dafault
-    //const data = await res.json(); //this is dafault
+﻿async function fetchParts() {
     const data = [
-        { log_date: "15/05/2025", log_time: "10:22", model: "M20", part_no: "120316", count_value: 150, count_type: "FG" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "190123", count_value: 90, count_type: "NG" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "120316", count_value: 90, count_type: "Hold" },
-        { log_date: "15/05/2025", log_time: "10:22", model: "M20", part_no: "120316", count_value: 150, count_type: "FG" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "190123", count_value: 90, count_type: "NG" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "120316", count_value: 90, count_type: "Hold" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "120316", count_value: 90, count_type: "Rework" },
-        { log_date: "15/05/2025", log_time: "10:22", model: "M20", part_no: "120316", count_value: 150, count_type: "FG" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "190123", count_value: 90, count_type: "NG" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "120316", count_value: 90, count_type: "Hold" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "120316", count_value: 90, count_type: "Rework" },
-        { log_date: "15/05/2025", log_time: "10:22", model: "M20", part_no: "120316", count_value: 150, count_type: "FG" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "190123", count_value: 90, count_type: "NG" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "120316", count_value: 90, count_type: "Hold" },
-        { log_date: "15/05/2025", log_time: "11:00", model: "M20", part_no: "120316", count_value: 90, count_type: "Rework" }
-    ]; //this is test
-        
+        { id: 1, log_date: "15/05/2025", log_time: "10:22", line: "Spot", model: "M20", part_no: "120316", count_value: 150, count_type: "FG" },
+        { id: 2, log_date: "15/05/2025", log_time: "11:00", line: "Assembly", model: "M20", part_no: "190123", count_value: 90, count_type: "NG" },
+        { id: 3, log_date: "15/05/2025", log_time: "11:00", line: "Paint", model: "M20", part_no: "120316", count_value: 90, count_type: "Hold" },
+        { id: 4, log_date: "15/05/2025", log_time: "11:00", line: "Bend", model: "M20", part_no: "120316", count_value: 90, count_type: "Rework" }
+    ];
+
     const tableBody = document.getElementById('partTableBody');
     tableBody.innerHTML = '';
 
     data.forEach(row => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-      <td>${row.log_date}</td>
-      <td>${row.log_time}</td>
-      <td>${row.model}</td>
-      <td>${row.part_no}</td>
-      <td>${row.count_value}</td>
-      <td>${row.count_type}</td>
-      <td>
-        <button onclick="editPart(${row.id})">Edit</button>
-        <button onclick="deletePart(${row.id})">Delete</button>
-      </td>
-    `;
+            <td>${row.id}</td>
+            <td>${row.log_date}</td>
+            <td>${row.log_time}</td>
+            <td>${row.line}</td>
+            <td>${row.model}</td>
+            <td>${row.part_no}</td>
+            <td>${row.count_value}</td>
+            <td>${row.count_type}</td>
+            <td>
+                <button onclick="editPart(${row.id})">Edit</button>
+                <button onclick="deletePart(${row.id})">Delete</button>
+            </td>
+        `;
         tableBody.appendChild(tr);
+    });
+
+    // 🔧 Apply filters if any (needed for dynamic data)
+    filterTable();
+}
+function filterTable() {
+    const searchInput = document.getElementById("searchInput").value.toLowerCase().trim();
+    const modelInput = document.getElementById("product").value.toLowerCase().trim();
+    const statusInput = document.getElementById("status").value.toLowerCase().trim();
+
+    const rows = document.querySelectorAll("#partTable tbody tr");
+
+    rows.forEach(row => {
+        const partNo = row.children[5].textContent.toLowerCase().trim();
+        const model = row.children[4].textContent.toLowerCase().trim();
+        const status = row.children[7].textContent.toLowerCase().trim();
+
+        // Track individual matches
+        const matchesPartNo = !searchInput || partNo.includes(searchInput);
+        const matchesModel = !modelInput || model === modelInput;
+        const matchesStatus = !statusInput || status === statusInput;
+
+        // Only show if ALL active filters match
+        const isVisible = matchesPartNo && matchesModel && matchesStatus;
+        row.style.display = isVisible ? "" : "none";
     });
 }
 
-function filterTable() {
-    const input = document.getElementById("searchInput").value.toLowerCase();
-    const rows = document.querySelectorAll("#partTable tbody tr");
-    rows.forEach(row => {
-        const partNo = row.children[3].textContent.toLowerCase();
-        row.style.display = partNo.includes(input) ? "" : "none";
-    });
+
+// Convert from "dd/mm/yyyy" or "dd-mm-yyyy" to "yyyy-mm-dd"
+function formatDate(dateStr) {
+    const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
+    if (parts.length !== 3) return '';
+    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
 }
 
 function deletePart(id) {
@@ -60,7 +73,7 @@ function deletePart(id) {
         body: `id=${encodeURIComponent(id)}`
     })
         .then(response => response.json())
-        .then(data => {
+        .then(data => { 
             if (data.success) {
                 alert("Deleted successfully!");
                 fetchAndRenderPartTable(); // Refresh the table

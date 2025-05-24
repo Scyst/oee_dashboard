@@ -13,7 +13,7 @@ function hideErrors() {
 }
 
 function BarshowError(chartId, messageId) {
-    document.getElementById(chartId).style.opacity = "0.4";
+    document.getElementById(chartId).style.opacity = "1"; //0.4
    //document.getElementById(messageId).style.display = "block"; //default
     document.getElementById(messageId).style.display = "none"; //testRun
 }

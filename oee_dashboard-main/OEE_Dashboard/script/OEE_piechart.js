@@ -1,7 +1,7 @@
 let oeeChart, qualityChart, performanceChart, availabilityChart;
 
 function LineshowError(chartId, messageId) {
-    document.getElementById(chartId).style.opacity = "0.4"; // optional visual effect
+    document.getElementById(chartId).style.opacity = "1"; // optional visual effect 0.4
     document.getElementById(messageId).style.display = "block"; //default
     document.getElementById(messageId).style.display = "none";//testRun
 }
