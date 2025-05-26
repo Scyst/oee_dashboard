@@ -40,14 +40,14 @@ WHILE @i <= 100
 BEGIN
     INSERT INTO parts (log_date, log_time, line, model, part_no, count_value, count_type)
     VALUES (
-        DATEADD(DAY, -ABS(CHECKSUM(NEWID()) % 30), GETDATE()),                     -- Random date in last 30 days
-        CAST(DATEADD(MINUTE, ABS(CHECKSUM(NEWID()) % 1440), '00:00') AS TIME),     -- Random time
-        CHOOSE((ABS(CHECKSUM(NEWID())) % 4) + 1, 'Line A', 'Line B', 'Spot', 'Paint'), -- Random line
-        CHOOSE((ABS(CHECKSUM(NEWID())) % 3) + 1, 'M10', 'M20', 'M30'),              -- Random model
-        CAST(ABS(CHECKSUM(NEWID())) % 90000 + 10000 AS VARCHAR),                   -- Random part_no
-        ABS(CHECKSUM(NEWID()) % 200),                                              -- Random count_value (0-199)
-        CHOOSE((ABS(CHECKSUM(NEWID())) % 4) + 1, 'FG', 'NG', 'Hold', 'Rework')     -- Random count_type
+        DATEADD(DAY, -ABS(CHECKSUM(NEWID()) % 30), GETDATE()),                         -- Date: Last 30 days
+        CAST(DATEADD(SECOND, ABS(CHECKSUM(NEWID()) % 86400), '00:00:00') AS TIME),     -- Time: Random 00:00 to 23:59:59
+        ISNULL(CHOOSE((ABS(CHECKSUM(NEWID()) % 4) + 1), 'Line A', 'Line B', 'Spot', 'Paint'), 'Line A'),
+        ISNULL(CHOOSE((ABS(CHECKSUM(NEWID()) % 3) + 1), 'M10', 'M20', 'M30'), 'M10'),
+        CAST(ABS(CHECKSUM(NEWID()) % 90000 + 10000) AS VARCHAR),                       -- Part No: 10000-99999
+        ABS(CHECKSUM(NEWID()) % 200),                                                  -- Count: 0-199
+        ISNULL(CHOOSE((ABS(CHECKSUM(NEWID()) % 4) + 1), 'FG', 'NG', 'Hold', 'Rework'), 'FG')
     );
 
-    SET @i = @i + 1;
+    SET @i += 1;
 END;
