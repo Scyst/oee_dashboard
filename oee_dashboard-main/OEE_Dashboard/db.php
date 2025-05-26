@@ -1,13 +1,16 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "oee_project_db"; // Make sure this matches your MySQL DB name
+$serverName = "localhost";  // or use "localhost\SQLEXPRESS" if using SQLEXPRESS
+$connectionOptions = array(
+    "Database" => "oee_project_db",   // your database name
+    "Uid" => "sa",                    // your SQL Server username
+    "PWD" => "your_password",         // your SQL Server password
+    "CharacterSet" => "UTF-8"
+);
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+// Establish connection
+$conn = sqlsrv_connect($serverName, $connectionOptions);
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+if (!$conn) {
+    die(print_r(sqlsrv_errors(), true));
 }
 ?>
