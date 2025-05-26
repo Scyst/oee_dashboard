@@ -15,7 +15,7 @@
 </head>
 
 <body>
-    <div style="height: 100vh;">
+    <div style="height: calc(100vh - 10px);">
         <div class="Header">
             <div class="OEE-head">
                 <h1 style="font-size: 2.5em;">Overall Equipment Effectiveness</h1>
@@ -91,7 +91,7 @@
                         </div>
                     </fieldset>
                 </div>
-            </div>
+            </div>  
         </div>
 
         <div class="oee-linechart">
@@ -150,7 +150,8 @@
             </div>
         </div>
     </div>
-    
+
+    <!--<hr style="border-color: darkgrey;">-->
 
     <div class="production-history">
 
@@ -198,7 +199,7 @@
                         <th>Part No.</th>
                         <th>Quatity</th>
                         <th style="width: 150px;">Type</th>
-                        <th style="width: 150px;">Actions</th>
+                        <th style="width: 175px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="partTableBody">
