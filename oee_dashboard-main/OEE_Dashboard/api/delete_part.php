@@ -1,27 +1,46 @@
 <?php
-require_once '../config.php'; // Adjust path as needed
-
 header('Content-Type: application/json');
+require_once '../db.php'; // Assuming db.php is one directory level up
 
+if (!$conn) {
+    echo json_encode(['success' => false, 'message' => 'Database connection failed.']);
+    exit();
+}
+
+// --- Delete Logic ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    if (isset($_POST['id'])) {
+        $id = $_POST['id']; // SQL Server driver handles sanitization with parameterized queries
 
-    if ($id > 0) {
-        $stmt = $conn->prepare("DELETE FROM parts WHERE id = ?");
-        $stmt->bind_param("i", $id);
-
-        if ($stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => 'Part deleted successfully.']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to delete part.']);
+        // Validate if id is numeric if it's an integer key in DB
+        if (!filter_var($id, FILTER_VALIDATE_INT)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid Part ID format.']);
+            exit();
         }
 
-        $stmt->close();
+        $sql = "DELETE FROM parts WHERE id = ?";
+        $params = array($id);
+
+        $stmt = sqlsrv_query($conn, $sql, $params);
+
+        if ($stmt === false) {
+            // error_log(print_r(sqlsrv_errors(), true)); // Server-side logging
+            echo json_encode(['success' => false, 'message' => 'Delete operation failed. SQL error.']);
+        } else {
+            $rows_affected = sqlsrv_rows_affected($stmt);
+            if ($rows_affected > 0) {
+                echo json_encode(['success' => true, 'message' => 'Part deleted successfully.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Part not found or no rows deleted.']);
+            }
+        }
+        sqlsrv_free_stmt($stmt);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Invalid ID provided.']);
+        echo json_encode(['success' => false, 'message' => 'Part ID not provided.']);
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
 }
 
-$conn->close();
+// sqlsrv_close($conn);
+?>

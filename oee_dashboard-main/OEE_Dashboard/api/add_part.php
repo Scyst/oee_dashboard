@@ -34,7 +34,7 @@ switch ($count_type) {
 
 
 // First check if record exists
-$checkSql = "SELECT * FROM part_logs WHERE log_date = ? AND shift = ? AND log_time = ? AND part_no = ?";
+$checkSql = "SELECT * FROM part WHERE log_date = ? AND shift = ? AND log_time = ? AND part_no = ?";
 $stmt = $conn->prepare($checkSql);
 $stmt->bind_param("ssss", $log_date, $shift, $log_time, $part_no);
 $stmt->execute();

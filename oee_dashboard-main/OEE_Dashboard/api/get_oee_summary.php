@@ -8,7 +8,7 @@ $shift = $_GET['shift'];
 $qualitySql = "SELECT 
     SUM(fg_count) AS FG,
     SUM(ng_count) + SUM(rework_count) + SUM(hold_count) AS Defects
- FROM part_logs
+ FROM part
  WHERE log_date = ? AND shift = ?";
 $qualityStmt = sqlsrv_query($conn, $qualitySql, [$log_date, $shift]);
 $quality = sqlsrv_fetch_array($qualityStmt, SQLSRV_FETCH_ASSOC);

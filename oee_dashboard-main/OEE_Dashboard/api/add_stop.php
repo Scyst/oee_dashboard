@@ -9,7 +9,7 @@ $stop_time = $_POST['stop_time'];
 $note = $_POST['note'];
 
 $params = [$log_date, $shift, $log_time, $stop_cause];
-$checkSql = "SELECT * FROM stop_logs WHERE log_date = ? AND shift = ? AND log_time = ? AND stop_cause = ?";
+$checkSql = "SELECT * FROM stop_cause WHERE log_date = ? AND shift = ? AND log_time = ? AND stop_cause = ?";
 $stmt = sqlsrv_query($conn, $checkSql, $params);
 
 if ($stmt === false) {
