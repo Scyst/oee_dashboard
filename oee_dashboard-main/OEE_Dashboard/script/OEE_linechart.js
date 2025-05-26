@@ -43,7 +43,7 @@ function renderLineChart(canvasId, title, labels, data, color, chartRef) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 2.9,
+            aspectRatio: 2.4,
             plugins: {
                 title: {
                     display: false,

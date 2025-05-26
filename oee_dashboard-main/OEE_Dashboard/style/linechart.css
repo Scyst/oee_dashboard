@@ -3,7 +3,7 @@
     align-content: center;
     gap: 5px;
     padding-top: 5px;
-    height: 170px;
+    height: 25%;
     min-width: fit-content;
 }
 
@@ -30,18 +30,20 @@
 }
 
 .linechart-wrapper {
-    height: 75%;
+    height: 80%;
     width: 100%;
+    align-content: center;
     /*margin-top: 10px;
     margin-right: 10px;*/
     position: absolute;
     right: 5px;
-    margin-right: 0px;
-    margin-top: 0px;
+    margin: 0 auto;
     bottom: 0;
 }
 
 .line-chart canvas {
+    margin: 0 auto;
+    width: 100%;
 }
 
 .chart-error {

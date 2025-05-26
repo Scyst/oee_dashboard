@@ -23,6 +23,7 @@ body {
 
 .Header {
     display: flex;
+    height: 15%;
     align-content: center;
     gap: 5px;
     min-width: fit-content;
@@ -33,7 +34,8 @@ body {
     border: 1px solid #545454;
     padding: 10px;
     text-align: center;
-    height: 145px;
+    align-content: center;
+    height: 100%;
     width: 100%;
     min-width: 1250px;
 }
@@ -43,19 +45,10 @@ body {
     border: 1px solid #545454;
     padding: 15px;
     text-align: center;
-    height: 145px;
+    align-content: center;
+    height: 100%;
     width: 200px;
 }
-
-/*.assis-tool {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #111;
-    color: white;
-    padding: 10px;
-    border-radius: 8px;
-}*/
 
 .tool-buttons {
     margin-top: 0px;

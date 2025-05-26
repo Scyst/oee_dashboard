@@ -3,9 +3,9 @@
     align-content: center;
     gap: 5px;
     padding-top: 5px;
-    height: calc(100vh - 515px);
+    height: calc(100vh - 60% - 20px);
     min-height: 170px;
-    max-height: 350px;
+    max-height: 500px;
     min-width: fit-content;
 }
 
