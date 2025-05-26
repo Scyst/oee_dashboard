@@ -55,23 +55,24 @@ async function fetchParts() {
 
 function filterTable() {
     const searchInput = document.getElementById("searchInput").value.toLowerCase().trim();
-    const modelInput = document.getElementById("product").value.toLowerCase().trim();
+    const lineInput = document.getElementById("lineInput").value.toLowerCase().trim();
+    const modelInput = document.getElementById("modelInput").value.toLowerCase().trim();
     const statusInput = document.getElementById("status").value.toLowerCase().trim();
 
     const rows = document.querySelectorAll("#partTable tbody tr");
 
     rows.forEach(row => {
         const partNo = row.children[5].textContent.toLowerCase().trim();
-        const model = row.children[4].textContent.toLowerCase().trim();
-        const status = row.children[7].textContent.toLowerCase().trim();
+        const line = row.children[3].textContent.toLowerCase().trim();   // index 3 = Line
+        const model = row.children[4].textContent.toLowerCase().trim();  // index 4 = Model
+        const status = row.children[7].textContent.toLowerCase().trim(); // index 7 = Type
 
-        // Track individual matches
         const matchesPartNo = !searchInput || partNo.includes(searchInput);
+        const matchesLine = !lineInput || line === lineInput;
         const matchesModel = !modelInput || model === modelInput;
         const matchesStatus = !statusInput || status === statusInput;
 
-        // Only show if ALL active filters match
-        const isVisible = matchesPartNo && matchesModel && matchesStatus;
+        const isVisible = matchesPartNo && matchesLine && matchesModel && matchesStatus;
         row.style.display = isVisible ? "" : "none";
     });
 }

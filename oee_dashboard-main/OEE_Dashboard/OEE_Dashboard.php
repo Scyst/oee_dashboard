@@ -162,15 +162,15 @@
             <div style="display: flex; gap: 5px; justify-content: center;">
                 <input type="text" id="searchInput" placeholder="Search Part No." oninput="filterTable()" />
 
-                <input list="lineList" name="line" placeholder="Line" required>
+                <input list="lineList" id="lineInput" placeholder="Line" oninput="filterTable()">
                 <datalist id="lineList">
                     <?php include 'api/get_lines.php'; ?>
-                </datalist><br>
+                </datalist>
 
-                <input list="modelList" name="model" placeholder="Model" required>
+                <input list="modelList" id="modelInput" placeholder="Model" oninput="filterTable()">
                 <datalist id="modelList">
                     <?php include 'api/get_models.php'; ?>
-                </datalist><br>
+                </datalist>
 
                 <!--<select id="product" onchange="filterTable()">
                     <option value="">All Models</option>
