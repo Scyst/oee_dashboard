@@ -12,7 +12,7 @@ if (!$conn) {
 
 // --- Fetch Data ---
 // Ensure table and column names match your SQL Server schema
-$sql = "SELECT id, log_date, log_time, line, model, part_no, count_value, count_type FROM parts ORDER BY log_date DESC, log_time DESC";
+$sql = "SELECT id, log_date, log_time, line, model, part_no, count_value, count_type FROM parts ORDER BY id, log_date DESC, log_time DESC";
 
 $stmt = sqlsrv_query($conn, $sql);
 
@@ -25,15 +25,16 @@ if ($stmt === false) {
 
 $parts = [];
 while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-    // SQL Server DATE and TIME types are usually fetched as strings in expected formats
-    // or as DateTime objects depending on connection/driver settings.
-    // If log_date is a DateTime object, format it:
     if (isset($row['log_date']) && $row['log_date'] instanceof DateTime) {
-        $row['log_date'] = $row['log_date']->format('Y-m-d'); // Or 'd/m/Y' if your JS expects that initially
+        $row['log_date'] = $row['log_date']->format('Y-m-d');
     }
-    // Ensure other data types are as expected by the frontend
+    if (isset($row['log_time']) && $row['log_time'] instanceof DateTime) {
+        $row['log_time'] = $row['log_time']->format('H:i:s'); 
+    }
+
     $parts[] = $row;
 }
+
 
 echo json_encode($parts);
 
