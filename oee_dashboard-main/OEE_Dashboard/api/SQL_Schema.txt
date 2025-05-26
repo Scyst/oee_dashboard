@@ -33,3 +33,21 @@ CREATE TABLE stop_cause (
     total_time INT, -- minutes
     note VARCHAR(255)
 );
+
+DECLARE @i INT = 1;
+
+WHILE @i <= 100
+BEGIN
+    INSERT INTO parts (log_date, log_time, line, model, part_no, count_value, count_type)
+    VALUES (
+        DATEADD(DAY, -ABS(CHECKSUM(NEWID()) % 30), GETDATE()),                     -- Random date in last 30 days
+        CAST(DATEADD(MINUTE, ABS(CHECKSUM(NEWID()) % 1440), '00:00') AS TIME),     -- Random time
+        CHOOSE((ABS(CHECKSUM(NEWID())) % 4) + 1, 'Line A', 'Line B', 'Spot', 'Paint'), -- Random line
+        CHOOSE((ABS(CHECKSUM(NEWID())) % 3) + 1, 'M10', 'M20', 'M30'),              -- Random model
+        CAST(ABS(CHECKSUM(NEWID())) % 90000 + 10000 AS VARCHAR),                   -- Random part_no
+        ABS(CHECKSUM(NEWID()) % 200),                                              -- Random count_value (0-199)
+        CHOOSE((ABS(CHECKSUM(NEWID())) % 4) + 1, 'FG', 'NG', 'Hold', 'Rework')     -- Random count_type
+    );
+
+    SET @i = @i + 1;
+END;
