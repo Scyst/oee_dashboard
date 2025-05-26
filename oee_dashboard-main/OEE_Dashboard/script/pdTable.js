@@ -2,7 +2,7 @@ async function fetchParts() {
     try {
         const res = await fetch('api/get_parts.php');
         const data = await res.json();
-        console.log(res);
+        console.log(data);
 
          /*const data = [
         { log_date: "15/05/2025", log_time: "10:22", model: "M20", part_no: "120316", count_value: 150, count_type: "FG" },
@@ -31,7 +31,8 @@ async function fetchParts() {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${row.id}</td>
-                <td>${row.log_date}</td>                
+                <td>${row.log_date}</td>
+                <td>${row.log_time}</td>               
                 <td>${row.line}</td>
                 <td>${row.model}</td>
                 <td>${row.part_no}</td>

@@ -12,7 +12,7 @@ if (!$conn) {
 
 // --- Fetch Data ---
 // Ensure table and column names match your SQL Server schema
-$sql = "SELECT id, log_date, /*log_time,*/ line, model, part_no, count_value, count_type FROM parts ORDER BY log_date DESC, log_time DESC";
+$sql = "SELECT id, log_date, log_time, line, model, part_no, count_value, count_type FROM parts ORDER BY log_date DESC, log_time DESC";
 
 $stmt = sqlsrv_query($conn, $sql);
 
