@@ -1,36 +1,37 @@
-﻿async function fetchParts() {
-    const data = [
-        { id: 1, log_date: "15/05/2025", log_time: "10:22", line: "Spot", model: "M20", part_no: "120316", count_value: 150, count_type: "FG" },
-        { id: 2, log_date: "15/05/2025", log_time: "11:00", line: "Assembly", model: "M20", part_no: "190123", count_value: 90, count_type: "NG" },
-        { id: 3, log_date: "15/05/2025", log_time: "11:00", line: "Paint", model: "M20", part_no: "120316", count_value: 90, count_type: "Hold" },
-        { id: 4, log_date: "15/05/2025", log_time: "11:00", line: "Bend", model: "M20", part_no: "120316", count_value: 90, count_type: "Rework" }
-    ];
+async function fetchParts() {
+    try {
+        const res = await fetch('api/get_parts.php');
+        const data = await res.json();
 
-    const tableBody = document.getElementById('partTableBody');
-    tableBody.innerHTML = '';
+        const tableBody = document.getElementById('partTableBody');
+        tableBody.innerHTML = '';
 
-    data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${row.id}</td>
-            <td>${row.log_date}</td>
-            <td>${row.log_time}</td>
-            <td>${row.line}</td>
-            <td>${row.model}</td>
-            <td>${row.part_no}</td>
-            <td>${row.count_value}</td>
-            <td>${row.count_type}</td>
-            <td>
-                <button onclick="editPart(${row.id})">Edit</button>
-                <button onclick="deletePart(${row.id})">Delete</button>
-            </td>
-        `;
-        tableBody.appendChild(tr);
-    });
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row.id}</td>
+                <td>${row.log_date}</td>
+                <td>${row.log_time}</td>
+                <td>${row.line}</td>
+                <td>${row.model}</td>
+                <td>${row.part_no}</td>
+                <td>${row.count_value}</td>
+                <td>${row.count_type}</td>
+                <td>
+                    <button onclick="editPart(${row.id})">Edit</button>
+                    <button onclick="deletePart(${row.id})">Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
 
-    // 🔧 Apply filters if any (needed for dynamic data)
-    filterTable();
+        filterTable(); // Apply filter on initial load
+    } catch (error) {
+        console.error("Failed to fetch part data:", error);
+        alert("Error fetching part data from the server.");
+    }
 }
+
 function filterTable() {
     const searchInput = document.getElementById("searchInput").value.toLowerCase().trim();
     const modelInput = document.getElementById("product").value.toLowerCase().trim();
