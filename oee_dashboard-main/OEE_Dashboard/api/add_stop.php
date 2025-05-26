@@ -1,5 +1,5 @@
 <?php
-require_once("../db.php");
+require_once("db.php");
 
 $log_date = $_POST['log_date'];
 $shift = $_POST['shift'];

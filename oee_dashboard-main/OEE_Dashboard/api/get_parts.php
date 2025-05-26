@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once '../db.php'; // Assuming db.php is one directory level up
+require_once("../db.php"); // Assuming db.php is one directory level up
 
 // Check if the connection from db.php was successful
 if (!$conn) {
