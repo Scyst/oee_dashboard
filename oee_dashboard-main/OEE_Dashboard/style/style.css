@@ -140,6 +140,12 @@ body {
     height: 100%;
 }
 
+.highlight {
+    background-color: rgb(44, 72, 211);
+    font-weight: bold;
+}
+
+
 /* Container styles */
 .dashboard {
     display: grid;
@@ -206,9 +212,9 @@ h3 {
     right: 20px;
 }
 
-    .close:hover {
-        color: red;
-    }
+.close:hover {
+    color: red;
+}
 
 
 /* Buttons */
