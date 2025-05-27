@@ -197,7 +197,6 @@
             </div>
         </div>
         <div class="table-wrapper" style="height: calc( 100% - 130px);">
-            <!-- Table -->
             <table id="partTable" border="1">
                 <thead>
                     <tr>
@@ -216,6 +215,7 @@
                 </tbody>
             </table>
         </div>
+
     </div>
 
     <!-- Edit Modal -->
@@ -225,21 +225,45 @@
             <h2>Edit Part</h2>
             <form id="editPartForm">
                 <input type="hidden" name="id" id="edit_id">
+
                 <input type="date" name="log_date" id="edit_date" required><br>
-                <input type="time" name="log_time" id="edit_time" required><br>
+                <input type="time" name="log_time" id="edit_time" step="1" required><br>
+
+                <!-- Line (datalist or text input) -->
+                <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
+                <datalist id="editLineList">
+                    <?php include 'api/get_lines.php'; ?>
+                </datalist><br>
+
+                <!-- Model -->
+                <input list="editModelList" name="model" id="edit_model" placeholder="Model" required>
+                <datalist id="editModelList">
+                    <?php include 'api/get_models.php'; ?>
+                </datalist><br>
+
+                <!-- Part No -->
+                <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
+                <datalist id="editPartList">
+                    <?php include 'api/get_part_nos.php'; ?>
+                </datalist><br>
+
+                <!-- Count Value -->
+                <input type="number" name="count_value" id="edit_value" placeholder="Quantity" required><br>
+                
+                <!-- Count Type -->
                 <select name="count_type" id="edit_type" required>
                     <option value="">-- Select Type --</option>
-                    <option value="fg_count">FG Count</option>
-                    <option value="ng_count">NG Count</option>
-                    <option value="rework_count">Rework</option>
-                    <option value="hold_count">Hold</option>
+                    <option value="FG">FG</option>
+                    <option value="NG">NG</option>
+                    <option value="Rework">Rework</option>
+                    <option value="Hold">Hold</option>
                 </select><br>
-                <input type="text" name="part_no" id="edit_part_no" required><br>
-                <input type="number" name="count_value" id="edit_value" required><br>
+
                 <button type="submit">Update Part</button>
             </form>
         </div>
     </div>
+
 
     <!-- Modal background and form for Part -->
     <div id="partModal" class="modal">
@@ -268,15 +292,15 @@
                     <?php include 'api/get_part_nos.php'; ?>
                 </datalist><br>
 
+                <input type="number" name="count_value" placeholder="Enter value" required><br>
+                
                 <select name="count_type" required>
-                    <option value="">-- Select Type --</option>
                     <option value="FG">FG</option>
                     <option value="NG">NG</option>
                     <option value="Rework">Rework</option>
                     <option value="Hold">Hold</option>
                 </select><br>
 
-                <input type="number" name="count_value" placeholder="Enter value" required><br>
                 <button type="submit">Submit Part</button>
             </form>
 

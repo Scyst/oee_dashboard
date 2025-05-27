@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once 'db.php'; // Assuming db.php is one directory level up
+require_once '../db.php'; // Assuming db.php is one directory level up
 
 if (!$conn) {
     echo json_encode(['success' => false, 'message' => 'Database connection failed.']);

@@ -36,4 +36,7 @@ if ($stmt === false) {
 }
 
 echo json_encode(["status" => "success", "message" => "Part inserted successfully"]);
+header("Location: ../OEE_Dashboard.php"); // adjust path as needed
+exit;
+
 ?>

@@ -2,7 +2,7 @@ async function fetchParts() {
     try {
         const res = await fetch('api/get_parts.php');
         const data = await res.json();
-        console.log(data);
+        //console.log(data);
 
         const tableBody = document.getElementById('partTableBody');
         tableBody.innerHTML = '';
@@ -100,19 +100,19 @@ function deletePart(id) {
         },
         body: `id=${encodeURIComponent(id)}`
     })
-        .then(response => response.json())
-        .then(data => { 
-            if (data.success) {
-                alert("Deleted successfully!");
-                fetchAndRenderPartTable(); // Refresh the table
-            } else {
-                alert("Delete failed: " + data.message);
-            }
-        })
-        .catch(err => {
-            console.error("Delete error:", err);
-            alert("An error occurred while deleting.");
-        });
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Deleted successfully!");
+            fetchParts(); 
+        } else {
+            alert("Delete failed: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error("Delete error:", err);
+        alert("An error occurred while deleting.");
+    });
 }
 
 function updatePart(data) {
@@ -123,20 +123,72 @@ function updatePart(data) {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData
     })
-        .then(res => res.json())
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Part updated.");
+            fetchParts(); // Correct function to refresh
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Request failed.");
+    });
+}
+
+function editPart(id) {
+    fetch(`api/get_part_by_id.php?id=${id}`)
+        .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert("Part updated.");
-                loadPartsTable(); // Refresh table
+                const part = data.data;
+                document.getElementById('edit_id').value = part.id;
+                document.getElementById('edit_date').value = part.log_date;
+                document.getElementById('edit_time').value = part.log_time;
+                document.getElementById('edit_line').value = part.line;
+                document.getElementById('edit_model').value = part.model;
+                document.getElementById('edit_part_no').value = part.part_no;
+                document.getElementById('edit_value').value = part.count_value;
+                document.getElementById('edit_type').value = part.count_type;
+
+                document.getElementById('editPartModal').style.display = 'block';
             } else {
-                alert("Error: " + data.message);
+                alert("Failed to load part for editing: " + data.message);
             }
         })
-        .catch(err => {
-            console.error(err);
-            alert("Request failed.");
+        .catch(error => {
+            console.error("Error loading part:", error);
+            alert("Failed to fetch part data.");
         });
 }
+
+document.getElementById('editPartForm').addEventListener('submit', function (e) {
+    e.preventDefault(); // Prevent page reload
+
+    const formData = new FormData(this);
+    const data = new URLSearchParams(formData);
+
+    fetch('api/update_part.php', {
+        method: 'POST',
+        body: data
+    })
+        .then(res => res.json())
+        .then(response => {
+            if (response.success) {
+                alert("Part updated!");
+                closeModal('editPartModal');
+                fetchParts(); // Reload the updated table
+            } else {
+                alert("Update failed: " + response.message);
+            }
+        })
+        .catch(error => {
+            console.error("Update error:", error);
+            alert("An error occurred during update.");
+        });
+});
 
 
 // Call fetch on page load
