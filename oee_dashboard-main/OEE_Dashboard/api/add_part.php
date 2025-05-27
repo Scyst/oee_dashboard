@@ -25,9 +25,9 @@ if (!in_array($count_type, $valid_types)) {
 }
 
 // Insert into database
-$sql = "INSERT INTO parts (log_date, log_time, model, line, part_no, count_type, count_value)
-        VALUES (?, ?, ?, ?, ?, ?, ?)";
-$params = [$log_date, $log_time, $model, $line, $part_no, $count_type, $count_value];
+$sql = "INSERT INTO parts (log_date, log_time, model, line, part_no, count_type, count_value, note)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+$params = [$log_date, $log_time, $model, $line, $part_no, $count_type, $count_value, $note];
 $stmt = sqlsrv_query($conn, $sql, $params);
 
 if ($stmt === false) {

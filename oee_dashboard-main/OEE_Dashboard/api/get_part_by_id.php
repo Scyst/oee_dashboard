@@ -13,7 +13,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $id = intval($_GET['id']);
 
 // Query to fetch the part by ID
-$sql = "SELECT id, log_date, log_time, line, model, part_no, count_value, count_type FROM parts WHERE id = ?";
+$sql = "SELECT id, log_date, log_time, line, model, part_no, count_value, count_type, note FROM parts WHERE id = ?";
 $params = array($id);
 
 $stmt = sqlsrv_query($conn, $sql, $params);

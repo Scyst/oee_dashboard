@@ -175,21 +175,19 @@
                     <?php include 'api/get_models.php'; ?>
                 </datalist>
 
-                <!--<select id="product" onchange="filterTable()">
-                    <option value="">All Models</option>
-                    <option value="M20">M20</option>
-                    Add more model options as needed
-                </select>-->
-
                 <select id="status" onchange="filterTable()">
                     <option value="">All Types</option>
                     <option value="FG">FG</option>
                     <option value="NG">NG</option>
-                    <option value="Hold">Hold</option>
-                    <option value="Rework">Rework</option>
-                </select>
-
+                    <option value="HOLD">Hold</option>
+                    <option value="REWORK">Rework</option>
+                    <option value="ETC.">Rework</option>
+                </select>          
                 
+                <button id="prevPageBtn">Previous</button>
+                <span id="pagination-info" style="text-align: center; align-content: center;"></span>
+                <button id="nextPageBtn">Next</button>
+
             </div>
 
             <!-- Add Form <input type="date" id="date" onchange="filterTable()" />-->
@@ -199,7 +197,7 @@
                 <button onclick="openModal('partModal')">Add</button>
             </div>
         </div>
-        <div class="table-wrapper" style="height: calc( 100% - 100px);">
+        <div class="table-wrapper" style="height: calc( 100% - 120px);">
             <table id="partTable" border="1">
                 <thead>
                     <tr>
@@ -211,6 +209,7 @@
                         <th>Part No.</th>
                         <th>Quatity</th>
                         <th style="width: 150px;">Type</th>
+                        <th style="width: 250px;">Note</th>                        
                         <th style="width: 175px;">Actions</th>
                     </tr>
                 </thead>
@@ -258,9 +257,12 @@
                     <option value="">-- Select Type --</option>
                     <option value="FG">FG</option>
                     <option value="NG">NG</option>
-                    <option value="Rework">Rework</option>
-                    <option value="Hold">Hold</option>
+                    <option value="HOLD">Hold</option>
+                    <option value="REWORK">Rework</option>
+                    <option value="ETC.">Rework</option>
                 </select><br>
+
+                <input type="text" placeholder="Note" name="note" id="edit_note"><br>
 
                 <button type="submit">Update Part</button>
             </form>
@@ -303,6 +305,8 @@
                     <option value="Rework">Rework</option>
                     <option value="Hold">Hold</option>
                 </select><br>
+
+                <input type="text" placeholder="Note" name="note"><br>
 
                 <button type="submit">Submit Part</button>
             </form>
@@ -391,13 +395,14 @@
 
     <script src="script/datetime.js"></script>
     <script src="script/export_data.js"></script>
-    <!--<script src="script/auto_updateDB.js"></script>-->
+    <script src="script/auto_updateDB.js"></script>
     <script src="script/fetch_line&barchart.js"></script>
     <script src="script/fetch_piechart.js"></script>
     <script src="script/OEE_piechart.js"></script>
     <script src="script/OEE_linechart.js"></script>
     <script src="script/OEE_barchart.js"></script>
     <script src="script/pdTable.js"></script>
-</body>
+    <script src="script/paginationTable.js"></script>
 
+</body>
 </html>

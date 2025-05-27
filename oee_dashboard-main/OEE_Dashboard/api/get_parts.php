@@ -1,43 +1,53 @@
 <?php
 header('Content-Type: application/json');
-require_once("../db.php"); // Assuming db.php is one directory level up
+require_once("../db.php");
 
-// Check if the connection from db.php was successful
-if (!$conn) {
-    // db.php would have already died if connection failed,
-    // but as a good practice, if db.php were changed to return false on error:
-    echo json_encode(['error' => 'Database connection failed. Check server logs.']);
-    exit();
-}
+// Default pagination params
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 50;
+$offset = ($page - 1) * $limit;
 
-// --- Fetch Data ---
-// Ensure table and column names match your SQL Server schema
-$sql = "SELECT id, log_date, log_time, line, model, part_no, count_value, count_type FROM parts ORDER BY log_date DESC, log_time DESC";
+// Get total record count for pagination
+$totalSql = "SELECT COUNT(*) AS total FROM parts";
+$totalStmt = sqlsrv_query($conn, $totalSql);
+$totalRow = sqlsrv_fetch_array($totalStmt, SQLSRV_FETCH_ASSOC);
+$total = $totalRow ? intval($totalRow['total']) : 0;
 
-$stmt = sqlsrv_query($conn, $sql);
+// Fetch paginated data
+$sql = "
+    SELECT id, log_date, log_time, line, model, part_no, count_value, count_type, note
+    FROM parts
+    ORDER BY log_date DESC, log_time DESC
+    OFFSET ? ROWS
+    FETCH NEXT ? ROWS ONLY
+";
+$params = [$offset, $limit];
+$stmt = sqlsrv_query($conn, $sql, $params);
 
 if ($stmt === false) {
-    // Log the detailed error on the server for debugging
-    // error_log(print_r(sqlsrv_errors(), true));
-    echo json_encode(['error' => 'Error fetching parts. SQL Server query failed.']);
+    echo json_encode(['success' => false, 'message' => 'SQL query failed.']);
     exit();
 }
 
-$parts = [];
+$data = [];
 while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-    if (isset($row['log_date']) && $row['log_date'] instanceof DateTime) {
+    if ($row['log_date'] instanceof DateTime) {
         $row['log_date'] = $row['log_date']->format('Y-m-d');
     }
-    if (isset($row['log_time']) && $row['log_time'] instanceof DateTime) {
-        $row['log_time'] = $row['log_time']->format('H:i:s'); 
+    if ($row['log_time'] instanceof DateTime) {
+        $row['log_time'] = $row['log_time']->format('H:i:s');
     }
-
-    $parts[] = $row;
+    $data[] = $row;
 }
 
-
-echo json_encode($parts);
+// Return JSON with pagination info
+echo json_encode([
+    'success' => true,
+    'page' => $page,
+    'limit' => $limit,
+    'total' => $total,
+    'data' => $data
+]);
 
 sqlsrv_free_stmt($stmt);
-// sqlsrv_close($conn); // Connection is typically closed when script ends, or manage as per your app structure.
 ?>

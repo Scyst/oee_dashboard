@@ -18,6 +18,7 @@ async function fetchParts() {
                 <td>${row.part_no}</td>
                 <td>${row.count_value}</td>
                 <td>${row.count_type}</td>
+                <td>${row.note}</td>
                 <td>
                     <button onclick="editPart(${row.id})">Edit</button>
                     <button onclick="deletePart(${row.id})">Delete</button>
@@ -152,6 +153,7 @@ function editPart(id) {
                 document.getElementById('edit_part_no').value = part.part_no;
                 document.getElementById('edit_value').value = part.count_value;
                 document.getElementById('edit_type').value = part.count_type;
+                document.getElementById('edit_note').value = part.note;
 
                 document.getElementById('editPartModal').style.display = 'block';
             } else {
