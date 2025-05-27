@@ -10,6 +10,11 @@ $offset = ($page - 1) * $limit;
 // Date filter
 $startDate = $_GET['startDate'] ?? null;
 $endDate = $_GET['endDate'] ?? null;
+$partNo = $_GET['part_no'] ?? '';
+$line = $_GET['line'] ?? '';
+$model = $_GET['model'] ?? '';
+$status = $_GET['status'] ?? '';
+
 
 $conditions = [];
 $params = [];
@@ -20,6 +25,26 @@ if ($startDate && $endDate) {
     $params[] = $startDate;
     $params[] = $endDate;
 }
+if (!empty($partNo)) {
+    $conditions[] = "part_no LIKE ?";
+    $params[] = "%$partNo%";
+}
+
+if (!empty($line)) {
+    $conditions[] = "line LIKE ?";
+    $params[] = "%$line%";
+}
+
+if (!empty($model)) {
+    $conditions[] = "model LIKE ?";
+    $params[] = "%$model%";
+}
+
+if (!empty($status)) {
+    $conditions[] = "count_type = ?";
+    $params[] = $status;
+}
+
 
 $whereClause = count($conditions) > 0 ? "WHERE " . implode(" AND ", $conditions) : "";
 

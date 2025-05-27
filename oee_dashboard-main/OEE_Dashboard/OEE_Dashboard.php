@@ -160,29 +160,29 @@
 
             <!-- Filter -->
             <div style="display: flex; gap: 5px; justify-content: center;">
-                <input list="searchlist" id="searchInput" placeholder="Search Part No." oninput="filterTable()" />
+                <input list="searchlist" id="searchInput" placeholder="Search Part No." oninput="fetchPaginatedParts(1)" />
                 <datalist id="searchlist">
                     <?php include 'api/get_part_nos.php'; ?>
                 </datalist><br>
 
-                <input list="lineList" id="lineInput" placeholder="Line" oninput="filterTable()">
+                <input list="lineList" id="lineInput" placeholder="Line" oninput="fetchPaginatedParts(1)">
                 <datalist id="lineList">
                     <?php include 'api/get_lines.php'; ?>
                 </datalist>
 
-                <input list="modelList" id="modelInput" placeholder="Model" oninput="filterTable()">
+                <input list="modelList" id="modelInput" placeholder="Model" oninput="fetchPaginatedParts(1)">
                 <datalist id="modelList">
                     <?php include 'api/get_models.php'; ?>
                 </datalist>
 
-                <select id="status" onchange="filterTable()">
+                <select id="status" onchange="fetchPaginatedParts(1)">
                     <option value="">All Types</option>
                     <option value="FG">FG</option>
                     <option value="NG">NG</option>
-                    <option value="HOLD">Hold</option>
-                    <option value="REWORK">Rework</option>
-                    <option value="ETC.">Rework</option>
-                </select>          
+                    <option value="HOLD">HOLD</option>
+                    <option value="REWORK">REWORK</option>
+                    <option value="ETC.">ETC.</option>
+                </select>    
                 
                 <input type="date" id="startDate" onchange="applyDateRangeFilter()">
                 <p style="text-align: center; align-content: center;"> - </p>
@@ -354,32 +354,32 @@
     </div>
 
     <script>
-    window.addEventListener("load", () => {
-        const now = new Date();
+        window.addEventListener("load", () => {
+            const now = new Date();
 
-        // Format as yyyy-mm-dd
-        const dateStr = now.toISOString().split('T')[0];
+            // Format as yyyy-mm-dd
+            const dateStr = now.toISOString().split('T')[0];
 
-        // Format time as hh:mm
-        const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
+            // Format time as hh:mm
+            const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
 
-        // Set all date and time fields
-        document.querySelectorAll('input[type="date"]').forEach(input => {
-            if (!input.value) input.value = dateStr;
+            // Set all date and time fields
+            document.querySelectorAll('input[type="date"]').forEach(input => {
+                if (!input.value) input.value = dateStr;
+            });
+
+            document.querySelectorAll('input[type="time"]').forEach(input => {
+                if (!input.value) input.value = timeStr;
+            });
+
+            // Special handling: set only startDate and endDate filter defaults to today
+            const startInput = document.getElementById("startDate");
+            const endInput = document.getElementById("endDate");
+
+            if (startInput && !startInput.value) startInput.value = dateStr;
+            if (endInput && !endInput.value) endInput.value = dateStr;
         });
-
-        document.querySelectorAll('input[type="time"]').forEach(input => {
-            if (!input.value) input.value = timeStr;
-        });
-
-        // Special handling: set only startDate and endDate filter defaults to today
-        const startInput = document.getElementById("startDate");
-        const endInput = document.getElementById("endDate");
-
-        if (startInput && !startInput.value) startInput.value = dateStr;
-        if (endInput && !endInput.value) endInput.value = dateStr;
-    });
-</script>
+    </script>
 
     <script>
         function openModal(modalId) {

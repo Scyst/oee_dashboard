@@ -3,24 +3,36 @@
 let currentPage = 1;
 const limit = 100;
 
-async function fetchPaginatedParts(page = 1, startDate = '', endDate = '') {
+async function fetchPaginatedParts(page = 1) {
     try {
-        let url = `api/get_parts.php?page=${page}&limit=${limit}`;
+        // Get filter values
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        const line = document.getElementById("lineInput")?.value.trim() || '';
+        const model = document.getElementById("modelInput")?.value.trim() || '';
+        const partNo = document.getElementById("searchInput")?.value.trim() || '';
+        const status = document.getElementById("status")?.value.trim() || '';
 
-        if (startDate && endDate) {
-            url += `&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
-        }
+        const params = new URLSearchParams({
+            page,
+            limit,
+            startDate,
+            endDate,
+            line,
+            model,
+            part_no: partNo,
+            count_type: status
+        });
 
-        const res = await fetch(url);
+        const res = await fetch(`api/get_parts.php?${params.toString()}`);
         const result = await res.json();
 
         if (!result.success) throw new Error(result.message);
 
-        const data = result.data;
         const tableBody = document.getElementById('partTableBody');
         tableBody.innerHTML = '';
 
-        data.forEach(row => {
+        result.data.forEach(row => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${row.id}</td>
@@ -31,7 +43,7 @@ async function fetchPaginatedParts(page = 1, startDate = '', endDate = '') {
                 <td>${row.part_no}</td>
                 <td>${row.count_value}</td>
                 <td>${row.count_type}</td>
-                <td>${row.note}</td>
+                <td>${row.note || ''}</td>
                 <td>
                     <button onclick="editPart(${row.id})">Edit</button>
                     <button onclick="deletePart(${row.id})">Delete</button>
