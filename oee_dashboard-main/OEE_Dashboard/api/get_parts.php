@@ -2,26 +2,46 @@
 header('Content-Type: application/json');
 require_once("../db.php");
 
-// Default pagination params
+// Pagination params
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 50;
 $offset = ($page - 1) * $limit;
 
-// Get total record count for pagination
-$totalSql = "SELECT COUNT(*) AS total FROM parts";
-$totalStmt = sqlsrv_query($conn, $totalSql);
+// Date filter
+$startDate = $_GET['startDate'] ?? null;
+$endDate = $_GET['endDate'] ?? null;
+
+$conditions = [];
+$params = [];
+
+// If date range is provided, filter by log_date
+if ($startDate && $endDate) {
+    $conditions[] = "log_date BETWEEN ? AND ?";
+    $params[] = $startDate;
+    $params[] = $endDate;
+}
+
+$whereClause = count($conditions) > 0 ? "WHERE " . implode(" AND ", $conditions) : "";
+
+// Get total for pagination
+$totalSql = "SELECT COUNT(*) AS total FROM parts $whereClause";
+$totalStmt = sqlsrv_query($conn, $totalSql, $params);
 $totalRow = sqlsrv_fetch_array($totalStmt, SQLSRV_FETCH_ASSOC);
 $total = $totalRow ? intval($totalRow['total']) : 0;
 
-// Fetch paginated data
+// Add pagination params to query
+$params[] = $offset;
+$params[] = $limit;
+
+// Main data query
 $sql = "
     SELECT id, log_date, log_time, line, model, part_no, count_value, count_type, note
     FROM parts
+    $whereClause
     ORDER BY log_date DESC, log_time DESC
-    OFFSET ? ROWS
-    FETCH NEXT ? ROWS ONLY
+    OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 ";
-$params = [$offset, $limit];
+
 $stmt = sqlsrv_query($conn, $sql, $params);
 
 if ($stmt === false) {
@@ -40,7 +60,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $data[] = $row;
 }
 
-// Return JSON with pagination info
+// Return JSON
 echo json_encode([
     'success' => true,
     'page' => $page,

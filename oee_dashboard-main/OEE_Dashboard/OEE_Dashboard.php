@@ -184,9 +184,9 @@
                     <option value="ETC.">Rework</option>
                 </select>          
                 
-                <button id="prevPageBtn">Previous</button>
-                <span id="pagination-info" style="text-align: center; align-content: center;"></span>
-                <button id="nextPageBtn">Next</button>
+                <input type="date" id="startDate" onchange="applyDateRangeFilter()">
+                <p style="text-align: center; align-content: center;"> - </p>
+                <input type="date" id="endDate" onchange="applyDateRangeFilter()">
 
             </div>
 
@@ -197,7 +197,7 @@
                 <button onclick="openModal('partModal')">Add</button>
             </div>
         </div>
-        <div class="table-wrapper" style="height: calc( 100% - 120px);">
+        <div class="table-wrapper" style="height: calc( 100% - 140px);">
             <table id="partTable" border="1">
                 <thead>
                     <tr>
@@ -216,6 +216,13 @@
                 <tbody id="partTableBody">
                 </tbody>
             </table>
+        </div>
+
+        <div style="display: flex; gap: 20px; justify-content: center; margin: 15px auto;">
+            <button id="prevPageBtn" style="width: fit-content; margin: 0;">Previous</button>
+            <span id="pagination-info" style="text-align: center; align-content: center;"></span>
+            <button id="nextPageBtn" style="width: fit-content; margin: 0;">Next</button>
+
         </div>
 
     </div>
@@ -347,20 +354,32 @@
     </div>
 
     <script>
-        window.addEventListener("load", () => {
-            const now = new Date();
+    window.addEventListener("load", () => {
+        const now = new Date();
 
-            // Format date as yyyy-mm-dd
-            const dateStr = now.toISOString().split('T')[0];
+        // Format as yyyy-mm-dd
+        const dateStr = now.toISOString().split('T')[0];
 
-            // Format time as hh:mm
-            const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
+        // Format time as hh:mm
+        const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
 
-            // Set default values for all date and time inputs
-            document.querySelectorAll('input[type="date"]').forEach(input => input.value = dateStr);
-            document.querySelectorAll('input[type="time"]').forEach(input => input.value = timeStr);
+        // Set all date and time fields
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            if (!input.value) input.value = dateStr;
         });
-    </script>
+
+        document.querySelectorAll('input[type="time"]').forEach(input => {
+            if (!input.value) input.value = timeStr;
+        });
+
+        // Special handling: set only startDate and endDate filter defaults to today
+        const startInput = document.getElementById("startDate");
+        const endInput = document.getElementById("endDate");
+
+        if (startInput && !startInput.value) startInput.value = dateStr;
+        if (endInput && !endInput.value) endInput.value = dateStr;
+    });
+</script>
 
     <script>
         function openModal(modalId) {

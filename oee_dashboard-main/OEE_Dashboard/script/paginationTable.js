@@ -3,9 +3,15 @@
 let currentPage = 1;
 const limit = 100;
 
-async function fetchPaginatedParts(page = 1) {
+async function fetchPaginatedParts(page = 1, startDate = '', endDate = '') {
     try {
-        const res = await fetch(`api/get_parts.php?page=${page}&limit=${limit}`);
+        let url = `api/get_parts.php?page=${page}&limit=${limit}`;
+
+        if (startDate && endDate) {
+            url += `&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+        }
+
+        const res = await fetch(url);
         const result = await res.json();
 
         if (!result.success) throw new Error(result.message);
@@ -35,7 +41,6 @@ async function fetchPaginatedParts(page = 1) {
         });
 
         updatePaginationControls(result.page, result.total);
-
     } catch (error) {
         console.error("Failed to fetch paginated data:", error);
         alert("Error loading parts data.");
@@ -50,16 +55,30 @@ function updatePaginationControls(current, totalItems) {
     document.getElementById('nextPageBtn').disabled = current >= totalPages;
 }
 
+function applyDateRangeFilter() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    currentPage = 1; // Always reset to first page when filtering
+    fetchPaginatedParts(currentPage, startDate, endDate);
+}
+
 document.getElementById('prevPageBtn').addEventListener('click', () => {
     if (currentPage > 1) {
         currentPage--;
-        fetchPaginatedParts(currentPage);
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        fetchPaginatedParts(currentPage, startDate, endDate);
     }
 });
 
 document.getElementById('nextPageBtn').addEventListener('click', () => {
     currentPage++;
-    fetchPaginatedParts(currentPage);
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    fetchPaginatedParts(currentPage, startDate, endDate);
 });
+
+
 
 window.onload = () => fetchPaginatedParts(currentPage);
