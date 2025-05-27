@@ -160,7 +160,10 @@
 
             <!-- Filter -->
             <div style="display: flex; gap: 5px; justify-content: center;">
-                <input type="text" id="searchInput" placeholder="Search Part No." oninput="filterTable()" />
+                <input list="searchlist" id="searchInput" placeholder="Search Part No." oninput="filterTable()" />
+                <datalist id="searchlist">
+                    <?php include 'api/get_part_nos.php'; ?>
+                </datalist><br>
 
                 <input list="lineList" id="lineInput" placeholder="Line" oninput="filterTable()">
                 <datalist id="lineList">
@@ -196,7 +199,7 @@
                 <button onclick="openModal('partModal')">Add</button>
             </div>
         </div>
-        <div class="table-wrapper" style="height: calc( 100% - 130px);">
+        <div class="table-wrapper" style="height: calc( 100% - 100px);">
             <table id="partTable" border="1">
                 <thead>
                     <tr>
