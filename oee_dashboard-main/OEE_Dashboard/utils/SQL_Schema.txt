@@ -3,35 +3,24 @@ CREATE TABLE parts (
     id INT IDENTITY(1,1) PRIMARY KEY,
     log_date DATE NOT NULL,
     log_time TIME NOT NULL,
-    line VARCHAR(50),
-    model VARCHAR(50),
-    part_no VARCHAR(50),
-    count_value INT,
-    count_type VARCHAR(50)
+    line VARCHAR(50) NOT NULL,
+    model VARCHAR(50) NOT NULL,
+    part_no VARCHAR(50) NOT NULL,
+    count_value INT NOT NULL,
+    count_type VARCHAR(50) NOT NULL,
+    note NVARCHAR(MAX) COLLATE Thai_100_CI_AI_SC_UTF8
 );
 
--- Create scrap table
-CREATE TABLE scrap (
+CREATE TABLE stop_causes (
     id INT IDENTITY(1,1) PRIMARY KEY,
-    date DATE NOT NULL,
-    shift VARCHAR(10),
-    line VARCHAR(50),
-    machine VARCHAR(50),
-    part_no VARCHAR(50),
-    scrap_type VARCHAR(100),
-    count INT
-);
-
--- Create stop_cause table
-CREATE TABLE stop_cause (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    date DATE NOT NULL,
-    shift VARCHAR(10),
-    line VARCHAR(50),
-    machine VARCHAR(50),
-    cause VARCHAR(100),
-    total_time INT, -- minutes
-    note VARCHAR(255)
+    log_date DATE NOT NULL,
+    stop_begin TIME NOT NULL,
+    stop_end TIME NOT NULL,
+    line NVARCHAR(100) NOT NULL,
+    machine NVARCHAR(100) NOT NULL,
+    cause NVARCHAR(255) COLLATE Thai_100_CI_AI_SC_UTF8,
+    note NVARCHAR(MAX) COLLATE Thai_100_CI_AI_SC_UTF8,
+    recovered_by NVARCHAR(100) COLLATE Thai_100_CI_AI_SC_UTF8
 );
 
 DECLARE @i INT = 1;

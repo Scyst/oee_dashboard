@@ -150,6 +150,23 @@ body {
     font-weight: bold;
 }
 
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #1e1e1e;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #333;
+    text-align: left;
+}
+
+th {
+    background-color: #333;
+    color: #00ffcc;
+}
+
 
 /* Container styles */
 .dashboard {

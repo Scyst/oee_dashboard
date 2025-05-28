@@ -1,0 +1,61 @@
+.stop-cause {
+    margin-top: 5px; 
+    height: calc(85% - 5px); 
+    width: 100%; 
+    min-width: fit-content;
+    color: white;
+    background: #0D0D0D;
+    border: 1px solid #545454;
+    border-radius: 10px;
+}
+
+.stop-cause .table-wrapper {
+    overflow-x: auto;
+    padding: 10px;
+    height: calc( 100% - 140px);
+}
+
+.stop-cause table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stop-cause th,
+.stop-cause td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+}
+
+.stop-cause th {
+    background-color: #222;
+    font-weight: bold;
+}
+
+.stop-cause tr:hover {
+    background-color: #2a2a2a;
+}
+
+.stop-cause td:first-child {
+    font-weight: bold;
+    text-align: center;
+}
+
+.stop-cause td:last-child {
+    font-weight: bold;
+    text-align: center;
+}
+
+.severe-cause {
+    background-color: #ffcccc; /* Red tint */
+}
+.critical-duration {
+    background-color: #ffe5b4; /* Orange tint */
+}
+.moderate-duration {
+    background-color: #ffffcc; /* Yellow tint */
+}
+.normal-duration {
+    background-color: #e0ffe0; /* Light green */
+}

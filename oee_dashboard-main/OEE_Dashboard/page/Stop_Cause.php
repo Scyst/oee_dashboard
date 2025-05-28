@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>OEE API Test Form</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/jspdf-thai@1.0.0/thsarabunnew.js"></script>
 
     <link rel="stylesheet" href="../style/style.css">
-    <link rel="stylesheet" href="../style/piechart.css">
-    <link rel="stylesheet" href="../style/linechart.css">
-    <link rel="stylesheet" href="../style/barchart.css">
-    <link rel="stylesheet" href="../style/pdTable.css">
+    <link rel="stylesheet" href="../style/Stop_Cause.css">
 </head>
 
 <body style="width: 100vw; height: fit-content; min-width: fit-content;">
@@ -48,7 +44,7 @@
             </div>
         </div>
 
-        <div class="production-history" style="margin-top: 5px; height: calc(85% - 5px); width: 100%; min-width: fit-content;">
+        <div class="stop-cause">
 
             <h3 style="margin-left: 10px">Stop Cause History</h3>
             <div style="display: flex; justify-content: space-between; padding: 0px 10px;">
@@ -85,14 +81,13 @@
 
                 </div>
 
-                <!-- Add Form <input type="date" id="date" onchange="filterTable()" />-->
                 <div>
                     <button onclick="exportToExcel()">Export to Excel</button>
                     <button onclick="exportToPDF()">Export to PDF</button>
                     <button onclick="openModal('partModal')">Add</button>
                 </div>
             </div>
-            <div class="table-wrapper" style="height: calc( 100% - 140px);">
+            <div class="table-wrapper">
                 <table id="partTable" border="1">
                     <thead>
                         <tr>

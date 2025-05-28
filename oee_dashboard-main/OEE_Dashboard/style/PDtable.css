@@ -1,15 +1,18 @@
 .production-history {
-    margin-top: 10px;
+    margin-top: 5px; 
+    height: calc(85% - 5px); 
+    width: 100%; 
+    min-width: fit-content;
     color: white;
     background: #0D0D0D;
     border: 1px solid #545454;
     border-radius: 10px;
-    height: calc(100vh - 20px);
 }
 
-.table-wrapper {
+.production-history .table-wrapper {
     overflow-x: auto;
     padding: 10px;
+    height: calc( 100% - 140px);
 }
 
 .production-history table {
@@ -42,22 +45,4 @@
 .production-history td:last-child {
     font-weight: bold;
     text-align: center;
-}
-
-/* Table style */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #1e1e1e;
-}
-
-th, td {
-    padding: 10px;
-    border: 1px solid #333;
-    text-align: left;
-}
-
-th {
-    background-color: #333;
-    color: #00ffcc;
 }

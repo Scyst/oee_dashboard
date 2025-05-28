@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>OEE API Test Form</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/jspdf-thai@1.0.0/thsarabunnew.js"></script>
 
     <link rel="stylesheet" href="../style/style.css">
-    <link rel="stylesheet" href="../style/piechart.css">
-    <link rel="stylesheet" href="../style/linechart.css">
-    <link rel="stylesheet" href="../style/barchart.css">
     <link rel="stylesheet" href="../style/pdTable.css">
 </head>
 
@@ -48,7 +44,7 @@
             </div>
         </div>
 
-        <div class="production-history" style="margin-top: 5px; height: calc(85% - 5px); width: 100%; min-width: fit-content;">
+        <div class="production-history">
 
             <h3 style="margin-left: 10px;">Production History</h3>
             <div style="display: flex; justify-content: space-between; padding: 0px 10px;">
@@ -57,17 +53,17 @@
                 <div style="display: flex; gap: 5px; justify-content: center;">
                     <input list="searchlist" id="searchInput" placeholder="Search Part No." oninput="fetchPaginatedParts(1)" />
                     <datalist id="searchlist">
-                        <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
+                        <?php include '../api/pdTable/get_part_nos.php'; ?>
                     </datalist><br>
 
                     <input list="lineList" id="lineInput" placeholder="Line" oninput="fetchPaginatedParts(1)">
                     <datalist id="lineList">
-                        <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
+                        <?php include '../api/pdTable/get_lines.php'; ?>
                     </datalist>
 
                     <input list="modelList" id="modelInput" placeholder="Model" oninput="fetchPaginatedParts(1)">
                     <datalist id="modelList">
-                        <?php include '../api/OEE_Dashboard/get_models.php'; ?>
+                        <?php include '../api/pdTable/get_models.php'; ?>
                     </datalist>
 
                     <select id="status" onchange="fetchPaginatedParts(1)">
@@ -85,14 +81,13 @@
 
                 </div>
 
-                <!-- Add Form <input type="date" id="date" onchange="filterTable()" />-->
                 <div>
                     <button onclick="exportToExcel()">Export to Excel</button>
                     <button onclick="exportToPDF()">Export to PDF</button>
                     <button onclick="openModal('partModal')">Add</button>
                 </div>
             </div>
-            <div class="table-wrapper" style="height: calc( 100% - 140px);">
+            <div class="table-wrapper">
                 <table id="partTable" border="1">
                     <thead>
                         <tr>
@@ -114,6 +109,7 @@
             </div>
 
             <div style="display: flex; gap: 20px; justify-content: center; margin: 10px auto;">
+
                 <button id="prevPageBtn" style="width: fit-content; margin: 0;">Previous</button>
                 <span id="pagination-info" style="text-align: center; align-content: center;"></span>
                 <button id="nextPageBtn" style="width: fit-content; margin: 0;">Next</button>
@@ -134,19 +130,19 @@
                     <!-- Line input with datalist -->
                     <input list="lineList" name="line" placeholder="Line" required>
                     <datalist id="lineList">
-                        <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
+                        <?php include '../api/pdTable/get_lines.php'; ?>
                     </datalist><br>
 
                     <!-- Model input with datalist -->
                     <input list="modelList" name="model" placeholder="Model" required>
                     <datalist id="modelList">
-                        <?php include '../api/OEE_Dashboard/get_models.php'; ?>
+                        <?php include '../api/pdTable/get_models.php'; ?>
                     </datalist><br>
 
                     <!-- Part No. input with datalist -->
                     <input list="partList" name="part_no" placeholder="Part No." required>
                     <datalist id="partList">
-                        <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
+                        <?php include '../api/pdTable/get_part_nos.php'; ?>
                     </datalist><br>
 
                     <input type="number" name="count_value" placeholder="Enter value" required><br>
@@ -182,19 +178,19 @@
                 <!-- Line (datalist or text input) -->
                 <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
                 <datalist id="editLineList">
-                    <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
+                    <?php include '../api/pdTable/get_lines.php'; ?>
                 </datalist><br>
 
                 <!-- Model -->
                 <input list="editModelList" name="model" id="edit_model" placeholder="Model" required>
                 <datalist id="editModelList">
-                    <?php include '../api/OEE_Dashboard/get_models.php'; ?>
+                    <?php include '../api/pdTable/get_models.php'; ?>
                 </datalist><br>
 
                 <!-- Part No -->
                 <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
                 <datalist id="editPartList">
-                    <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
+                    <?php include '../api/pdTable/get_part_nos.php'; ?>
                 </datalist><br>
 
                 <!-- Count Value -->
@@ -278,7 +274,6 @@
 
     <script src="../script/datetime.js"></script>
     <script src="../script/pdTable/export_data.js"></script>
-    <script src="../script/pdTable/pdTable.js"></script>
     <script src="../script/pdTable/paginationTable.js"></script>
 
 </body>
