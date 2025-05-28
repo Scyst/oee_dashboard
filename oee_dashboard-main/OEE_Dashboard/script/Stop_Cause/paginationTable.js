@@ -76,7 +76,7 @@ function editPart(id) {
                 document.getElementById('edit_type').value = part.count_type;
                 document.getElementById('edit_note').value = part.note;
 
-                document.getElementById('editPartModal').style.display = 'block';
+                document.getElementById('editStopModal').style.display = 'block';
             } else {
                 alert("Failed to load part for editing: " + data.message);
             }
@@ -90,7 +90,7 @@ function editPart(id) {
 function deletePart(id) {
     if (!confirm("Are you sure you want to delete this part?")) return;
 
-    fetch("../api/pdTable/delete_part.php", {
+    fetch("../api/Stop_Cause/delete_part.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
@@ -134,7 +134,7 @@ document.getElementById('editPartForm').addEventListener('submit', function (e) 
     const formData = new FormData(this);
     const data = new URLSearchParams(formData);
 
-    fetch('../api/pdTable/update_part.php', {
+    fetch('../api/Stop_Cause/update_part.php', {
         method: 'POST',
         body: data
     })
@@ -142,7 +142,7 @@ document.getElementById('editPartForm').addEventListener('submit', function (e) 
         .then(response => {
             if (response.success) {
                 alert("Part updated!");
-                closeModal('editPartModal');
+                closeModal('editStopModal');
                 fetchPaginatedParts(currentPage); // Reload the updated table
             } else {
                 alert("Update failed: " + response.message);
@@ -170,14 +170,14 @@ document.getElementById('nextPageBtn').addEventListener('click', () => {
     fetchPaginatedParts(currentPage, startDate, endDate);
 });
 
-document.getElementById("addPartForm").addEventListener("submit", async function (e) {
+document.getElementById("addStopForm").addEventListener("submit", async function (e) {
     e.preventDefault(); // prevent page reload
 
     const form = e.target;
     const formData = new FormData(form);
 
     try {
-        const res = await fetch("../api/pdTable/add_part.php", {
+        const res = await fetch("../api/Stop_Cause/add_part.php", {
             method: "POST",
             body: formData
         });
@@ -187,7 +187,7 @@ document.getElementById("addPartForm").addEventListener("submit", async function
 
         if (result.status === "success") {
             alert(result.message);
-            closeModal("partModal");         // hide the modal
+            closeModal("stopModal");         // hide the modal
             fetchPaginatedParts(1);          // reload the table from page 1
             form.reset();                    // optional: clear form
         } else {

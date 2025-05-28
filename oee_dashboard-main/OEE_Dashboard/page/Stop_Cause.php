@@ -51,29 +51,20 @@
 
                 <!-- Filter -->
                 <div style="display: flex; gap: 5px; justify-content: center;">
-                    <input list="searchlist" id="searchInput" placeholder="Search Part No." oninput="fetchPaginatedParts(1)" />
+                    <input list="searchlist" id="searchInput" placeholder="Search Stop Cause" oninput="fetchPaginatedParts(1)" />
                     <datalist id="searchlist">
-                        <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
+                        <?php include '../api/Stop_Cause/get_cause.php'; ?>
                     </datalist><br>
 
                     <input list="lineList" id="lineInput" placeholder="Line" oninput="fetchPaginatedParts(1)">
                     <datalist id="lineList">
-                        <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
+                        <?php include '../api/Stop_Cause/get_lines.php'; ?>
                     </datalist>
 
-                    <input list="modelList" id="modelInput" placeholder="Model" oninput="fetchPaginatedParts(1)">
-                    <datalist id="modelList">
-                        <?php include '../api/OEE_Dashboard/get_models.php'; ?>
-                    </datalist>
-
-                    <select id="status" onchange="fetchPaginatedParts(1)">
-                        <option value="">All Types</option>
-                        <option value="FG">FG</option>
-                        <option value="NG">NG</option>
-                        <option value="HOLD">HOLD</option>
-                        <option value="REWORK">REWORK</option>
-                        <option value="ETC.">ETC.</option>
-                    </select>    
+                    <input list="machineList" id="machineInput" placeholder="Machine/Station" oninput="fetchPaginatedParts(1)">
+                    <datalist id="machineList">
+                        <?php include '../api/Stop_Cause/get_machine.php'; ?>
+                    </datalist>   
                     
                     <input type="date" id="startDate" onchange="applyDateRangeFilter()">
                     <p style="text-align: center; align-content: center;"> - </p>
@@ -84,11 +75,11 @@
                 <div>
                     <button onclick="exportToExcel()">Export to Excel</button>
                     <button onclick="exportToPDF()">Export to PDF</button>
-                    <button onclick="openModal('partModal')">Add</button>
+                    <button onclick="openModal('stopModal')">Add</button>
                 </div>
             </div>
             <div class="table-wrapper">
-                <table id="partTable" border="1">
+                <table id="stopTable" border="1">
                     <thead>
                         <tr>
                             <th style="width: 100px; text-align: center;">ID</th>
@@ -103,7 +94,7 @@
                             <th style="width: 175px;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="partTableBody">
+                    <tbody id="stopTableBody">
                     </tbody>
                 </table>
             </div>
@@ -118,43 +109,39 @@
         </div>
 
             <!-- Modal background and form for Part -->
-        <div id="partModal" class="modal">
+        <div id="stopModal" class="modal">
             <div class="modal-content">
-                <span class="close" onclick="closeModal('partModal')">&times;</span>
+                <span class="close" onclick="closeModal('stopModal')">&times;</span>
                 <h2>Add Part</h2>
-                <form id="addPartForm">
+                <form id="addStopForm">
                     <input type="date" name="log_date" required value="<?= date('Y-m-d') ?>"><br>
-                    <input type="time" name="log_time" step="1" required value="<?= date('H:i:s') ?>"><br>
+                    <input type="time" name="stop_begin" step="1" required value="<?= date('H:i:s') ?>"><br>
+                    <input type="time" name="stop_end" step="1" required value="<?= date('H:i:s') ?>"><br>
 
                     <!-- Line input with datalist -->
                     <input list="lineList" name="line" placeholder="Line" required>
                     <datalist id="lineList">
-                        <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
+                        <?php include '../api/Stop_Cause/get_lines.php'; ?>
                     </datalist><br>
 
                     <!-- Model input with datalist -->
-                    <input list="modelList" name="model" placeholder="Model" required>
-                    <datalist id="modelList">
-                        <?php include '../api/OEE_Dashboard/get_models.php'; ?>
+                    <input list="machineList" name="machine" placeholder="Machine/Station" required>
+                    <datalist id="machineList">
+                        <?php include '../api/Stop_Cause/get_machine.php'; ?>
                     </datalist><br>
 
                     <!-- Part No. input with datalist -->
-                    <input list="partList" name="part_no" placeholder="Part No." required>
-                    <datalist id="partList">
-                        <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
+                    <input list="causeList" name="cause" placeholder="Stop Cause" required>
+                    <datalist id="causeList">
+                        <?php include '../api/Stop_Cause/get_cause.php'; ?>
                     </datalist><br>
-
-                    <input type="number" name="count_value" placeholder="Enter value" required><br>
                     
-                    <select name="count_type" required>
-                        <option value="FG">FG</option>
-                        <option value="NG">NG</option>
-                        <option value="HOLD">HOLD</option>
-                        <option value="REWORK">REWORK</option>
-                        <option value="ETC.">ETC.</option>
-                    </select><br>
-
                     <input type="text" placeholder="Note" name="note"><br>
+
+                    <input list="recoverList" name="recovered_by" placeholder="Recovered By" required>
+                    <datalist id="recoverList">
+                        <?php include '../api/Stop_Cause/get_recovered_by.php'; ?>
+                    </datalist><br>
 
                     <button type="submit">Submit Part</button>
                 </form>
@@ -164,66 +151,48 @@
     </div>
     
     <!-- Edit Modal -->
-    <div id="editPartModal" class="modal">
+    <div id="editStopModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('editPartModal')">&times;</span>
+            <span class="close" onclick="closeModal('editStopModal')">&times;</span>
             <h2>Edit Part</h2>
             <form id="editPartForm">
                 <input type="hidden" name="id" id="edit_id">
 
                 <input type="date" name="log_date" id="edit_date" required><br>
-                <input type="time" name="log_time" id="edit_time" step="1" required><br>
+                
+                <input type="time" name="stop_begin" id="edit_stopBegin" step="1" required><br>
+
+                <input type="time" name="stop_end" id="edit_stopEnd" step="1" required><br>
 
                 <!-- Line (datalist or text input) -->
                 <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
                 <datalist id="editLineList">
-                    <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
+                    <?php include '../api/Stop_Cause/get_lines.php'; ?>
                 </datalist><br>
 
                 <!-- Model -->
-                <input list="editModelList" name="model" id="edit_model" placeholder="Model" required>
-                <datalist id="editModelList">
-                    <?php include '../api/OEE_Dashboard/get_models.php'; ?>
+                <input list="editMachineList" name="machine" id="edit_machine" placeholder="Machine/Station" required>
+                <datalist id="editMachineList">
+                    <?php include '../api/Stop_Cause/get_machine.php'; ?>
                 </datalist><br>
 
                 <!-- Part No -->
                 <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
                 <datalist id="editPartList">
-                    <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
+                    <?php include '../api/Stop_Cause/get_part_nos.php'; ?>
                 </datalist><br>
 
                 <!-- Count Value -->
                 <input type="number" name="count_value" id="edit_value" placeholder="Quantity" required><br>
-                
-                <!-- Count Type -->
-                <select name="count_type" id="edit_type" required>
-                    <option value="">-- Select Type --</option>
-                    <option value="FG">FG</option>
-                    <option value="NG">NG</option>
-                    <option value="HOLD">HOLD</option>
-                    <option value="REWORK">REWORK</option>
-                    <option value="ETC.">ETC.</option>
-                </select><br>
 
                 <input type="text" placeholder="Note" name="note" id="edit_note"><br>
 
-                <button type="submit">Update Part</button>
-            </form>
-        </div>
-    </div>
+                <input list="editrecoverList" name="recovered_by" id="edit_recovered_by" placeholder="Recovered By" required>
+                    <datalist id="editrecoverList">
+                        <?php include '../api/Stop_Cause/get_recovered_by.php'; ?>
+                </datalist><br>
 
-    <!-- Modal for Stop Cause -->
-    <div id="stopModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('stopModal')">&times;</span>
-            <h2>Add Stop Cause</h2>
-            <form action="../api/OEE_Dashboard/add_stop.php" method="POST">
-                <input type="date" name="log_date" required><br>
-                <input type="time" placeholder="Time" name="log_time" required><br>
-                <input type="text" placeholder="Cause" name="stop_cause" required><br>
-                <input type="number" placeholder="Stop Time (min)" name="stop_time"><br>
-                <input type="text" placeholder="Note" name="note"><br>
-                <button type="submit">Submit Stop Cause</button>
+                <button type="submit">Update Part</button>
             </form>
         </div>
     </div>

@@ -11,18 +11,6 @@ CREATE TABLE parts (
     note NVARCHAR(MAX) COLLATE Thai_100_CI_AI_SC_UTF8
 );
 
-CREATE TABLE stop_causes (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    log_date DATE NOT NULL,
-    stop_begin TIME NOT NULL,
-    stop_end TIME NOT NULL,
-    line NVARCHAR(100) NOT NULL,
-    machine NVARCHAR(100) NOT NULL,
-    cause NVARCHAR(255) COLLATE Thai_100_CI_AI_SC_UTF8,
-    note NVARCHAR(MAX) COLLATE Thai_100_CI_AI_SC_UTF8,
-    recovered_by NVARCHAR(100) COLLATE Thai_100_CI_AI_SC_UTF8
-);
-
 DECLARE @i INT = 1;
 
 WHILE @i <= 100
@@ -36,6 +24,63 @@ BEGIN
         CAST(ABS(CHECKSUM(NEWID()) % 90000 + 10000) AS VARCHAR),                       -- Part No: 10000-99999
         ABS(CHECKSUM(NEWID()) % 200),                                                  -- Count: 0-199
         ISNULL(CHOOSE((ABS(CHECKSUM(NEWID()) % 4) + 1), 'FG', 'NG', 'Hold', 'Rework'), 'FG')
+    );
+
+    SET @i += 1;
+END;
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE stop_causes (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    log_date DATE NOT NULL,
+    stop_begin DATETIME NOT NULL,
+    stop_end DATETIME NOT NULL,
+    line NVARCHAR(50) NOT NULL,
+    machine NVARCHAR(50) NOT NULL,
+    cause NVARCHAR(255) COLLATE Thai_100_CI_AI_SC_UTF8 NOT NULL,
+    note NVARCHAR(255) COLLATE Thai_100_CI_AI_SC_UTF8,
+    recovered_by NVARCHAR(100) COLLATE Thai_100_CI_AI_SC_UTF8 NOT NULL,
+    duration AS DATEDIFF(MINUTE, stop_begin, stop_end) PERSISTED
+);
+
+
+DECLARE @i INT = 1;
+
+WHILE @i <= 1000
+BEGIN
+    DECLARE @date DATE = DATEADD(DAY, -ABS(CHECKSUM(NEWID())) % 30, GETDATE());
+    DECLARE @hour INT = ABS(CHECKSUM(NEWID())) % 24;
+    DECLARE @minute INT = ABS(CHECKSUM(NEWID())) % 60;
+    DECLARE @duration INT = 5 + ABS(CHECKSUM(NEWID())) % 120; -- 5 to 125 mins
+
+    DECLARE @start DATETIME = DATEADD(MINUTE, @minute, DATEADD(HOUR, @hour, CAST(@date AS DATETIME)));
+    DECLARE @end DATETIME = DATEADD(MINUTE, @duration, @start);
+
+    INSERT INTO stop_causes (log_date, stop_begin, stop_end, line, machine, cause, note, recovered_by)
+    VALUES (
+        @date,
+        @start,
+        @end,
+        CHOOSE(ABS(CHECKSUM(NEWID())) % 4 + 1, N'Line A', N'Line B', N'Paint', N'Spot'),
+        CHOOSE(ABS(CHECKSUM(NEWID())) % 4 + 1, N'Machine 1', N'Machine 2', N'Station 1', N'Station 2'),
+        CHOOSE(ABS(CHECKSUM(NEWID())) % 5 + 1,
+            N'ไฟดับ', 
+            N'เปลี่ยนแม่พิมพ์', 
+            N'พักเบรค', 
+            N'ซ่อมเครื่องจักร', 
+            N'ระบบล่ม'),
+        CHOOSE(ABS(CHECKSUM(NEWID())) % 4 + 1,
+            N'ไม่มีบันทึก',
+            N'แจ้งหัวหน้างานแล้ว',
+            N'ตรวจสอบแล้ว',
+            N'ดำเนินการเรียบร้อย'),
+        CHOOSE(ABS(CHECKSUM(NEWID())) % 5 + 1,
+            N'สมชาย', 
+            N'วิชัย', 
+            N'นฤมล', 
+            N'ปิยะ', 
+            N'ธีรวัฒน์')
     );
 
     SET @i += 1;
