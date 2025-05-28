@@ -93,7 +93,7 @@ async function fetchAndRenderBarCharts() {
         );*/
         hideErrors();
 
-        const response = await fetch("api/get_stop_causes.php");
+        const response = await fetch("../api/get_stop_causes.php");
         const data = await response.json();
 
         // Ensure at least 7 bars for scrap

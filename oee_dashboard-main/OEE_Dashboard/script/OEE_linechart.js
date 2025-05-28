@@ -98,7 +98,7 @@ function renderLineChart(canvasId, title, labels, data, color, chartRef) {
 async function fetchAndRenderLineCharts() {
     try {
         hideErrors(); // clear previous errors
-        const response = await fetch("api/get_oee_7day.php");
+        const response = await fetch("../api/get_oee_7day.php");
         const data = await response.json();
 
         if (!data.success) throw new Error("Data error");

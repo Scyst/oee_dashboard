@@ -1,5 +1,5 @@
 <?php
-require_once("db.php");
+require_once("api/db.php");
 
 $log_date = $_GET['log_date'];
 $shift = $_GET['shift'];

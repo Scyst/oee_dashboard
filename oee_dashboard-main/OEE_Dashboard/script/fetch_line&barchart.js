@@ -9,7 +9,7 @@ function fetchBarCharts() {
 
   const query = `start=${start}&end=${end}&shift=${shift}&line=${line}&machine=${machine}`;
 
-  fetch(`api\get_scrap_by_part.php?${query}`)
+  fetch(`..\api\get_scrap_by_part.php?${query}`)
     .then(res => res.json())
     .then(data => {
       currentScrapData = data;
@@ -18,7 +18,7 @@ function fetchBarCharts() {
       initScrapBarChart(labels, values);
     });
 
-  fetch(`api\get_stop_causes.php?${query}`)
+  fetch(`..\api\get_stop_causes.php?${query}`)
     .then(res => res.json())
     .then(data => {
       const labels = data.map(item => item.cause);

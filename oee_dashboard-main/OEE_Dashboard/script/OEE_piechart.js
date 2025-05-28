@@ -105,7 +105,7 @@ function renderPieChartWithLoss(chartRef, ctx, label, value, lossBreakdown, main
 async function fetchAndRenderCharts() {
     try {
         hideErrors();
-        const response = await fetch("api/get_oee_summary.php?log_date=<?=date('Y-m-d')?>&shift=A");
+        const response = await fetch("../api/get_oee_summary.php?log_date=<?=date('Y-m-d')?>&shift=A");
         const data = await response.json();
         if (!data.success) throw new Error("Invalid data");
 

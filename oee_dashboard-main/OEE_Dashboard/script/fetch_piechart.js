@@ -81,13 +81,13 @@ function fetchOeeSummary() {
   const date = new Date().toISOString().split("T")[0];
   const shift = "A";
 
-  fetch(`/api/get_oee_summary.php?log_date=${date}&shift=${shift}`)
+  fetch(`../api/get_oee_summary.php?log_date=${date}&shift=${shift}`)
     .then(res => res.json())
     .then(data => {
       initPieCharts(data);
 
       // You can also fetch 7-day line chart data here
-      fetch("/api/get_oee_trend.php")
+      fetch("../api/get_oee_trend.php")
         .then(res => res.json())
         .then(trend => {
           const labels = trend.map(row => row.log_date);

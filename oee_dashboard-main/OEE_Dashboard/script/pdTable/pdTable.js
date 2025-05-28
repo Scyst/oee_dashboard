@@ -1,6 +1,6 @@
 async function fetchParts() {
     try {
-        const res = await fetch('api/get_parts.php');
+        const res = await fetch('../api/pdTable/get_parts.php');
         const data = await res.json();
         //console.log(data);
 
@@ -94,7 +94,7 @@ function formatDate(dateStr) {
 function deletePart(id) {
     if (!confirm("Are you sure you want to delete this part?")) return;
 
-    fetch("api/delete_part.php", {
+    fetch("../api/pdTable/delete_part.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
@@ -117,7 +117,7 @@ function deletePart(id) {
 }
 
 function editPart(id) {
-    fetch(`api/get_part_by_id.php?id=${id}`)
+    fetch(`../api/pdTable/get_part_by_id.php?id=${id}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -149,7 +149,7 @@ document.getElementById('editPartForm').addEventListener('submit', function (e) 
     const formData = new FormData(this);
     const data = new URLSearchParams(formData);
 
-    fetch('api/update_part.php', {
+    fetch('../api/pdTable/update_part.php', {
         method: 'POST',
         body: data
     })

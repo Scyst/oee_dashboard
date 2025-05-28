@@ -22,7 +22,7 @@ async function exportToPDF() {
         limit: 100000 // Large number to fetch all
     });
 
-    const response = await fetch(`api/get_parts.php?${params.toString()}`);
+    const response = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
     const result = await response.json();
 
     if (!result.success) {
@@ -69,7 +69,7 @@ async function exportToExcel() {
         limit: 100000
     });
 
-    const response = await fetch(`api/get_parts.php?${params.toString()}`);
+    const response = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
     const result = await response.json();
 
     if (!result.success) {

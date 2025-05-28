@@ -24,7 +24,7 @@ async function fetchPaginatedParts(page = 1) {
             count_type: status
         });
 
-        const res = await fetch(`api/get_parts.php?${params.toString()}`);
+        const res = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
         const result = await res.json();
         //console.log(res);
 
@@ -91,6 +91,36 @@ document.getElementById('nextPageBtn').addEventListener('click', () => {
     const endDate = document.getElementById('endDate').value;
     fetchPaginatedParts(currentPage, startDate, endDate);
 });
+
+document.getElementById("addPartForm").addEventListener("submit", async function (e) {
+    e.preventDefault(); // prevent page reload
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    try {
+        const res = await fetch("../api/pdTable/add_part.php", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await res.json();
+        console.log(result)
+
+        if (result.status === "success") {
+            alert(result.message);
+            closeModal("partModal");         // hide the modal
+            fetchPaginatedParts(1);          // reload the table from page 1
+            form.reset();                    // optional: clear form
+        } else {
+            alert("Add failed: " + result.message);
+        }
+    } catch (err) {
+        console.error("Add request failed", err);
+        alert("An error occurred.");
+    }
+});
+
 
 
 

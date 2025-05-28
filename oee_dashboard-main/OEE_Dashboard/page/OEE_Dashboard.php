@@ -9,11 +9,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/jspdf-thai@1.0.0/thsarabunnew.js"></script>
 
-    <link rel="stylesheet" href="style/style.css">
-    <link rel="stylesheet" href="style/piechart.css">
-    <link rel="stylesheet" href="style/linechart.css">
-    <link rel="stylesheet" href="style/barchart.css">
-    <link rel="stylesheet" href="style/pdTable.css">
+    <link rel="stylesheet" href="../style/style.css">
+    <link rel="stylesheet" href="../style/piechart.css">
+    <link rel="stylesheet" href="../style/linechart.css">
+    <link rel="stylesheet" href="../style/barchart.css">
+    <link rel="stylesheet" href="../style/pdTable.css">
 </head>
 
 <body>
@@ -28,9 +28,9 @@
                 <p id="time"></p>
 
                 <div class="tool-buttons">
-                    <button><img src="icons/db.png" alt="Database"></button>
-                    <button><img src="icons/save.svg" alt="Save"></button>
-                    <button><img src="icons/clipart2496353.png" alt="Settings"></button>
+                    <button><img src="../icons/db.png" alt="Database"></button>
+                    <button><img src="../icons/save.svg" alt="Save"></button>
+                    <button><img src="../icons/clipart2496353.png" alt="Settings"></button>
                 </div>
             </div>
 
@@ -164,17 +164,17 @@
             <div style="display: flex; gap: 5px; justify-content: center;">
                 <input list="searchlist" id="searchInput" placeholder="Search Part No." oninput="fetchPaginatedParts(1)" />
                 <datalist id="searchlist">
-                    <?php include 'api/get_part_nos.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
                 </datalist><br>
 
                 <input list="lineList" id="lineInput" placeholder="Line" oninput="fetchPaginatedParts(1)">
                 <datalist id="lineList">
-                    <?php include 'api/get_lines.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
                 </datalist>
 
                 <input list="modelList" id="modelInput" placeholder="Model" oninput="fetchPaginatedParts(1)">
                 <datalist id="modelList">
-                    <?php include 'api/get_models.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_models.php'; ?>
                 </datalist>
 
                 <select id="status" onchange="fetchPaginatedParts(1)">
@@ -243,19 +243,19 @@
                 <!-- Line (datalist or text input) -->
                 <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
                 <datalist id="editLineList">
-                    <?php include 'api/get_lines.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
                 </datalist><br>
 
                 <!-- Model -->
                 <input list="editModelList" name="model" id="edit_model" placeholder="Model" required>
                 <datalist id="editModelList">
-                    <?php include 'api/get_models.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_models.php'; ?>
                 </datalist><br>
 
                 <!-- Part No -->
                 <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
                 <datalist id="editPartList">
-                    <?php include 'api/get_part_nos.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
                 </datalist><br>
 
                 <!-- Count Value -->
@@ -284,26 +284,26 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('partModal')">&times;</span>
             <h2>Add Part</h2>
-            <form action="api/add_part.php" method="POST">
+            <form id="addPartForm">
                 <input type="date" name="log_date" required value="<?= date('Y-m-d') ?>"><br>
                 <input type="time" name="log_time" step="1" required value="<?= date('H:i:s') ?>"><br>
 
                 <!-- Line input with datalist -->
                 <input list="lineList" name="line" placeholder="Line" required>
                 <datalist id="lineList">
-                    <?php include 'api/get_lines.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
                 </datalist><br>
 
                 <!-- Model input with datalist -->
                 <input list="modelList" name="model" placeholder="Model" required>
                 <datalist id="modelList">
-                    <?php include 'api/get_models.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_models.php'; ?>
                 </datalist><br>
 
                 <!-- Part No. input with datalist -->
                 <input list="partList" name="part_no" placeholder="Part No." required>
                 <datalist id="partList">
-                    <?php include 'api/get_part_nos.php'; ?>
+                    <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
                 </datalist><br>
 
                 <input type="number" name="count_value" placeholder="Enter value" required><br>
@@ -330,7 +330,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('scrapModal')">&times;</span>
             <h2>Add Scrap</h2>
-            <form action="api/add_scrap.php" method="POST">
+            <form action="../api/OEE_Dashboard/add_scrap.php" method="POST">
                 <input type="date" name="log_date" required><br>
                 <input type="time" placeholder="Time" name="log_time" required><br>
                 <input type="text" placeholder="Part No" name="part_no" required><br>
@@ -345,7 +345,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('stopModal')">&times;</span>
             <h2>Add Stop Cause</h2>
-            <form action="api/add_stop.php" method="POST">
+            <form action="../api/OEE_Dashboard/add_stop.php" method="POST">
                 <input type="date" name="log_date" required><br>
                 <input type="time" placeholder="Time" name="log_time" required><br>
                 <input type="text" placeholder="Cause" name="stop_cause" required><br>
@@ -415,15 +415,15 @@
         }
     </script>
 
-    <script src="script/datetime.js"></script>
-    <script src="script/fetch_line&barchart.js"></script>
-    <script src="script/fetch_piechart.js"></script>
-    <script src="script/OEE_piechart.js"></script>
-    <script src="script/OEE_linechart.js"></script>
-    <script src="script/OEE_barchart.js"></script>
-    <script src="script/pdTable/export_data.js"></script>
-    <script src="script/pdTable/pdTable.js"></script>
-    <script src="script/pdTable/paginationTable.js"></script>
+    <script src="../script/datetime.js"></script>
+    <script src="../script/fetch_line&barchart.js"></script>
+    <script src="../script/fetch_piechart.js"></script>
+    <script src="../script/OEE_piechart.js"></script>
+    <script src="../script/OEE_linechart.js"></script>
+    <script src="../script/OEE_barchart.js"></script>
+    <script src="../script/pdTable/export_data.js"></script>
+    <script src="../script/pdTable/pdTable.js"></script>
+    <script src="../script/pdTable/paginationTable.js"></script>
 
 </body>
 </html>
