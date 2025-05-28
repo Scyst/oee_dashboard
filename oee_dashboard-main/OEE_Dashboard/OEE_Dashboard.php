@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="style/piechart.css">
     <link rel="stylesheet" href="style/linechart.css">
     <link rel="stylesheet" href="style/barchart.css">
-    <link rel="stylesheet" href="style/PDtable.css">
+    <link rel="stylesheet" href="style/pdTable.css">
 </head>
 
 <body>

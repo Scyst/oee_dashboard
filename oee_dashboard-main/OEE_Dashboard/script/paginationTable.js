@@ -96,3 +96,7 @@ document.getElementById('nextPageBtn').addEventListener('click', () => {
 
 
 window.onload = () => fetchPaginatedParts(currentPage);
+
+setInterval(() => {
+    fetchPaginatedParts(currentPage);
+}, 30000); // 60000ms = 1 minute

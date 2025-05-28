@@ -1,15 +1,16 @@
 <?php
+//use in pdTable.js
+
 header('Content-Type: application/json');
-require_once '../db.php'; // Assuming db.php is one directory level up
+require_once '../db.php';
 
 if (!$conn) {
     echo json_encode(['success' => false, 'message' => 'Database connection failed.']);
     exit();
 }
 
-// --- Update Logic ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Ensure all expected fields are present
+
     $required_fields = ['id', 'log_date', 'log_time', 'line', 'model', 'part_no', 'count_value', 'count_type'];
     $missing_fields = [];
     foreach ($required_fields as $field) {
@@ -24,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $id = $_POST['id'];
-    // Your JS formatDate function converts to "yyyy-mm-dd", which is suitable for SQL Server DATE type
     $log_date = $_POST['log_date'];
     $log_time = $_POST['log_time'];
     $line = $_POST['line'];
@@ -34,7 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $count_type = $_POST['count_type'];
     $note = $_POST['note'];
 
-    // Basic Validation (you might want more robust validation)
     if (!filter_var($id, FILTER_VALIDATE_INT)) {
         echo json_encode(['success' => false, 'message' => 'Invalid ID format.']);
         exit();
@@ -47,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Invalid count_value format. Expected an integer.']);
         exit();
     }
-    // Add more validation for other fields as necessary
 
     $sql = "UPDATE parts SET log_date = ?, log_time = ?, line = ?, model = ?, part_no = ?, count_value = ?, count_type = ?, note = ? WHERE id = ?";
     $params = array($log_date, $log_time, $line, $model, $part_no, $count_value, $count_type, $note, $id);
@@ -55,16 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = sqlsrv_query($conn, $sql, $params);
 
     if ($stmt === false) {
-        // error_log(print_r(sqlsrv_errors(), true)); // Server-side logging
         echo json_encode(['success' => false, 'message' => 'Update operation failed. SQL error. Details: ' . print_r(sqlsrv_errors(), true) ]); // Include error details for debugging if needed, remove for production
     } else {
         $rows_affected = sqlsrv_rows_affected($stmt);
         if ($rows_affected > 0) {
             echo json_encode(['success' => true, 'message' => 'Part updated successfully.']);
         } else {
-            // This can also mean the data submitted was the same as what's already in the DB,
-            // or the part_id was not found.
-            // You might want to check if the part exists first for a more specific message.
             echo json_encode(['success' => true, 'message' => 'No changes made or part not found.']);
         }
     }

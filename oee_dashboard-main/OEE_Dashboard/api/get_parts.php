@@ -1,4 +1,6 @@
 <?php
+//use in pdTable.js & paginationTble.js
+
 header('Content-Type: application/json');
 require_once("../db.php");
 

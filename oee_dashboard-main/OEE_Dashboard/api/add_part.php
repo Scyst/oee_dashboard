@@ -1,4 +1,6 @@
 <?php
+//use in OEE_Dashboard.php
+
 require_once("../db.php");
 
 header('Content-Type: application/json');
