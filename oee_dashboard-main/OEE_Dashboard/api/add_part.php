@@ -1,8 +1,6 @@
 <?php
-//use in OEE_Dashboard.php
-
+// use in OEE_Dashboard.php
 require_once("../db.php");
-
 header('Content-Type: application/json');
 
 // Get values from POST
@@ -13,15 +11,16 @@ $model    = $_POST['model'] ?? '';
 $line     = $_POST['line'] ?? '';
 $count_type = $_POST['count_type'] ?? '';
 $count_value = isset($_POST['count_value']) ? (int)$_POST['count_value'] : 0;
+$note = $_POST['note'] ?? null;
 
 if (!$log_date || !$log_time || !$part_no || !$count_type || !$count_value || !$model || !$line) {
     echo json_encode(["status" => "error", "message" => "Missing required fields"]);
     exit;
 }
 
-// Prepare field to insert
-$valid_types = ['FG', 'NG', 'Hold', 'Rework'];
-if (!in_array($count_type, $valid_types)) {
+// Validate count_type
+$valid_types = ['FG', 'NG', 'HOLD', 'REWORK', 'ETC.'];
+if (!in_array(strtoupper($count_type), $valid_types)) {
     echo json_encode(["status" => "error", "message" => "Invalid count type"]);
     exit;
 }
@@ -37,8 +36,6 @@ if ($stmt === false) {
     exit;
 }
 
-echo json_encode(["status" => "success", "message" => "Part inserted successfully"]);
-header("Location: ../OEE_Dashboard.php"); // adjust path as needed
+header("Location: ../OEE_Dashboard.php");
 exit;
-
 ?>

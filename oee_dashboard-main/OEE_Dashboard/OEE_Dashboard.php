@@ -7,6 +7,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/jspdf-thai@1.0.0/thsarabunnew.js"></script>
+
     <link rel="stylesheet" href="style/style.css">
     <link rel="stylesheet" href="style/piechart.css">
     <link rel="stylesheet" href="style/linechart.css">
@@ -264,9 +266,9 @@
                     <option value="">-- Select Type --</option>
                     <option value="FG">FG</option>
                     <option value="NG">NG</option>
-                    <option value="HOLD">Hold</option>
-                    <option value="REWORK">Rework</option>
-                    <option value="ETC.">Rework</option>
+                    <option value="HOLD">HOLD</option>
+                    <option value="REWORK">REWORK</option>
+                    <option value="ETC.">ETC.</option>
                 </select><br>
 
                 <input type="text" placeholder="Note" name="note" id="edit_note"><br>
@@ -309,8 +311,9 @@
                 <select name="count_type" required>
                     <option value="FG">FG</option>
                     <option value="NG">NG</option>
-                    <option value="Rework">Rework</option>
-                    <option value="Hold">Hold</option>
+                    <option value="HOLD">HOLD</option>
+                    <option value="REWORK">REWORK</option>
+                    <option value="ETC.">ETC.</option>
                 </select><br>
 
                 <input type="text" placeholder="Note" name="note"><br>
@@ -413,15 +416,14 @@
     </script>
 
     <script src="script/datetime.js"></script>
-    <script src="script/export_data.js"></script>
-    <script src="script/auto_updateDB.js"></script>
     <script src="script/fetch_line&barchart.js"></script>
     <script src="script/fetch_piechart.js"></script>
     <script src="script/OEE_piechart.js"></script>
     <script src="script/OEE_linechart.js"></script>
     <script src="script/OEE_barchart.js"></script>
-    <script src="script/pdTable.js"></script>
-    <script src="script/paginationTable.js"></script>
+    <script src="script/pdTable/export_data.js"></script>
+    <script src="script/pdTable/pdTable.js"></script>
+    <script src="script/pdTable/paginationTable.js"></script>
 
 </body>
 </html>
