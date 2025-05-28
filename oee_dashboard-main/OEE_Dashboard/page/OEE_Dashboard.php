@@ -13,11 +13,10 @@
     <link rel="stylesheet" href="../style/piechart.css">
     <link rel="stylesheet" href="../style/linechart.css">
     <link rel="stylesheet" href="../style/barchart.css">
-    <link rel="stylesheet" href="../style/pdTable.css">
 </head>
 
 <body>
-    <div style="height: calc(100vh - 10px);">
+    <div style="height: calc(100vh - 20px);">
         <div class="Header">
             <div class="OEE-head">
                 <h1 style="font-size: 2.5em;">Overall Equipment Effectiveness</h1>
@@ -28,9 +27,21 @@
                 <p id="time"></p>
 
                 <div class="tool-buttons">
-                    <button><img src="../icons/db.png" alt="Database"></button>
-                    <button><img src="../icons/save.svg" alt="Save"></button>
-                    <button><img src="../icons/clipart2496353.png" alt="Settings"></button>
+                    <a href="OEE_Dashboard.php">
+                        <button>
+                            <img src="../icons/reports-icon.png" alt="Save">
+                        </button>
+                    </a>
+                    <a href="pdTable.php">
+                        <button>
+                            <img src="../icons/db.png" alt="Database">
+                        </button>
+                    </a>
+                    <a href="Stop_Cause.php">
+                        <button>
+                            <img src="../icons/clipart2496353.png" alt="Settings">
+                        </button>
+                    </a>
                 </div>
             </div>
 
@@ -40,7 +51,7 @@
             <div style="display: block;width: 100%">
                 <div class="pie-chart">
                     <fieldset>
-                        <h3>OEE</h3>
+                        <h4>OEE</h4>
                         <div class="align_legend">
                             <div id="customLegend" class="legend-container">
                                 <div class="legend-item"><span style="background: #00BF63"></span>OEE</div>
@@ -57,7 +68,7 @@
                         </div>
                     </fieldset>
                     <fieldset>
-                        <h3>Quality</h3>
+                        <h4>Quality</h4>
                         <div class="align_legend">
                             <div id="customLegend" class="legend-container">
                                 <div class="legend-item"><span style="background: #00BF63"></span>Quality</div>
@@ -69,7 +80,7 @@
                         </div>
                     </fieldset>
                     <fieldset>
-                        <h3>Performance</h3>
+                        <h4>Performance</h4>
                         <div class="align_legend">
                             <div id="customLegend" class="legend-container">
                                 <div class="legend-item"><span style="background: #00BF63"></span>Performance</div>
@@ -81,7 +92,7 @@
                         </div>
                     </fieldset>
                     <fieldset>
-                        <h3>Availability</h3>
+                        <h4>Availability</h4>
                         <div class="align_legend">
                             <div id="customLegend" class="legend-container">
                                 <div class="legend-item"><span style="background: #00BF63"></span>Availability</div>
@@ -100,28 +111,28 @@
             <div style="display: block;width: 100%">
                 <div class="line-chart">
                     <fieldset>
-                        <h3>OEE</h3>
+                        <h4>OEE</h4>
                         <div class="linechart-wrapper">
                             <canvas id="oeeLineChart"></canvas>
                         </div>
                         <div id="oeeLineError" class="chart-error">Fetch Failed</div>
                     </fieldset>
                     <fieldset>
-                        <h3>Quality</h3>
+                        <h4>Quality</h4>
                         <div class="linechart-wrapper">
                             <canvas id="qualityLineChart"></canvas>
                         </div>
                         <div id="qualityLineError" class="chart-error">Fetch Failed</div>
                     </fieldset>
                     <fieldset>
-                        <h3>Performance</h3>
+                        <h4>Performance</h4>
                         <div class="linechart-wrapper">
                             <canvas id="performanceLineChart"></canvas>
                         </div>
                         <div id="performanceLineError" class="chart-error">Fetch Failed</div>
                     </fieldset>
                     <fieldset>
-                        <h3>Availability</h3>
+                        <h4>Availability</h4>
                         <div class="linechart-wrapper">
                             <canvas id="availabilityLineChart"></canvas>
                         </div>
@@ -135,14 +146,14 @@
             <div style="display: block; width: 100%;">
                 <div class="bar-chart">
                     <fieldset>
-                        <h3>Stop Cause</h3>
+                        <h4>Stop Cause</h4>
                         <div class="barchart-wrapper">
                             <canvas id="stopCauseBarChart"></canvas>
                         </div>
                         <div id="stopCauseBarError">Error loading scrap data</div>
                     </fieldset>
                     <fieldset>
-                        <h3>Scrap</h3>
+                        <h4>Scrap</h4>
                         <div class="barchart-wrapper">
                             <canvas id="scrapBarChart"></canvas>
                         </div>
@@ -152,178 +163,6 @@
             </div>
         </div>
     </div>
-
-    <!--<hr style="border-color: darkgrey;">-->
-
-    <div class="production-history">
-
-        <h3>Production History</h3>
-        <div style="margin-top: 30px; display: flex; justify-content: space-between; padding: 10px 10px 0px 10px;">
-
-            <!-- Filter -->
-            <div style="display: flex; gap: 5px; justify-content: center;">
-                <input list="searchlist" id="searchInput" placeholder="Search Part No." oninput="fetchPaginatedParts(1)" />
-                <datalist id="searchlist">
-                    <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
-                </datalist><br>
-
-                <input list="lineList" id="lineInput" placeholder="Line" oninput="fetchPaginatedParts(1)">
-                <datalist id="lineList">
-                    <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
-                </datalist>
-
-                <input list="modelList" id="modelInput" placeholder="Model" oninput="fetchPaginatedParts(1)">
-                <datalist id="modelList">
-                    <?php include '../api/OEE_Dashboard/get_models.php'; ?>
-                </datalist>
-
-                <select id="status" onchange="fetchPaginatedParts(1)">
-                    <option value="">All Types</option>
-                    <option value="FG">FG</option>
-                    <option value="NG">NG</option>
-                    <option value="HOLD">HOLD</option>
-                    <option value="REWORK">REWORK</option>
-                    <option value="ETC.">ETC.</option>
-                </select>    
-                
-                <input type="date" id="startDate" onchange="applyDateRangeFilter()">
-                <p style="text-align: center; align-content: center;"> - </p>
-                <input type="date" id="endDate" onchange="applyDateRangeFilter()">
-
-            </div>
-
-            <!-- Add Form <input type="date" id="date" onchange="filterTable()" />-->
-            <div>
-                <button onclick="exportToExcel()">Export to Excel</button>
-                <button onclick="exportToPDF()">Export to PDF</button>
-                <button onclick="openModal('partModal')">Add</button>
-            </div>
-        </div>
-        <div class="table-wrapper" style="height: calc( 100% - 140px);">
-            <table id="partTable" border="1">
-                <thead>
-                    <tr>
-                        <th style="width: 100px; text-align: center;">ID</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Line</th>
-                        <th>Model</th>
-                        <th>Part No.</th>
-                        <th>Quatity</th>
-                        <th style="width: 150px;">Type</th>
-                        <th style="width: 250px;">Note</th>                        
-                        <th style="width: 175px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="partTableBody">
-                </tbody>
-            </table>
-        </div>
-
-        <div style="display: flex; gap: 20px; justify-content: center; margin: 15px auto;">
-            <button id="prevPageBtn" style="width: fit-content; margin: 0;">Previous</button>
-            <span id="pagination-info" style="text-align: center; align-content: center;"></span>
-            <button id="nextPageBtn" style="width: fit-content; margin: 0;">Next</button>
-
-        </div>
-
-    </div>
-
-    <!-- Edit Modal -->
-    <div id="editPartModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editPartModal')">&times;</span>
-            <h2>Edit Part</h2>
-            <form id="editPartForm">
-                <input type="hidden" name="id" id="edit_id">
-
-                <input type="date" name="log_date" id="edit_date" required><br>
-                <input type="time" name="log_time" id="edit_time" step="1" required><br>
-
-                <!-- Line (datalist or text input) -->
-                <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
-                <datalist id="editLineList">
-                    <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
-                </datalist><br>
-
-                <!-- Model -->
-                <input list="editModelList" name="model" id="edit_model" placeholder="Model" required>
-                <datalist id="editModelList">
-                    <?php include '../api/OEE_Dashboard/get_models.php'; ?>
-                </datalist><br>
-
-                <!-- Part No -->
-                <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
-                <datalist id="editPartList">
-                    <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
-                </datalist><br>
-
-                <!-- Count Value -->
-                <input type="number" name="count_value" id="edit_value" placeholder="Quantity" required><br>
-                
-                <!-- Count Type -->
-                <select name="count_type" id="edit_type" required>
-                    <option value="">-- Select Type --</option>
-                    <option value="FG">FG</option>
-                    <option value="NG">NG</option>
-                    <option value="HOLD">HOLD</option>
-                    <option value="REWORK">REWORK</option>
-                    <option value="ETC.">ETC.</option>
-                </select><br>
-
-                <input type="text" placeholder="Note" name="note" id="edit_note"><br>
-
-                <button type="submit">Update Part</button>
-            </form>
-        </div>
-    </div>
-
-
-    <!-- Modal background and form for Part -->
-    <div id="partModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('partModal')">&times;</span>
-            <h2>Add Part</h2>
-            <form id="addPartForm">
-                <input type="date" name="log_date" required value="<?= date('Y-m-d') ?>"><br>
-                <input type="time" name="log_time" step="1" required value="<?= date('H:i:s') ?>"><br>
-
-                <!-- Line input with datalist -->
-                <input list="lineList" name="line" placeholder="Line" required>
-                <datalist id="lineList">
-                    <?php include '../api/OEE_Dashboard/get_lines.php'; ?>
-                </datalist><br>
-
-                <!-- Model input with datalist -->
-                <input list="modelList" name="model" placeholder="Model" required>
-                <datalist id="modelList">
-                    <?php include '../api/OEE_Dashboard/get_models.php'; ?>
-                </datalist><br>
-
-                <!-- Part No. input with datalist -->
-                <input list="partList" name="part_no" placeholder="Part No." required>
-                <datalist id="partList">
-                    <?php include '../api/OEE_Dashboard/get_part_nos.php'; ?>
-                </datalist><br>
-
-                <input type="number" name="count_value" placeholder="Enter value" required><br>
-                
-                <select name="count_type" required>
-                    <option value="FG">FG</option>
-                    <option value="NG">NG</option>
-                    <option value="HOLD">HOLD</option>
-                    <option value="REWORK">REWORK</option>
-                    <option value="ETC.">ETC.</option>
-                </select><br>
-
-                <input type="text" placeholder="Note" name="note"><br>
-
-                <button type="submit">Submit Part</button>
-            </form>
-
-        </div>
-    </div>
-
 
     <!-- Modal for Scrap -->
     <div id="scrapModal" class="modal">
@@ -336,22 +175,6 @@
                 <input type="text" placeholder="Part No" name="part_no" required><br>
                 <input type="number" placeholder="Scrap Count" name="scrap_count"><br>
                 <button type="submit">Submit Scrap</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Stop Cause -->
-    <div id="stopModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('stopModal')">&times;</span>
-            <h2>Add Stop Cause</h2>
-            <form action="../api/OEE_Dashboard/add_stop.php" method="POST">
-                <input type="date" name="log_date" required><br>
-                <input type="time" placeholder="Time" name="log_time" required><br>
-                <input type="text" placeholder="Cause" name="stop_cause" required><br>
-                <input type="number" placeholder="Stop Time (min)" name="stop_time"><br>
-                <input type="text" placeholder="Note" name="note"><br>
-                <button type="submit">Submit Stop Cause</button>
             </form>
         </div>
     </div>
@@ -421,9 +244,6 @@
     <script src="../script/OEE_piechart.js"></script>
     <script src="../script/OEE_linechart.js"></script>
     <script src="../script/OEE_barchart.js"></script>
-    <script src="../script/pdTable/export_data.js"></script>
-    <script src="../script/pdTable/pdTable.js"></script>
-    <script src="../script/pdTable/paginationTable.js"></script>
 
 </body>
 </html>

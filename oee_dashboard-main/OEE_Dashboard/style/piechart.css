@@ -31,12 +31,10 @@
 
 .piechart-wrapper {
     height: 100%;
-    width: 170px;
-    /*margin-top: 10px;
-    margin-right: 10px;*/
+    aspect-ratio: 1/1;
     position: absolute;
     right: 0px;
-    margin-right: 15px;
+    padding: 10px;
     align-content: center;
 }
 
