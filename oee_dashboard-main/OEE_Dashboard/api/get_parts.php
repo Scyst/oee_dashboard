@@ -8,43 +8,38 @@ $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 50;
 $offset = ($page - 1) * $limit;
 
 // Date filter
-$startDate = $_GET['startDate'] ?? null;
-$endDate = $_GET['endDate'] ?? null;
-$partNo = $_GET['part_no'] ?? '';
-$line = $_GET['line'] ?? '';
-$model = $_GET['model'] ?? '';
-$status = $_GET['status'] ?? '';
-
-
+// Collect filters
 $conditions = [];
 $params = [];
 
-// If date range is provided, filter by log_date
+$startDate = $_GET['startDate'] ?? null;
+$endDate = $_GET['endDate'] ?? null;
+$line = $_GET['line'] ?? null;
+$model = $_GET['model'] ?? null;
+$partNo = $_GET['part_no'] ?? null;
+$countType = $_GET['count_type'] ?? null;
+
 if ($startDate && $endDate) {
     $conditions[] = "log_date BETWEEN ? AND ?";
     $params[] = $startDate;
     $params[] = $endDate;
 }
-if (!empty($partNo)) {
-    $conditions[] = "part_no LIKE ?";
-    $params[] = "%$partNo%";
-}
-
 if (!empty($line)) {
-    $conditions[] = "line LIKE ?";
-    $params[] = "%$line%";
+    $conditions[] = "LOWER(line) = LOWER(?)";
+    $params[] = $line;
 }
-
 if (!empty($model)) {
-    $conditions[] = "model LIKE ?";
-    $params[] = "%$model%";
+    $conditions[] = "LOWER(model) = LOWER(?)";
+    $params[] = $model;
 }
-
-if (!empty($status)) {
-    $conditions[] = "count_type = ?";
-    $params[] = $status;
+if (!empty($partNo)) {
+    $conditions[] = "LOWER(part_no) = LOWER(?)";
+    $params[] = $partNo;
 }
-
+if (!empty($countType)) {
+    $conditions[] = "LOWER(count_type) = LOWER(?)";
+    $params[] = $countType;
+}
 
 $whereClause = count($conditions) > 0 ? "WHERE " . implode(" AND ", $conditions) : "";
 

@@ -26,8 +26,10 @@ async function fetchPaginatedParts(page = 1) {
 
         const res = await fetch(`api/get_parts.php?${params.toString()}`);
         const result = await res.json();
+        //
+        console.log(res);
 
-        if (!result.success) throw new Error(result.message);
+        if (!result.success) throw new Error(result.message);   
 
         const tableBody = document.getElementById('partTableBody');
         tableBody.innerHTML = '';
