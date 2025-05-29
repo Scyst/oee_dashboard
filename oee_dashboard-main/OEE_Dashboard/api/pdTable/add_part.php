@@ -18,7 +18,7 @@ if (!$log_date || !$log_time || !$part_no || !$count_type || !$count_value || !$
     exit;
 }
 
-$valid_types = ['FG', 'NG', 'HOLD', 'REWORK', 'ETC.'];
+$valid_types = ['FG', 'NG', 'HOLD', 'REWORK', 'SCRAP', 'ETC.'];
 if (!in_array(strtoupper($count_type), $valid_types)) {
     echo json_encode(["status" => "error", "message" => "Invalid count type"]);
     exit;

@@ -9,9 +9,8 @@ async function fetchPaginatedParts(page = 1) {
         const startDate = document.getElementById("startDate").value;
         const endDate = document.getElementById("endDate").value;
         const line = document.getElementById("lineInput")?.value.trim() || '';
-        const model = document.getElementById("modelInput")?.value.trim() || '';
-        const partNo = document.getElementById("searchInput")?.value.trim() || '';
-        const status = document.getElementById("status")?.value.trim() || '';
+        const machine = document.getElementById("machineInput")?.value.trim() || '';
+        const cause = document.getElementById("searchInput")?.value.trim() || '';
 
         const params = new URLSearchParams({
             page,
@@ -19,18 +18,17 @@ async function fetchPaginatedParts(page = 1) {
             startDate,
             endDate,
             line,
-            model,
-            part_no: partNo,
-            count_type: status
+            machine,
+            cause: cause
         });
 
-        const res = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
+        const res = await fetch(`../api/Stop_Cause/get_stop.php?${params.toString()}`);
         const result = await res.json();
         //console.log(res);
 
         if (!result.success) throw new Error(result.message);   
 
-        const tableBody = document.getElementById('partTableBody');
+        const tableBody = document.getElementById('stopTableBody');
         tableBody.innerHTML = '';
 
         result.data.forEach(row => {
@@ -38,16 +36,16 @@ async function fetchPaginatedParts(page = 1) {
             tr.innerHTML = `
                 <td>${row.id}</td>
                 <td>${row.log_date}</td>
-                <td>${row.log_time}</td>
+                <td>${row.stop_begin}</td>
+                <td>${row.stop_end}</td>
                 <td>${row.line}</td>
-                <td>${row.model}</td>
-                <td>${row.part_no}</td>
-                <td>${row.count_value}</td>
-                <td>${row.count_type}</td>
+                <td>${row.machine}</td>
+                <td>${row.cause}</td>
+                <td>${row.recovered_by}</td>
                 <td>${row.note || ''}</td>
                 <td>
-                    <button onclick="editPart(${row.id})">Edit</button>
-                    <button onclick="deletePart(${row.id})">Delete</button>
+                    <button onclick="editStop(${row.id})">Edit</button>
+                    <button onclick="deleteStop(${row.id})">Delete</button>
                 </td>
             `;
             tableBody.appendChild(tr);
@@ -56,41 +54,41 @@ async function fetchPaginatedParts(page = 1) {
         updatePaginationControls(result.page, result.total);
     } catch (error) {
         console.error("Failed to fetch paginated data:", error);
-        alert("Error loading parts data.");
+        alert("Error loading stop data.");
     }
 }
 
-function editPart(id) {
-    fetch(`../api/pdTable/get_part_by_id.php?id=${id}`)
+function editStop(id) {
+    fetch(`../api/Stop_Cause/get_stop_by_id.php?id=${id}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const part = data.data;
-                document.getElementById('edit_id').value = part.id;
-                document.getElementById('edit_date').value = part.log_date;
-                document.getElementById('edit_time').value = part.log_time;
-                document.getElementById('edit_line').value = part.line;
-                document.getElementById('edit_model').value = part.model;
-                document.getElementById('edit_part_no').value = part.part_no;
-                document.getElementById('edit_value').value = part.count_value;
-                document.getElementById('edit_type').value = part.count_type;
-                document.getElementById('edit_note').value = part.note;
+                const stop = data.data;
+                document.getElementById('edit_id').value = stop.id;
+                document.getElementById('edit_date').value = stop.log_date;
+                document.getElementById('edit_stopBegin').value = stop.stop_begin;
+                document.getElementById('edit_stopEnd').value = stop.stop_end;
+                document.getElementById('edit_line').value = stop.line;
+                document.getElementById('edit_machine').value = stop.machine;
+                document.getElementById('edit_cause').value = stop.cause;
+                document.getElementById('edit_recovered_by').value = stop.recovered_by;
+                document.getElementById('edit_note').value = stop.note;
 
                 document.getElementById('editStopModal').style.display = 'block';
             } else {
-                alert("Failed to load part for editing: " + data.message);
+                alert("Failed to load data for editing: " + data.message);
             }
         })
         .catch(error => {
             console.error("Error loading part:", error);
-            alert("Failed to fetch part data.");
+            alert("Failed to fetch stop cause data.");
         });
 }
 
-function deletePart(id) {
-    if (!confirm("Are you sure you want to delete this part?")) return;
+function deleteStop(id) {
+    if (!confirm("Are you sure you want to delete this data?")) return;
 
-    fetch("../api/Stop_Cause/delete_part.php", {
+    fetch("../api/Stop_Cause/delete_stop.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
@@ -128,20 +126,20 @@ function applyDateRangeFilter() {
     fetchPaginatedParts(currentPage, startDate, endDate);
 }
 
-document.getElementById('editPartForm').addEventListener('submit', function (e) {
+document.getElementById('editStopForm').addEventListener('submit', function (e) {
     e.preventDefault(); // Prevent page reload
 
     const formData = new FormData(this);
     const data = new URLSearchParams(formData);
 
-    fetch('../api/Stop_Cause/update_part.php', {
+    fetch('../api/Stop_Cause/update_stop.php', {
         method: 'POST',
         body: data
     })
         .then(res => res.json())
         .then(response => {
             if (response.success) {
-                alert("Part updated!");
+                alert("Data updated!");
                 closeModal('editStopModal');
                 fetchPaginatedParts(currentPage); // Reload the updated table
             } else {
@@ -177,7 +175,7 @@ document.getElementById("addStopForm").addEventListener("submit", async function
     const formData = new FormData(form);
 
     try {
-        const res = await fetch("../api/Stop_Cause/add_part.php", {
+        const res = await fetch("../api/Stop_Cause/add_stop.php", {
             method: "POST",
             body: formData
         });
@@ -198,9 +196,6 @@ document.getElementById("addStopForm").addEventListener("submit", async function
         alert("An error occurred.");
     }
 });
-
-
-
 
 window.onload = () => fetchPaginatedParts(currentPage);
 

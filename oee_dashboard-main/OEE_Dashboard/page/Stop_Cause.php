@@ -107,55 +107,55 @@
             </div>
 
         </div>
+    </div>
 
-            <!-- Modal background and form for Part -->
-        <div id="stopModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal('stopModal')">&times;</span>
-                <h2>Add Part</h2>
-                <form id="addStopForm">
-                    <input type="date" name="log_date" required value="<?= date('Y-m-d') ?>"><br>
-                    <input type="time" name="stop_begin" step="1" required value="<?= date('H:i:s') ?>"><br>
-                    <input type="time" name="stop_end" step="1" required value="<?= date('H:i:s') ?>"><br>
+    <!-- Modal background and form for Part -->
+    <div id="stopModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('stopModal')">&times;</span>
+            <h2>Add Stop Cause</h2>
+            <form id="addStopForm">
+                <input type="date" name="log_date" required><br>
+                <input type="time" name="stop_begin" step="1" required><br>
+                <input type="time" name="stop_end" step="1" required><br>
 
-                    <!-- Line input with datalist -->
-                    <input list="lineList" name="line" placeholder="Line" required>
-                    <datalist id="lineList">
-                        <?php include '../api/Stop_Cause/get_lines.php'; ?>
-                    </datalist><br>
+                <!-- Line input with datalist -->
+                <input list="lineList" name="line" placeholder="Line" required>
+                <datalist id="lineList">
+                    <?php include '../api/Stop_Cause/get_lines.php'; ?>
+                </datalist><br>
 
-                    <!-- Model input with datalist -->
-                    <input list="machineList" name="machine" placeholder="Machine/Station" required>
-                    <datalist id="machineList">
-                        <?php include '../api/Stop_Cause/get_machine.php'; ?>
-                    </datalist><br>
+                <!-- Model input with datalist -->
+                <input list="machineList" name="machine" placeholder="Machine/Station" required>
+                <datalist id="machineList">
+                    <?php include '../api/Stop_Cause/get_machine.php'; ?>
+                </datalist><br>
 
-                    <!-- Part No. input with datalist -->
-                    <input list="causeList" name="cause" placeholder="Stop Cause" required>
-                    <datalist id="causeList">
-                        <?php include '../api/Stop_Cause/get_cause.php'; ?>
-                    </datalist><br>
-                    
-                    <input type="text" placeholder="Note" name="note"><br>
+                <!-- Part No. input with datalist -->
+                <input list="causeList" name="cause" placeholder="Stop Cause" required>
+                <datalist id="causeList">
+                    <?php include '../api/Stop_Cause/get_cause.php'; ?>
+                </datalist><br>
+                
+                <input list="recoverList" name="recovered_by" placeholder="Recovered By" required>
+                <datalist id="recoverList">
+                    <?php include '../api/Stop_Cause/get_recovered_by.php'; ?>
+                </datalist><br>
 
-                    <input list="recoverList" name="recovered_by" placeholder="Recovered By" required>
-                    <datalist id="recoverList">
-                        <?php include '../api/Stop_Cause/get_recovered_by.php'; ?>
-                    </datalist><br>
+                <input type="text" placeholder="Note" name="note"><br>
 
-                    <button type="submit">Submit Part</button>
-                </form>
+                <button type="submit">Submit Part</button>
+            </form>
 
-            </div>
         </div>
     </div>
-    
+
     <!-- Edit Modal -->
     <div id="editStopModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('editStopModal')">&times;</span>
-            <h2>Edit Part</h2>
-            <form id="editPartForm">
+            <h2>Edit Stop Cause</h2>
+            <form id="editStopForm">
                 <input type="hidden" name="id" id="edit_id">
 
                 <input type="date" name="log_date" id="edit_date" required><br>
@@ -177,22 +177,19 @@
                 </datalist><br>
 
                 <!-- Part No -->
-                <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
-                <datalist id="editPartList">
-                    <?php include '../api/Stop_Cause/get_part_nos.php'; ?>
+                <input list="editCauseList" name="cause" id="edit_cause" placeholder="Stop Cause" required>
+                <datalist id="editCauseList">
+                    <?php include '../api/Stop_Cause/get_cause.php'; ?>
                 </datalist><br>
-
-                <!-- Count Value -->
-                <input type="number" name="count_value" id="edit_value" placeholder="Quantity" required><br>
-
-                <input type="text" placeholder="Note" name="note" id="edit_note"><br>
 
                 <input list="editrecoverList" name="recovered_by" id="edit_recovered_by" placeholder="Recovered By" required>
                     <datalist id="editrecoverList">
                         <?php include '../api/Stop_Cause/get_recovered_by.php'; ?>
                 </datalist><br>
 
-                <button type="submit">Update Part</button>
+                <input type="text" placeholder="Note" name="note" id="edit_note"><br>
+
+                <button type="submit">Update Stop Cause</button>
             </form>
         </div>
     </div>
@@ -201,25 +198,15 @@
         window.addEventListener("load", () => {
             const now = new Date();
 
-            // Format as yyyy-mm-dd
             const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toTimeString().split(':').slice(0, 3).join(':'); // HH:mm:ss
 
-            // Format time as hh:mm
-            const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
+            document.querySelectorAll('input[type="date"]').forEach(input => input.value ||= dateStr);
+            document.querySelectorAll('input[type="time"]').forEach(input => input.value ||= timeStr);
 
-            // Set all date and time fields
-            document.querySelectorAll('input[type="date"]').forEach(input => {
-                if (!input.value) input.value = dateStr;
-            });
-
-            document.querySelectorAll('input[type="time"]').forEach(input => {
-                if (!input.value) input.value = timeStr;
-            });
-
-            // Special handling: set only startDate and endDate filter defaults to today
             const startInput = document.getElementById("startDate");
             const endInput = document.getElementById("endDate");
-
+            
             if (startInput && !startInput.value) startInput.value = dateStr;
             if (endInput && !endInput.value) endInput.value = dateStr;
         });
@@ -239,7 +226,7 @@
             const timeInput = modal.querySelector('input[type="time"]');
 
             if (dateInput) dateInput.value = dateStr;
-            if (timeInput) timeInput.value = timeStr;
+            if (timeInput && !timeInput.value) timeInput.value = timeStr;
         }
 
         function closeModal(modalId) {
@@ -257,9 +244,9 @@
     </script>
 
     <script src="../script/datetime.js"></script>
-    <script src="../script/pdTable/export_data.js"></script>
-    <script src="../script/pdTable/pdTable.js"></script>
-    <script src="../script/pdTable/paginationTable.js"></script>
+    <script src="../script/Stop_Cause/Cal_duration.js"></script>
+    <script src="../script/Stop_Cause/export_data.js"></script>
+    <script src="../script/Stop_Cause/paginationTable.js"></script>
 
 </body>
 </html>

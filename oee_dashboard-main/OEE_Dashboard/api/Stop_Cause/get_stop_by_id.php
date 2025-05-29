@@ -1,6 +1,6 @@
 <?php
 //call by pdTable.js in function editPart(id)
-require_once '../../api/db.php'; // Adjust the path to your db.php file
+require_once '../api/db.php';
 
 header('Content-Type: application/json');
 

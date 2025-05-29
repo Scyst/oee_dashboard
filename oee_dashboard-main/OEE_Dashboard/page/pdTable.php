@@ -72,6 +72,7 @@
                         <option value="NG">NG</option>
                         <option value="HOLD">HOLD</option>
                         <option value="REWORK">REWORK</option>
+                        <option value="SCRAP">SCRAP</option>
                         <option value="ETC.">ETC.</option>
                     </select>    
                     
@@ -152,6 +153,7 @@
                         <option value="NG">NG</option>
                         <option value="HOLD">HOLD</option>
                         <option value="REWORK">REWORK</option>
+                        <option value="SCRAP">SCRAP</option>
                         <option value="ETC.">ETC.</option>
                     </select><br>
 
@@ -203,6 +205,7 @@
                     <option value="NG">NG</option>
                     <option value="HOLD">HOLD</option>
                     <option value="REWORK">REWORK</option>
+                    <option value="SCRAP">SCRAP</option>
                     <option value="ETC.">ETC.</option>
                 </select><br>
 
