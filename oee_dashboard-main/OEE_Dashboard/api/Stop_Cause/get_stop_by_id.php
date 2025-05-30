@@ -1,6 +1,6 @@
 <?php
 //call by pdTable.js in function editPart(id)
-require_once '../api/db.php';
+require_once '../../api/db.php';
 
 header('Content-Type: application/json');
 
@@ -13,7 +13,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $id = intval($_GET['id']);
 
 // Query to fetch the part by ID
-$sql = "SELECT id, log_date, log_time, line, model, part_no, count_value, count_type, note FROM stop_causes WHERE id = ?";
+$sql = "SELECT id, log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note FROM stop_causes WHERE id = ?";
 $params = array($id);
 
 $stmt = sqlsrv_query($conn, $sql, $params);
@@ -34,8 +34,11 @@ if (!$row) {
 if ($row['log_date'] instanceof DateTime) {
     $row['log_date'] = $row['log_date']->format('Y-m-d');
 }
-if ($row['log_time'] instanceof DateTime) {
-    $row['log_time'] = $row['log_time']->format('H:i:s');
+if ($row['stop_begin'] instanceof DateTime) {
+    $row['stop_begin'] = $row['stop_begin']->format('H:i:s');
+}
+if ($row['stop_end'] instanceof DateTime) {
+    $row['stop_end'] = $row['stop_end']->format('H:i:s');
 }
 
 echo json_encode(['success' => true, 'data' => $row]);

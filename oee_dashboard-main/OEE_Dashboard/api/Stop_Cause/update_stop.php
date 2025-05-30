@@ -11,7 +11,7 @@ if (!$conn) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $required_fields = ['id', 'log_date', 'log_time', 'line', 'model', 'part_no', 'count_value', 'count_type'];
+    $required_fields = ['id', 'log_date', 'stop_begin', 'stop_end', 'line', 'machine', 'cause', 'recovered_by'];
     $missing_fields = [];
     foreach ($required_fields as $field) {
         if (!isset($_POST[$field])) {
@@ -26,12 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $id = $_POST['id'];
     $log_date = $_POST['log_date'];
-    $log_time = $_POST['log_time'];
+    $stop_begin = $_POST['stop_begin'];
+    $stop_end = $_POST['stop_end'];
     $line = $_POST['line'];
-    $model = $_POST['model'];
-    $part_no = $_POST['part_no'];
-    $count_value = $_POST['count_value'];
-    $count_type = $_POST['count_type'];
+    $machine = $_POST['machine'];
+    $cause = $_POST['cause'];
+    $recovered_by = $_POST['recovered_by'];
     $note = $_POST['note'];
 
     if (!filter_var($id, FILTER_VALIDATE_INT)) {
@@ -42,13 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          echo json_encode(['success' => false, 'message' => 'Invalid log_date format. Expected YYYY-MM-DD.']);
         exit();
     }
-     if (!filter_var($count_value, FILTER_VALIDATE_INT)) {
-        echo json_encode(['success' => false, 'message' => 'Invalid count_value format. Expected an integer.']);
-        exit();
-    }
 
-    $sql = "UPDATE stop_causes SET log_date = ?, log_time = ?, line = ?, model = ?, part_no = ?, count_value = ?, count_type = ?, note = ? WHERE id = ?";
-    $params = array($log_date, $log_time, $line, $model, $part_no, $count_value, $count_type, $note, $id);
+    $sql = "UPDATE stop_causes SET log_date = ?, stop_begin = ?, stop_end = ?, line = ?, machine = ?, cause = ?, recovered_by = ?, note = ? WHERE id = ?";
+    $params = array($log_date, $stop_begin, $stop_end, $line, $machine, $cause, $recovered_by, $note, $id);
 
     $stmt = sqlsrv_query($conn, $sql, $params);
 
