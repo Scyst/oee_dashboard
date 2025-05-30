@@ -217,17 +217,32 @@
             const modal = document.getElementById(modalId);
             modal.style.display = "block";
 
-            // Set current date and time every time modal opens
             const now = new Date();
+
             const dateStr = now.toISOString().split('T')[0];
-            const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
 
-            const dateInput = modal.querySelector('input[type="date"]');
-            const timeInput = modal.querySelector('input[type="time"]');
+            // Format function: HH:mm:ss
+            const formatTime = date => date.toTimeString().split(':').slice(0, 3).join(':');
 
-            if (dateInput) dateInput.value = dateStr;
-            if (timeInput && !timeInput.value) timeInput.value = timeStr;
+            const stopBeginStr = formatTime(now);
+
+            // Add 5 minutes for stop_end
+            const endTime = new Date(now.getTime() + 5 * 60 * 1000);
+            const stopEndStr = formatTime(endTime);
+
+            // Set all date fields inside the modal
+            modal.querySelectorAll('input[type="date"]').forEach(input => {
+                if (!input.value) input.value = dateStr;
+            });
+
+            // Set specific time inputs
+            const stopBeginInput = modal.querySelector('input[name="stop_begin"]');
+            const stopEndInput = modal.querySelector('input[name="stop_end"]');
+
+            if (stopBeginInput) stopBeginInput.value = stopBeginStr;
+            if (stopEndInput) stopEndInput.value = stopEndStr;
         }
+
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = "none";

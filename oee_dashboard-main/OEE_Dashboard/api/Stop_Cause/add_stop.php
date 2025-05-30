@@ -36,10 +36,10 @@ if ($duration < 0) {
 }
 
 // Insert query
-$sql = "INSERT INTO stop_cause (
-            log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note, total_time
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-$params = [$log_date, $stop_begin, $stop_end, $line, $machine, $cause, $recovered_by, $note, $duration];
+$sql = "INSERT INTO stop_causes (
+            log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+$params = [$log_date, $stop_begin, $stop_end, $line, $machine, $cause, $recovered_by, $note];
 
 $stmt = sqlsrv_query($conn, $sql, $params);
 
