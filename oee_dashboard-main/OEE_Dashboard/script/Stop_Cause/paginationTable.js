@@ -126,6 +126,25 @@ function applyDateRangeFilter() {
     fetchPaginatedParts(currentPage, startDate, endDate);
 }
 
+function renderCauseSummary(summary) {
+    const container = document.getElementById('causeSummary');
+    container.innerHTML = '';
+
+    if (summary.length === 0) {
+        container.innerHTML = '<p>No stop causes found in this range.</p>';
+        return;
+    }
+
+    const list = document.createElement('ul');
+    summary.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.cause} – ${item.count} times`;
+        list.appendChild(li);
+    });
+
+    container.appendChild(list);
+}
+
 document.getElementById('editStopForm').addEventListener('submit', function (e) {
     e.preventDefault(); // Prevent page reload
 

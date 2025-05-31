@@ -80,13 +80,30 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $data[] = $row;
 }
 
-// Return JSON
+// Summary query for all causes in current filters
+$summarySql = "
+    SELECT cause, COUNT(*) AS count
+    FROM stop_causes
+    $whereClause
+    GROUP BY cause
+    ORDER BY count DESC
+";
+
+$summaryStmt = sqlsrv_query($conn, $summarySql, $params);
+$summary = [];
+
+while ($row = sqlsrv_fetch_array($summaryStmt, SQLSRV_FETCH_ASSOC)) {
+    $summary[] = $row;
+}
+
+// Return with summary
 echo json_encode([
     'success' => true,
     'page' => $page,
     'limit' => $limit,
     'total' => $total,
-    'data' => $data
+    'data' => $data,
+    'summary' => $summary // ✅ Add this
 ]);
 
 sqlsrv_free_stmt($stmt);

@@ -32,7 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $machine = $_POST['machine'];
     $cause = $_POST['cause'];
     $recovered_by = $_POST['recovered_by'];
-    $note = $_POST['note'];
+   $note = $_POST['note'] ?? null;
+
+    // Validate time format
+    $time_fields = ['stop_begin', 'stop_end'];
+    foreach ($time_fields as $timeField) {
+        if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $_POST[$timeField])) {
+            echo json_encode(['success' => false, 'message' => "Invalid $timeField format. Expected HH:MM or HH:MM:SS."]);
+            exit();
+        }
+    }
 
     if (!filter_var($id, FILTER_VALIDATE_INT)) {
         echo json_encode(['success' => false, 'message' => 'Invalid ID format.']);
