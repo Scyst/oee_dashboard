@@ -61,4 +61,22 @@
 
 .summaryTableContainer table {
     width: 60vw;
+    background-color: #1e1e1e;
+}
+
+#summaryTableContainer table th {
+    background-color: #222;
+}
+
+#summaryTableContainer table th,
+#summaryTableContainer table td {
+    padding: 10px;
+    border: 1px solid #333;
+    text-align: left;
+}
+
+#summaryTableContainer table th.equal-col,
+#summaryTableContainer table td.equal-col {
+    width: 11%; /* adjust depending on layout preference */
+    word-wrap: break-word;
 }

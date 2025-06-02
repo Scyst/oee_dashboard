@@ -19,6 +19,7 @@ $line = $_GET['line'] ?? null;
 $model = $_GET['model'] ?? null;
 $partNo = $_GET['part_no'] ?? null;
 $countType = $_GET['count_type'] ?? null;
+$lotNo = $_GET['lot_no'] ?? null;
 
 if ($startDate && $endDate) {
     $conditions[] = "log_date BETWEEN ? AND ?";
@@ -41,6 +42,10 @@ if (!empty($countType)) {
     $conditions[] = "LOWER(count_type) = LOWER(?)";
     $params[] = $countType;
 }
+if (!empty($lotNo)) {
+    $conditions[] = "LOWER(lot_no) = LOWER(?)";
+    $params[] = $lotNo;
+}
 
 $whereClause = count($conditions) > 0 ? "WHERE " . implode(" AND ", $conditions) : "";
 
@@ -57,7 +62,7 @@ $paramsWithPagination[] = $limit;
 
 // Main data query
 $sql = "
-    SELECT id, log_date, log_time, line, model, part_no, count_value, count_type, note
+    SELECT id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note
     FROM parts
     $whereClause
     ORDER BY log_date DESC, log_time DESC, id DESC
@@ -82,8 +87,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $data[] = $row;
 }
 
-// After your main data query...
-// --- Summary Query (Group by model & part_no, count per type) ---
+// --- Summary Query ---
 $summarySql = "
     SELECT
         model,
@@ -101,7 +105,6 @@ $summarySql = "
 ";
 
 $summaryStmt = sqlsrv_query($conn, $summarySql, $params);
-
 $summary = [];
 while ($row = sqlsrv_fetch_array($summaryStmt, SQLSRV_FETCH_ASSOC)) {
     $summary[] = $row;
@@ -122,7 +125,6 @@ $grandSql = "
 
 $grandStmt = sqlsrv_query($conn, $grandSql, $params);
 $grandTotal = sqlsrv_fetch_array($grandStmt, SQLSRV_FETCH_ASSOC);
-
 
 // Return JSON
 echo json_encode([

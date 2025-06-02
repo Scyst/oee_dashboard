@@ -6,6 +6,7 @@ CREATE TABLE parts (
     line VARCHAR(50) NOT NULL,
     model VARCHAR(50) NOT NULL,
     part_no VARCHAR(50) NOT NULL,
+    lot_no VARCHAR(50) NOT NULL,
     count_value INT NOT NULL,
     count_type VARCHAR(50) NOT NULL,
     note NVARCHAR(MAX) COLLATE Thai_100_CI_AI_SC_UTF8

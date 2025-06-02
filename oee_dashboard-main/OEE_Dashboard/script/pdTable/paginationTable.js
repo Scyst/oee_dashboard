@@ -12,6 +12,7 @@ async function fetchPaginatedParts(page = 1) {
         const model = document.getElementById("modelInput")?.value.trim() || '';
         const partNo = document.getElementById("searchInput")?.value.trim() || '';
         const status = document.getElementById("status")?.value.trim() || '';
+        const lotNo = document.getElementById("lotInput")?.value.trim() || '';
 
         const params = new URLSearchParams({
             page,
@@ -21,7 +22,8 @@ async function fetchPaginatedParts(page = 1) {
             line,
             model,
             part_no: partNo,
-            count_type: status
+            count_type: status,
+            lot_no: lotNo // ⬅️ add this line
         });
 
         const res = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
@@ -41,6 +43,7 @@ async function fetchPaginatedParts(page = 1) {
                 <td>${row.line}</td>
                 <td>${row.model}</td>
                 <td>${row.part_no}</td>
+                <td>${row.lot_no || ''}</td>
                 <td>${row.count_value}</td>
                 <td>${row.count_type}</td>
                 <td>${row.note || ''}</td>
@@ -180,7 +183,6 @@ function applyDateRangeFilter() {
     fetchPaginatedParts(currentPage, startDate, endDate);
 }
 
-
 function openSummaryModal() {
     const modal = document.getElementById('summaryModal');
     modal.style.display = 'block';
@@ -202,12 +204,12 @@ function openSummaryModal() {
             <tr>
                 <th>Model</th>
                 <th>Part No</th>
-                <th>FG</th>
-                <th>NG</th>
-                <th>HOLD</th>
-                <th>REWORK</th>
-                <th>SCRAP</th>
-                <th>ETC</th>
+                <th class="equal-col">FG</th>
+                <th class="equal-col">NG</th>
+                <th class="equal-col">HOLD</th>
+                <th class="equal-col">REWORK</th>
+                <th class="equal-col">SCRAP</th>
+                <th class="equal-col">ETC</th>
             </tr>
         </thead>
         <tbody>
@@ -215,12 +217,12 @@ function openSummaryModal() {
                 <tr>
                     <td>${row.model}</td>
                     <td>${row.part_no}</td>
-                    <td>${row.FG || 0}</td>
-                    <td>${row.NG || 0}</td>
-                    <td>${row.HOLD || 0}</td>
-                    <td>${row.REWORK || 0}</td>
-                    <td>${row.SCRAP || 0}</td>
-                    <td>${row.ETC || 0}</td>
+                    <td class="equal-col">${row.FG || 0}</td>
+                    <td class="equal-col">${row.NG || 0}</td>
+                    <td class="equal-col">${row.HOLD || 0}</td>
+                    <td class="equal-col">${row.REWORK || 0}</td>
+                    <td class="equal-col">${row.SCRAP || 0}</td>
+                    <td class="equal-col">${row.ETC || 0}</td>
                 </tr>
             `).join('')}
         </tbody>

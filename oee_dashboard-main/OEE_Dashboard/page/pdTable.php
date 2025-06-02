@@ -45,11 +45,7 @@
 
         <div class="production-history">
 
-            <div style="display: flex; height: 50px; align-items: baseline">
-                <h3 style="margin-left: 10px; min-width: fit-content;">Production History</h3>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; padding: 0px 10px;">
+            <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
 
                 <!-- Filter -->
                 <div style="display: flex; gap: 5px; justify-content: center;">
@@ -57,6 +53,11 @@
                     <datalist id="searchlist">
                         <?php include '../api/pdTable/get_part_nos.php'; ?>
                     </datalist><br>
+
+                    <input list="lotList" id="lotInput" placeholder="Lot No." oninput="fetchPaginatedParts(1)">
+                    <datalist id="lotList">
+                        <?php include '../api/pdTable/get_lot_numbers.php'; ?>
+                    </datalist>
 
                     <input list="lineList" id="lineInput" placeholder="Line" oninput="fetchPaginatedParts(1)">
                     <datalist id="lineList">
@@ -77,11 +78,10 @@
                         <option value="SCRAP">SCRAP</option>
                         <option value="ETC.">ETC.</option>
                     </select>    
-                    
+
                     <input type="date" id="startDate" onchange="applyDateRangeFilter()">
                     <p style="text-align: center; align-content: center;"> - </p>
                     <input type="date" id="endDate" onchange="applyDateRangeFilter()">
-
                 </div>
 
                 <div>
@@ -91,12 +91,17 @@
                 </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
-                <button onclick="openSummaryModal()">Show Detailed Summary</button>
-                <div id="grandSummary" style="font-weight: bold;"></div>
+            <div style="display: flex; justify-content: space-between; padding: 2px 10px;">
+                <div style="display: flex; align-items: center;">
+                    <div id="grandSummary" style="font-weight: bold;"></div>
+                </div>    
+                <div style="display: flex; gap: 5px; justify-content: center;">
+                    <button onclick="openSummaryModal()">Show Detailed Summary</button>
+                </div>
             </div>
 
             <div id="partSummaryWrapper" style="display: none;">
+                <div id="grandSummary" style="font-weight: bold;"></div>
                 <div id="partSummary" style="overflow-x: auto;"></div>
             </div>
 
@@ -110,6 +115,7 @@
                             <th>Line</th>
                             <th>Model</th>
                             <th>Part No.</th>
+                            <th>Lot No.</th>
                             <th>Quatity</th>
                             <th style="width: 150px;">Type</th>
                             <th style="width: 250px;">Note</th>                        
@@ -229,7 +235,7 @@
     </div>
 
     <div id="summaryModal" class="modal">
-        <div class="modal-content" style="max-height: 80vh; min-width: fit-content; max-width: 80%; overflow-y: auto;">
+        <div class="modal-content" style="max-height: 80vh; min-width: fit-content; max-width: 50%; overflow-y: auto;">
             <span class="close" onclick="closeModal('summaryModal')">&times;</span>
             <div id="summaryTableContainer"></div>
         </div>
