@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>OEE API Test Form</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/jspdf-thai@1.0.0/thsarabunnew.js"></script>
+    <script src="../utils/libs/chart.umd.js"></script>
 
     <link rel="stylesheet" href="../style/style.css">
     <link rel="stylesheet" href="../style/piechart.css">
