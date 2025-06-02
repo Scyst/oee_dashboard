@@ -81,29 +81,39 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
 }
 
 // Summary query for all causes in current filters
+// Summary query with duration per cause
 $summarySql = "
-    SELECT cause, COUNT(*) AS count
+    SELECT 
+        cause, 
+        COUNT(*) AS count,
+        SUM(DATEDIFF(SECOND, stop_begin, stop_end)) AS total_seconds
     FROM stop_causes
     $whereClause
     GROUP BY cause
-    ORDER BY count DESC
+    ORDER BY total_seconds DESC
 ";
 
 $summaryStmt = sqlsrv_query($conn, $summarySql, $params);
 $summary = [];
+$totalSeconds = 0;
 
 while ($row = sqlsrv_fetch_array($summaryStmt, SQLSRV_FETCH_ASSOC)) {
-    $summary[] = $row;
+    $totalSeconds += $row['total_seconds'] ?? 0;
+    $summary[] = [
+        'cause' => $row['cause'],
+        'count' => $row['count'],
+        'total_seconds' => $row['total_seconds']
+    ];
 }
 
-// Return with summary
 echo json_encode([
     'success' => true,
     'page' => $page,
     'limit' => $limit,
     'total' => $total,
     'data' => $data,
-    'summary' => $summary // ✅ Add this
+    'summary' => $summary,
+    'grand_total_seconds' => $totalSeconds
 ]);
 
 sqlsrv_free_stmt($stmt);

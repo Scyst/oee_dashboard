@@ -22,7 +22,7 @@
             <div class="assis-tool">
                 <p id="date"></p>
                 <p id="time"></p>
-
+                
                 <div class="tool-buttons">
                     <a href="OEE_Dashboard.php">
                         <button>
@@ -42,12 +42,14 @@
                 </div>
             </div>
         </div>
-
+        
         <div class="stop-cause">
-
-            <h3 style="margin-left: 10px">Stop Cause History</h3>
+            <div style="display: flex; height: 50px; align-items: baseline">
+                <h3 style="margin-left: 10px; min-width: fit-content;">Stop Cause History</h3>
+                <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto; margin-left: 15px;"></div>
+            </div>
             <div style="display: flex; justify-content: space-between; padding: 0px 10px;">
-
+                
                 <!-- Filter -->
                 <div style="display: flex; gap: 5px; justify-content: center;">
                     <input list="searchlist" id="searchInput" placeholder="Search Stop Cause" oninput="fetchPaginatedParts(1)" />
@@ -71,6 +73,7 @@
 
                 </div>
 
+                
                 <div>
                     <button onclick="exportToExcel()">Export to Excel</button>
                     <button onclick="exportToPDF()">Export to PDF</button>

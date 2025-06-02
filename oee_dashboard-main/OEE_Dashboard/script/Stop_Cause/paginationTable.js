@@ -50,8 +50,9 @@ async function fetchPaginatedParts(page = 1) {
             `;
             tableBody.appendChild(tr);
         });
-
         updatePaginationControls(result.page, result.total);
+        //fetchStopCauseSummary({ startDate, endDate, line, machine, cause });
+        renderCauseSummary(result.summary || [], result.grand_total_seconds || 0);
     } catch (error) {
         console.error("Failed to fetch paginated data:", error);
         alert("Error loading stop data.");
@@ -126,24 +127,44 @@ function applyDateRangeFilter() {
     fetchPaginatedParts(currentPage, startDate, endDate);
 }
 
-function renderCauseSummary(summary) {
+function formatDuration(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const hrs = Math.floor(mins / 60);
+    const minsLeft = mins % 60;
+    return `${hrs}h ${minsLeft}m`;
+}
+
+function renderCauseSummary(summary, totalSeconds = 0) {
     const container = document.getElementById('causeSummary');
-    container.innerHTML = '';
+    container.innerHTML = ''; // Clear previous
 
-    if (summary.length === 0) {
-        container.innerHTML = '<p>No stop causes found in this range.</p>';
-        return;
-    }
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'inline-block';
 
-    const list = document.createElement('ul');
+    // Grand total first
+    const totalSpan = document.createElement('span');
+    totalSpan.style.marginRight = '20px';
+    totalSpan.textContent = `Total Stop Duration: ${formatDuration(totalSeconds)}`;
+    wrapper.appendChild(totalSpan);
+
+    // Individual cause summaries
     summary.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `${item.cause} – ${item.count} times`;
-        list.appendChild(li);
+        const span = document.createElement('span');
+        span.style.marginRight = '20px';
+        span.textContent = `${item.cause} – ${item.count} times (${formatDuration(item.total_seconds)})`;
+        wrapper.appendChild(span);
     });
 
-    container.appendChild(list);
+    container.appendChild(wrapper);
 }
+
+async function fetchStopCauseSummary(filters) {
+    const params = new URLSearchParams(filters);
+    const res = await fetch(`../api/Stop_Cause/get_cause_summary.php?${params}`);
+    const summary = await res.json();
+    renderCauseSummary(summary);
+}
+
 
 document.getElementById('editStopForm').addEventListener('submit', function (e) {
     e.preventDefault(); // Prevent page reload
@@ -207,6 +228,7 @@ document.getElementById("addStopForm").addEventListener("submit", async function
             closeModal("stopModal");         // hide the modal
             fetchPaginatedParts(1);          // reload the table from page 1
             form.reset();                    // optional: clear form
+            form.querySelector('[name="log_date"]').value = new Date().toISOString().split('T')[0];
         } else {
             alert("Add failed: " + result.message);
         }
