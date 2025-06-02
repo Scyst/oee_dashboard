@@ -15,14 +15,13 @@ async function exportToPDF() {
         startDate: document.getElementById("startDate").value,
         endDate: document.getElementById("endDate").value,
         line: document.getElementById("lineInput")?.value.trim() || '',
-        model: document.getElementById("modelInput")?.value.trim() || '',
+        model: document.getElementById("machineInput")?.value.trim() || '',
         part_no: document.getElementById("searchInput")?.value.trim() || '',
-        count_type: document.getElementById("status")?.value.trim() || '',
         page: 1,
         limit: 100000 // Large number to fetch all
     });
 
-    const response = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
+    const response = await fetch(`../api/Stop_Cause/get_stop.php?${params.toString()}`);
     const result = await response.json();
 
     if (!result.success) {
@@ -30,20 +29,20 @@ async function exportToPDF() {
         return;
     }
 
-    const headers = [["Date", "Time", "Line", "Model", "Part No.", "Quantity", "Type"]];
+    const headers = [["Date", "Start", "End", "Line", "Machine/Station", "Cause", "Recovered By"]];
     const rows = result.data.map(row => [
         row.log_date,
-        row.log_time,
+        row.stop_begin,
+        row.stop_end,
         row.line,
-        row.model,
-        row.part_no,
-        row.count_value,
-        row.count_type,
+        row.machine,
+        row.cause,
+        row.recovered_by,
         //row.note || ''
     ]);
 
     doc.setFontSize(16);
-    doc.text("Filtered Production History", 14, 16);
+    doc.text("Filtered Stop Cause History", 14, 16);
 
     doc.autoTable({
         head: headers,
@@ -54,7 +53,7 @@ async function exportToPDF() {
         theme: 'striped',
     });
 
-    doc.save("Filtered_Production_History.pdf");
+    doc.save("Stop_Cause_History.pdf");
 }
 
 async function exportToExcel() {
@@ -62,14 +61,13 @@ async function exportToExcel() {
         startDate: document.getElementById("startDate").value,
         endDate: document.getElementById("endDate").value,
         line: document.getElementById("lineInput")?.value.trim() || '',
-        model: document.getElementById("modelInput")?.value.trim() || '',
+        model: document.getElementById("machineInput")?.value.trim() || '',
         part_no: document.getElementById("searchInput")?.value.trim() || '',
-        count_type: document.getElementById("status")?.value.trim() || '',
         page: 1,
         limit: 100000
     });
 
-    const response = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
+    const response = await fetch(`../api/Stop_Cause/get_stop.php?${params.toString()}`);
     const result = await response.json();
 
     if (!result.success) {
@@ -77,15 +75,15 @@ async function exportToExcel() {
         return;
     }
 
-    const headers = ["Date", "Time", "Line", "Model", "Part No.", "Quantity", "Type", "Note"];
+    const headers = ["Date", "Start", "End", "Line", "Machine/Station", "Cause", "Recovered By", "Note"];
     const data = result.data.map(row => [
         row.log_date,
-        row.log_time,
+        row.stop_begin,
+        row.stop_end,
         row.line,
-        row.model,
-        row.part_no,
-        row.count_value,
-        row.count_type,
+        row.machine,
+        row.cause,
+        row.recovered_by,
         row.note || ''
     ]);
 
@@ -93,5 +91,5 @@ async function exportToExcel() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "FilteredData");
 
-    XLSX.writeFile(workbook, "Filtered_Production_History.xlsx");
+    XLSX.writeFile(workbook, "Stop_Cause_History.xlsx");
 }

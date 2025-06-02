@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OEE API Test Form</title>
+    <title>OEE - STOP CAUSE HISTORY</title>
     <script src="../utils/libs/jspdf.umd.min.js"></script>
     <script src="../utils/libs/jspdf.plugin.autotable.js"></script>
     <script src="../utils/libs/xlsx.full.min.js"></script>
@@ -16,8 +16,8 @@
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
             <div class="OEE-head">
-                <h1 style="font-size: 2.5em;">Overall Equipment Effectiveness</h1>
-                <h2 style="font-size: 2em;">Assembly Line</h2>
+                <h1>STOPS & CAUSES</h1>
+                <!--h2 style="font-size: 2em;">Assembly Line</!--h2-->
             </div>
             <div class="assis-tool">
                 <p id="date"></p>
@@ -44,11 +44,9 @@
         </div>
         
         <div class="stop-cause">
-            <div style="display: flex; height: 50px; align-items: baseline">
-                <h3 style="margin-left: 10px; min-width: fit-content;">Stop Cause History</h3>
-                <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto; margin-left: 15px;"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0px 10px;">
+
+            
+            <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
                 
                 <!-- Filter -->
                 <div style="display: flex; gap: 5px; justify-content: center;">
@@ -56,12 +54,12 @@
                     <datalist id="searchlist">
                         <?php include '../api/Stop_Cause/get_cause.php'; ?>
                     </datalist><br>
-
+                    
                     <input list="lineList" id="lineInput" placeholder="Line" oninput="fetchPaginatedParts(1)">
                     <datalist id="lineList">
                         <?php include '../api/Stop_Cause/get_lines.php'; ?>
                     </datalist>
-
+                    
                     <input list="machineList" id="machineInput" placeholder="Machine/Station" oninput="fetchPaginatedParts(1)">
                     <datalist id="machineList">
                         <?php include '../api/Stop_Cause/get_machine.php'; ?>
@@ -70,24 +68,30 @@
                     <input type="date" id="startDate" onchange="applyDateRangeFilter()">
                     <p style="text-align: center; align-content: center;"> - </p>
                     <input type="date" id="endDate" onchange="applyDateRangeFilter()">
-
+                    
                 </div>
-
+                
                 
                 <div>
                     <button onclick="exportToExcel()">Export to Excel</button>
-                    <button onclick="exportToPDF()">Export to PDF</button>
+                    <!--button onclick="exportToPDF()">Export to PDF</!--button-->
                     <button onclick="openModal('stopModal')">Add</button>
                 </div>
             </div>
+
+            <div style="display: flex; height: 50px; align-items: center; max-width: calc(100vw - 40px); min-width: calc(100% - 20px); height: 40px;">
+                <!--h3 style="margin-left: 10px; min-width: fit-content;">Stop Cause History</h3-->
+                <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto; margin-left: 15px; border: solid 1px honeydew; padding: 5px 10px;"></div>
+            </div>
+
             <div class="table-wrapper">
                 <table id="stopTable" border="1">
                     <thead>
                         <tr>
                             <th style="width: 100px; text-align: center;">ID</th>
                             <th>Date</th>
-                            <th>Stop Began</th>
-                            <th>Stop End</th>
+                            <th>Start</th>
+                            <th>End</th>
                             <th>Line</th>
                             <th>Machine/Station</th>
                             <th>Cause</th>

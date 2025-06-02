@@ -144,6 +144,7 @@ function renderCauseSummary(summary, totalSeconds = 0) {
     // Grand total first
     const totalSpan = document.createElement('span');
     totalSpan.style.marginRight = '20px';
+    totalSpan.style.color = 'red';
     totalSpan.textContent = `Total Stop Duration: ${formatDuration(totalSeconds)}`;
     wrapper.appendChild(totalSpan);
 
@@ -151,6 +152,7 @@ function renderCauseSummary(summary, totalSeconds = 0) {
     summary.forEach(item => {
         const span = document.createElement('span');
         span.style.marginRight = '20px';
+        span.style.color = 'darkorange';
         span.textContent = `${item.cause} – ${item.count} times (${formatDuration(item.total_seconds)})`;
         wrapper.appendChild(span);
     });
@@ -242,4 +244,4 @@ window.onload = () => fetchPaginatedParts(currentPage);
 
 setInterval(() => {
     fetchPaginatedParts(currentPage);
-}, 30000); // 60000ms = 1 minute
+}, 60000); // 60000ms = 1 minute

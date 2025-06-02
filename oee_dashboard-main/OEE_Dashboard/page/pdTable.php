@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OEE API Test Form</title>
+    <title>OEE - PRODUCTION HISTORY</title>
     <script src="../utils/libs/jspdf.umd.min.js"></script>
     <script src="../utils/libs/jspdf.plugin.autotable.js"></script>
     <script src="../utils/libs/xlsx.full.min.js"></script>
@@ -16,8 +16,8 @@
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
             <div class="OEE-head">
-                <h1 style="font-size: 2.5em;">Overall Equipment Effectiveness</h1>
-                <h2 style="font-size: 2em;">Assembly Line</h2>
+                <h1>PRODUCTION HISTORY</h1>
+                <!--h2 style="font-size: 2em;">Assembly Line</!--h2-->
             </div>
             <div class="assis-tool">
                 <p id="date"></p>
@@ -45,7 +45,10 @@
 
         <div class="production-history">
 
-            <h3 style="margin-left: 10px;">Production History</h3>
+            <div style="display: flex; height: 50px; align-items: baseline">
+                <h3 style="margin-left: 10px; min-width: fit-content;">Production History</h3>
+            </div>
+
             <div style="display: flex; justify-content: space-between; padding: 0px 10px;">
 
                 <!-- Filter -->
@@ -83,7 +86,7 @@
 
                 <div>
                     <button onclick="exportToExcel()">Export to Excel</button>
-                    <button onclick="exportToPDF()">Export to PDF</button>
+                    <!--button onclick="exportToPDF()">Export to PDF</!--button-->
                     <button onclick="openModal('partModal')">Add</button>
                 </div>
             </div>
