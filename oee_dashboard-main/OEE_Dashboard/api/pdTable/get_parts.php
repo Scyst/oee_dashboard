@@ -92,6 +92,7 @@ $summarySql = "
     SELECT
         model,
         part_no,
+        lot_no,
         SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
         SUM(CASE WHEN count_type = 'NG' THEN count_value ELSE 0 END) AS NG,
         SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
@@ -100,8 +101,8 @@ $summarySql = "
         SUM(CASE WHEN count_type = 'ETC' THEN count_value ELSE 0 END) AS ETC
     FROM parts
     $whereClause
-    GROUP BY model, part_no
-    ORDER BY model, part_no
+    GROUP BY model, part_no, lot_no
+    ORDER BY model, part_no, lot_no
 ";
 
 $summaryStmt = sqlsrv_query($conn, $summarySql, $params);

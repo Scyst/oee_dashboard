@@ -70,50 +70,21 @@ function renderSummary(summary, grandTotal) {
     const tableContainer = document.getElementById('partSummary');
     const grandContainer = document.getElementById('grandSummary');
 
-    // Render detailed summary table
+    // Store globally for modal reuse
+    window.cachedSummary = summary || [];
+    window.cachedGrand = grandTotal || {};
+
+    // Render inline summary (if needed)
     tableContainer.innerHTML = '';
     if (summary.length === 0) {
         tableContainer.innerHTML = '<p>No summary data available.</p>';
-    } else {
-        const table = document.createElement('table');
-        table.style.borderCollapse = 'collapse';
-        table.style.minWidth = '600px';
-        table.innerHTML = `
-            <thead>
-                <tr>
-                    <th>Model</th>
-                    <th>Part No</th>
-                    <th>FG</th>
-                    <th>NG</th>
-                    <th>HOLD</th>
-                    <th>REWORK</th>
-                    <th>SCRAP</th>
-                    <th>ETC</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${summary.map(row => `
-                    <tr>
-                        <td>${row.model}</td>
-                        <td>${row.part_no}</td>
-                        <td>${row.FG || 0}</td>
-                        <td>${row.NG || 0}</td>
-                        <td>${row.HOLD || 0}</td>
-                        <td>${row.REWORK || 0}</td>
-                        <td>${row.SCRAP || 0}</td>
-                        <td>${row.ETC || 0}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        `;
-        tableContainer.appendChild(table);
     }
 
-    // Render grand total summary text
     if (grandTotal) {
         grandContainer.textContent = `Total FG: ${grandTotal.FG || 0} | NG: ${grandTotal.NG || 0} | HOLD: ${grandTotal.HOLD || 0} | REWORK: ${grandTotal.REWORK || 0} | SCRAP: ${grandTotal.SCRAP || 0} | ETC: ${grandTotal.ETC || 0}`;
     }
 }
+
 
 function editPart(id) {
     fetch(`../api/pdTable/get_part_by_id.php?id=${id}`)
@@ -127,6 +98,7 @@ function editPart(id) {
                 document.getElementById('edit_line').value = part.line;
                 document.getElementById('edit_model').value = part.model;
                 document.getElementById('edit_part_no').value = part.part_no;
+                document.getElementById('edit_lot_no').value = part.lot_no;
                 document.getElementById('edit_value').value = part.count_value;
                 document.getElementById('edit_type').value = part.count_type;
                 document.getElementById('edit_note').value = part.note;
@@ -187,14 +159,22 @@ function openSummaryModal() {
     const modal = document.getElementById('summaryModal');
     modal.style.display = 'block';
 
-    // Move the rendered summary table here
-    const summaryContainer = document.getElementById('summaryTableContainer');
     const summaryData = window.cachedSummary || [];
+    const grandTotal = window.cachedGrand || {};
+
+    const summaryContainer = document.getElementById('summaryTableContainer');
+    summaryContainer.innerHTML = '';
 
     if (summaryData.length === 0) {
         summaryContainer.innerHTML = "<p>No summary data to display.</p>";
         return;
     }
+
+    const grandRow = document.createElement('div');
+    grandRow.style.marginBottom = '10px';
+    grandRow.style.fontWeight = 'bold';
+    grandRow.textContent = `Grand Total — FG: ${grandTotal.FG || 0} | NG: ${grandTotal.NG || 0} | HOLD: ${grandTotal.HOLD || 0} | REWORK: ${grandTotal.REWORK || 0} | SCRAP: ${grandTotal.SCRAP || 0} | ETC: ${grandTotal.ETC || 0}`;
+    summaryContainer.appendChild(grandRow);
 
     const table = document.createElement('table');
     table.style.width = '100%';
@@ -204,6 +184,7 @@ function openSummaryModal() {
             <tr>
                 <th>Model</th>
                 <th>Part No</th>
+                <th>Lot No</th>
                 <th class="equal-col">FG</th>
                 <th class="equal-col">NG</th>
                 <th class="equal-col">HOLD</th>
@@ -217,6 +198,7 @@ function openSummaryModal() {
                 <tr>
                     <td>${row.model}</td>
                     <td>${row.part_no}</td>
+                    <td>${row.lot_no || ''}</td>
                     <td class="equal-col">${row.FG || 0}</td>
                     <td class="equal-col">${row.NG || 0}</td>
                     <td class="equal-col">${row.HOLD || 0}</td>
@@ -227,7 +209,7 @@ function openSummaryModal() {
             `).join('')}
         </tbody>
     `;
-    summaryContainer.innerHTML = '';
+
     summaryContainer.appendChild(table);
 }
 

@@ -164,6 +164,11 @@
                         <?php include '../api/pdTable/get_part_nos.php'; ?>
                     </datalist><br>
 
+                    <input list="LotList" name="Lot_no" placeholder="Lot No." required>
+                    <datalist id="LotList">
+                        <?php include '../api/pdTable/get_lot_numbers.php'; ?>
+                    </datalist><br>
+
                     <input type="number" name="count_value" placeholder="Enter value" required><br>
                     
                     <select name="count_type" required>
@@ -211,6 +216,12 @@
                 <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
                 <datalist id="editPartList">
                     <?php include '../api/pdTable/get_part_nos.php'; ?>
+                </datalist><br>
+
+                <!-- Lot No -->
+                <input list="editLotList" name="Lot_no" id="edit_lot_no" placeholder="Lot No." required>
+                <datalist id="editLotList">
+                    <?php include '../api/pdTable/get_lot_numbers.php'; ?>
                 </datalist><br>
 
                 <!-- Count Value -->
