@@ -90,6 +90,16 @@
                     <button onclick="openModal('partModal')">Add</button>
                 </div>
             </div>
+
+            <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                <button onclick="openSummaryModal()">Show Detailed Summary</button>
+                <div id="grandSummary" style="font-weight: bold;"></div>
+            </div>
+
+            <div id="partSummaryWrapper" style="display: none;">
+                <div id="partSummary" style="overflow-x: auto;"></div>
+            </div>
+
             <div class="table-wrapper">
                 <table id="partTable" border="1">
                     <thead>
@@ -215,6 +225,13 @@
 
                 <button type="submit">Update Part</button>
             </form>
+        </div>
+    </div>
+
+    <div id="summaryModal" class="modal">
+        <div class="modal-content" style="max-height: 80vh; min-width: fit-content; max-width: 80%; overflow-y: auto;">
+            <span class="close" onclick="closeModal('summaryModal')">&times;</span>
+            <div id="summaryTableContainer"></div>
         </div>
     </div>
 

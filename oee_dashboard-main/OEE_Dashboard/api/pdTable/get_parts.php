@@ -9,8 +9,7 @@ $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 50;
 $offset = ($page - 1) * $limit;
 
-// Date filter
-// Collect filters
+// Filters
 $conditions = [];
 $params = [];
 
@@ -52,8 +51,9 @@ $totalRow = sqlsrv_fetch_array($totalStmt, SQLSRV_FETCH_ASSOC);
 $total = $totalRow ? intval($totalRow['total']) : 0;
 
 // Add pagination params to query
-$params[] = $offset;
-$params[] = $limit;
+$paramsWithPagination = $params;
+$paramsWithPagination[] = $offset;
+$paramsWithPagination[] = $limit;
 
 // Main data query
 $sql = "
@@ -64,7 +64,7 @@ $sql = "
     OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 ";
 
-$stmt = sqlsrv_query($conn, $sql, $params);
+$stmt = sqlsrv_query($conn, $sql, $paramsWithPagination);
 
 if ($stmt === false) {
     echo json_encode(['success' => false, 'message' => 'SQL query failed.']);
@@ -82,13 +82,57 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $data[] = $row;
 }
 
+// After your main data query...
+// --- Summary Query (Group by model & part_no, count per type) ---
+$summarySql = "
+    SELECT
+        model,
+        part_no,
+        SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
+        SUM(CASE WHEN count_type = 'NG' THEN count_value ELSE 0 END) AS NG,
+        SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
+        SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
+        SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
+        SUM(CASE WHEN count_type = 'ETC' THEN count_value ELSE 0 END) AS ETC
+    FROM parts
+    $whereClause
+    GROUP BY model, part_no
+    ORDER BY model, part_no
+";
+
+$summaryStmt = sqlsrv_query($conn, $summarySql, $params);
+
+$summary = [];
+while ($row = sqlsrv_fetch_array($summaryStmt, SQLSRV_FETCH_ASSOC)) {
+    $summary[] = $row;
+}
+
+// --- Grand Total Summary ---
+$grandSql = "
+    SELECT
+        SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
+        SUM(CASE WHEN count_type = 'NG' THEN count_value ELSE 0 END) AS NG,
+        SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
+        SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
+        SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
+        SUM(CASE WHEN count_type = 'ETC' THEN count_value ELSE 0 END) AS ETC
+    FROM parts
+    $whereClause
+";
+
+$grandStmt = sqlsrv_query($conn, $grandSql, $params);
+$grandTotal = sqlsrv_fetch_array($grandStmt, SQLSRV_FETCH_ASSOC);
+
+
 // Return JSON
 echo json_encode([
     'success' => true,
     'page' => $page,
     'limit' => $limit,
     'total' => $total,
-    'data' => $data
+    'data' => $data,
+    'summary' => $summary,
+    'grand_total' => $grandTotal
 ]);
 
 sqlsrv_free_stmt($stmt);

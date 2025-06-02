@@ -46,3 +46,19 @@
     font-weight: bold;
     text-align: center;
 }
+
+#partSummary table {
+    min-width: 800px;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+#partSummary th,
+#partSummary td {
+    padding: 4px 10px;
+    border: 1px solid #ccc;
+    white-space: nowrap;
+}
+
+.summaryTableContainer table {
+    width: 60vw;
+}

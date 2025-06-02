@@ -1,4 +1,4 @@
-// paginationTable.js
+// Stap_Cause/paginationTable.js
 
 let currentPage = 1;
 const limit = 100;

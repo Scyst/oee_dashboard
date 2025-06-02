@@ -1,4 +1,4 @@
-// paginationTable.js
+// pdTable/paginationTable.js
 
 let currentPage = 1;
 const limit = 100;
@@ -26,13 +26,12 @@ async function fetchPaginatedParts(page = 1) {
 
         const res = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
         const result = await res.json();
-        //console.log(res);
 
-        if (!result.success) throw new Error(result.message);   
+        if (!result.success) throw new Error(result.message);
 
+        // Populate table
         const tableBody = document.getElementById('partTableBody');
         tableBody.innerHTML = '';
-
         result.data.forEach(row => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -54,9 +53,62 @@ async function fetchPaginatedParts(page = 1) {
         });
 
         updatePaginationControls(result.page, result.total);
+        renderSummary(result.summary, result.grand_total);
+        window.cachedSummary = result.summary || [];
+
     } catch (error) {
         console.error("Failed to fetch paginated data:", error);
         alert("Error loading parts data.");
+    }
+}
+
+function renderSummary(summary, grandTotal) {
+    const wrapper = document.getElementById('partSummaryWrapper');
+    const tableContainer = document.getElementById('partSummary');
+    const grandContainer = document.getElementById('grandSummary');
+
+    // Render detailed summary table
+    tableContainer.innerHTML = '';
+    if (summary.length === 0) {
+        tableContainer.innerHTML = '<p>No summary data available.</p>';
+    } else {
+        const table = document.createElement('table');
+        table.style.borderCollapse = 'collapse';
+        table.style.minWidth = '600px';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Part No</th>
+                    <th>FG</th>
+                    <th>NG</th>
+                    <th>HOLD</th>
+                    <th>REWORK</th>
+                    <th>SCRAP</th>
+                    <th>ETC</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${summary.map(row => `
+                    <tr>
+                        <td>${row.model}</td>
+                        <td>${row.part_no}</td>
+                        <td>${row.FG || 0}</td>
+                        <td>${row.NG || 0}</td>
+                        <td>${row.HOLD || 0}</td>
+                        <td>${row.REWORK || 0}</td>
+                        <td>${row.SCRAP || 0}</td>
+                        <td>${row.ETC || 0}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        `;
+        tableContainer.appendChild(table);
+    }
+
+    // Render grand total summary text
+    if (grandTotal) {
+        grandContainer.textContent = `Total FG: ${grandTotal.FG || 0} | NG: ${grandTotal.NG || 0} | HOLD: ${grandTotal.HOLD || 0} | REWORK: ${grandTotal.REWORK || 0} | SCRAP: ${grandTotal.SCRAP || 0} | ETC: ${grandTotal.ETC || 0}`;
     }
 }
 
@@ -126,6 +178,55 @@ function applyDateRangeFilter() {
 
     currentPage = 1; // Always reset to first page when filtering
     fetchPaginatedParts(currentPage, startDate, endDate);
+}
+
+
+function openSummaryModal() {
+    const modal = document.getElementById('summaryModal');
+    modal.style.display = 'block';
+
+    // Move the rendered summary table here
+    const summaryContainer = document.getElementById('summaryTableContainer');
+    const summaryData = window.cachedSummary || [];
+
+    if (summaryData.length === 0) {
+        summaryContainer.innerHTML = "<p>No summary data to display.</p>";
+        return;
+    }
+
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>Part No</th>
+                <th>FG</th>
+                <th>NG</th>
+                <th>HOLD</th>
+                <th>REWORK</th>
+                <th>SCRAP</th>
+                <th>ETC</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${summaryData.map(row => `
+                <tr>
+                    <td>${row.model}</td>
+                    <td>${row.part_no}</td>
+                    <td>${row.FG || 0}</td>
+                    <td>${row.NG || 0}</td>
+                    <td>${row.HOLD || 0}</td>
+                    <td>${row.REWORK || 0}</td>
+                    <td>${row.SCRAP || 0}</td>
+                    <td>${row.ETC || 0}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
+    summaryContainer.innerHTML = '';
+    summaryContainer.appendChild(table);
 }
 
 document.getElementById('editPartForm').addEventListener('submit', function (e) {
@@ -198,9 +299,6 @@ document.getElementById("addPartForm").addEventListener("submit", async function
         alert("An error occurred.");
     }
 });
-
-
-
 
 window.onload = () => fetchPaginatedParts(currentPage);
 
