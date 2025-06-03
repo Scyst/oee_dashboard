@@ -75,14 +75,19 @@ $REWORK = [];
 $SCRAP = [];
 $ETC = [];
 
-while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
-    $partLabels[] = $row['part_no'];
-    $FG[] = (int) $row['FG'];
-    $NG[] = (int) $row['NG'];
-    $HOLD[] = (int) $row['HOLD'];
-    $REWORK[] = (int) $row['REWORK'];
-    $SCRAP[] = (int) $row['SCRAP'];
-    $ETC[] = (int) $row['ETC'];
+if ($partStmt) {
+    while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
+        $partLabels[] = $row['part_no'];
+        $FG[] = (int) $row['FG'];
+        $NG[] = (int) $row['NG'];
+        $HOLD[] = (int) $row['HOLD'];
+        $REWORK[] = (int) $row['REWORK'];
+        $SCRAP[] = (int) $row['SCRAP'];
+        $ETC[] = (int) $row['ETC'];
+    }
+} else {
+    echo json_encode(["error" => "Parts query failed.", "sql_error" => print_r(sqlsrv_errors(), true)]);
+    exit;
 }
 
 
