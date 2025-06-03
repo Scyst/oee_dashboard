@@ -90,5 +90,40 @@ function highlightMatch(cell, keyword) {
     cell.innerHTML = text.replace(regex, `<span class="highlight">$1</span>`);
 }
 
-// Call fetch on page load
-window.onload = fetchParts;
+function refetchSummaryInModal() {
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+    const line = document.getElementById("lineInput").value.trim();
+    const model = document.getElementById("modelInput").value.trim();
+    const partNo = document.getElementById("searchInput").value.trim();
+    const status = document.getElementById("status").value.trim();
+    const lotNo = document.getElementById("lotInput")?.value.trim() || '';
+
+    const params = new URLSearchParams({
+        page: 1,
+        limit: 1000, // get all for summary
+        startDate,
+        endDate,
+        line,
+        model,
+        part_no: partNo,
+        count_type: status,
+        lot_no: lotNo
+    });
+
+    fetch(`../api/pdTable/get_parts.php?${params.toString()}`)
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                window.cachedSummary = result.summary || [];
+                window.cachedGrand = result.grand_total || {};
+                openSummaryModal(); // re-render updated table
+            } else {
+                alert("Summary load failed: " + result.message);
+            }
+        })
+        .catch(err => {
+            console.error("Summary fetch error", err);
+            alert("Failed to load summary.");
+        });
+}

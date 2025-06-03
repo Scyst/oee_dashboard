@@ -81,10 +81,9 @@ function renderSummary(summary, grandTotal) {
     }
 
     if (grandTotal) {
-        grandContainer.textContent = `Total FG: ${grandTotal.FG || 0} | NG: ${grandTotal.NG || 0} | HOLD: ${grandTotal.HOLD || 0} | REWORK: ${grandTotal.REWORK || 0} | SCRAP: ${grandTotal.SCRAP || 0} | ETC: ${grandTotal.ETC || 0}`;
+        grandContainer.textContent = `Total - FG: ${grandTotal.FG || 0} | NG: ${grandTotal.NG || 0} | HOLD: ${grandTotal.HOLD || 0} | REWORK: ${grandTotal.REWORK || 0} | SCRAP: ${grandTotal.SCRAP || 0} | ETC: ${grandTotal.ETC || 0}`;
     }
 }
-
 
 function editPart(id) {
     fetch(`../api/pdTable/get_part_by_id.php?id=${id}`)
@@ -170,12 +169,31 @@ function openSummaryModal() {
         return;
     }
 
-    const grandRow = document.createElement('div');
-    grandRow.style.marginBottom = '10px';
-    grandRow.style.fontWeight = 'bold';
-    grandRow.textContent = `Grand Total — FG: ${grandTotal.FG || 0} | NG: ${grandTotal.NG || 0} | HOLD: ${grandTotal.HOLD || 0} | REWORK: ${grandTotal.REWORK || 0} | SCRAP: ${grandTotal.SCRAP || 0} | ETC: ${grandTotal.ETC || 0}`;
-    summaryContainer.appendChild(grandRow);
+    // Flex container for total + export button
+    const headerRow = document.createElement('div');
+    headerRow.style.display = 'flex';
+    headerRow.style.justifyContent = 'space-between';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.marginTop = '20px';
+    headerRow.style.marginBottom = '10px';
 
+    // Grand Total
+    const grandRow = document.createElement('div');
+    grandRow.style.fontWeight = 'bold';
+    grandRow.textContent = `Total - FG: ${grandTotal.FG || 0} | NG: ${grandTotal.NG || 0} | HOLD: ${grandTotal.HOLD || 0} | REWORK: ${grandTotal.REWORK || 0} | SCRAP: ${grandTotal.SCRAP || 0} | ETC: ${grandTotal.ETC || 0}`;
+    headerRow.appendChild(grandRow);
+
+    // Export Button
+    const buttonRow = document.createElement('div');
+    const exportBtn = document.createElement('button');
+    exportBtn.textContent = 'Export Summary to Excel';
+    exportBtn.onclick = exportSummaryToExcel; // You must define this function separately
+    buttonRow.appendChild(exportBtn);
+    headerRow.appendChild(buttonRow);
+
+    summaryContainer.appendChild(headerRow);
+
+    // Table
     const table = document.createElement('table');
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
@@ -209,7 +227,6 @@ function openSummaryModal() {
             `).join('')}
         </tbody>
     `;
-
     summaryContainer.appendChild(table);
 }
 

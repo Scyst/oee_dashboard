@@ -1,7 +1,9 @@
 <?php
-require_once("../../api/db.php");
+//call by EditModal in pdTable.php
 
-$sql = "SELECT DISTINCT lot_no FROM parts WHERE lot_no IS NOT NULL AND lot_no <> '' ORDER BY lot_no";
+require_once("../api/db.php");
+
+$sql = "SELECT DISTINCT lot_no FROM parts WHERE lot_no IS NOT NULL";
 $stmt = sqlsrv_query($conn, $sql);
 
 if ($stmt) {
