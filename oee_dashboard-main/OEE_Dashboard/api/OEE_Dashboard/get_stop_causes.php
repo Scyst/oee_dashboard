@@ -2,14 +2,29 @@
 require_once("../../api/db.php");
 header('Content-Type: application/json');
 
-// Handle date range from GET or default to today
+// Default date range (today)
 $startDate = $_GET['startDate'] ?? date('Y-m-d');
 $endDate   = $_GET['endDate'] ?? date('Y-m-d');
+$line      = $_GET['line'] ?? null;
+$model     = $_GET['model'] ?? null;
 
+// Build WHERE clause
+$conditions = ["log_date BETWEEN ? AND ?"];
 $params = [$startDate, $endDate];
-$where  = "WHERE log_date BETWEEN ? AND ?";
 
-// --- STOP CAUSES CHART ---
+if (!empty($line)) {
+    $conditions[] = "LOWER(line) = LOWER(?)";
+    $params[] = $line;
+}
+
+if (!empty($model)) {
+    $conditions[] = "LOWER(machine) = LOWER(?)"; // adjust if you have a `model` field instead
+    $params[] = $model;
+}
+
+$where = "WHERE " . implode(" AND ", $conditions);
+
+// STOP CAUSES
 $stopSql = "
     SELECT cause, SUM(DATEDIFF(SECOND, stop_begin, stop_end)) AS total_seconds
     FROM stop_causes
@@ -22,32 +37,54 @@ $stopStmt = sqlsrv_query($conn, $stopSql, $params);
 $stopLabels = [];
 $stopValues = [];
 
+if ($stopStmt) {
+    while ($row = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
+        $stopLabels[] = $row['cause'];
+        $stopValues[] = round(($row['total_seconds'] ?? 0) / 60, 1); // convert to minutes
+    }
+} else {
+    echo json_encode(["error" => "Stop cause query failed."]);
+    exit;
+}
+
 while ($row = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
     $stopLabels[] = $row['cause'];
     $stopValues[] = round(($row['total_seconds'] ?? 0) / 60, 1); // convert to minutes
 }
 
-// --- PARTS CHART: GOOD vs BAD JOBS per PART NO ---
 $partSql = "
-    SELECT part_no,
-        SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS good_jobs,
-        SUM(CASE WHEN count_type IN ('NG','HOLD','REWORK','SCRAP','ETC') THEN count_value ELSE 0 END) AS bad_jobs
+    SELECT TOP 50 part_no,
+        SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
+        SUM(CASE WHEN count_type = 'NG' THEN count_value ELSE 0 END) AS NG,
+        SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
+        SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
+        SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
+        SUM(CASE WHEN count_type = 'ETC.' THEN count_value ELSE 0 END) AS ETC
     FROM parts
     $where
     GROUP BY part_no
-    ORDER BY part_no
+    ORDER BY SUM(count_value) DESC
 ";
 
 $partStmt = sqlsrv_query($conn, $partSql, $params);
 $partLabels = [];
-$partGood = [];
-$partBad = [];
+$FG = [];
+$NG = [];
+$HOLD = [];
+$REWORK = [];
+$SCRAP = [];
+$ETC = [];
 
 while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     $partLabels[] = $row['part_no'];
-    $partGood[] = (int) $row['good_jobs'];
-    $partBad[] = (int) $row['bad_jobs'];
+    $FG[] = (int) $row['FG'];
+    $NG[] = (int) $row['NG'];
+    $HOLD[] = (int) $row['HOLD'];
+    $REWORK[] = (int) $row['REWORK'];
+    $SCRAP[] = (int) $row['SCRAP'];
+    $ETC[] = (int) $row['ETC'];
 }
+
 
 // Final output
 echo json_encode([
@@ -57,7 +94,11 @@ echo json_encode([
     ],
     "parts" => [
         "labels" => $partLabels,
-        "good"   => $partGood,
-        "bad"    => $partBad
+        "FG"     => $FG,
+        "NG"     => $NG,
+        "HOLD"   => $HOLD,
+        "REWORK" => $REWORK,
+        "SCRAP"  => $SCRAP,
+        "ETC"    => $ETC
     ]
 ]);

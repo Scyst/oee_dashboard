@@ -169,22 +169,6 @@ th {
     color: #00ffcc;
 }
 
-
-/* Container styles */
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 20px;
-}
-
-/* Card style for each box */
-.card {
-    background-color: #1e1e1e;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
-}
-
 /* Titles */
 h1, h2, h3 {
     color: #00ffcc;
@@ -259,7 +243,6 @@ h4 {
 .close:hover {
     color: red;
 }
-
 
 /* Buttons */
 button, .btn {

@@ -98,7 +98,7 @@ $summarySql = "
         SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
         SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
         SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
-        SUM(CASE WHEN count_type = 'ETC' THEN count_value ELSE 0 END) AS ETC
+        SUM(CASE WHEN count_type = 'ETC.' THEN count_value ELSE 0 END) AS ETC
     FROM parts
     $whereClause
     GROUP BY model, part_no, lot_no
@@ -119,7 +119,7 @@ $grandSql = "
         SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
         SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
         SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
-        SUM(CASE WHEN count_type = 'ETC' THEN count_value ELSE 0 END) AS ETC
+        SUM(CASE WHEN count_type = 'ETC.' THEN count_value ELSE 0 END) AS ETC
     FROM parts
     $whereClause
 ";

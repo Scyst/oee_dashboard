@@ -1,4 +1,5 @@
 ﻿let partsBarChartInstance, stopCauseBarChartInstance;
+Chart.register(ChartZoom);
 
 function hideErrors() {
     ["partsBarError", "stopCauseBarError"].forEach(id => {
@@ -21,7 +22,6 @@ function BarshowError(chartId, messageId) {
 function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOptions, color = "#42a5f5") {
     if (chartInstance) chartInstance.destroy();
 
-    // Detect if multiple datasets passed
     const isMulti = Array.isArray(valuesOrDatasets) && valuesOrDatasets[0]?.data;
 
     const datasets = isMulti
@@ -48,6 +48,21 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
                     display: false,
                     text: isMulti ? '' : labelOrOptions,
                     font: { size: 16 }
+                },
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x'
+                    },
+                    zoom: {
+                        wheel: {
+                            enabled: true
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x'
+                    }
                 }
             },
             layout: { padding: 10 },
@@ -74,33 +89,47 @@ async function fetchAndRenderBarCharts() {
 
         const startDate = document.getElementById("startDate")?.value || '';
         const endDate = document.getElementById("endDate")?.value || '';
+        const line = document.getElementById("lineFilter")?.value || '';
+        const model = document.getElementById("modelFilter")?.value || '';
 
         const params = new URLSearchParams({
             startDate,
-            endDate
+            endDate,
+            line,
+            model
         });
 
         const response = await fetch(`../api/OEE_dashboard/get_stop_causes.php?${params.toString()}`);
         const data = await response.json();
 
-        // Ensure at least 7 bars for scrap
-        //const paddedScrap = padBarData(data.scrap.labels, data.scrap.values, 7);
+        const partLabels = data.parts.labels;
+
+        const countTypes = {
+            FG:     { label: "Good",    color: "#00C853" },
+            NG:     { label: "NG",      color: "#FF5252" },
+            HOLD:   { label: "Hold",    color: "#FFD600" },
+            REWORK: { label: "Rework",  color: "#2979FF" },
+            SCRAP:  { label: "Scrap",   color: "#9E9E9E" },
+            ETC:    { label: "ETC",     color: "#AA00FF" }
+        };
+
+        const partDatasets = [];
+
+        for (const [type, { label, color }] of Object.entries(countTypes)) {
+            if (data.parts[type]) {
+                partDatasets.push({
+                    label,
+                    data: data.parts[type],
+                    backgroundColor: color
+                });
+            }
+        }
+
         partsBarChartInstance = renderBarChart(
             partsBarChartInstance,
             document.getElementById("partsBarChart").getContext("2d"),
-            data.parts.labels,
-            [
-                {
-                    label: "Good Jobs",
-                    data: data.parts.good,
-                    backgroundColor: "#00C853"
-                },
-                {
-                    label: "Bad Jobs",
-                    data: data.parts.bad,
-                    backgroundColor: "#FF5252"
-                }
-            ]
+            partLabels,
+            partDatasets
         );
 
         // Ensure at least 7 bars for stop cause
@@ -141,4 +170,7 @@ window.addEventListener("load", () => {
 
 document.getElementById("startDate")?.addEventListener("change", fetchAndRenderBarCharts);
 document.getElementById("endDate")?.addEventListener("change", fetchAndRenderBarCharts);
+document.getElementById("lineFilter")?.addEventListener("change", fetchAndRenderBarCharts);
+document.getElementById("modelFilter")?.addEventListener("change", fetchAndRenderBarCharts);
+
 

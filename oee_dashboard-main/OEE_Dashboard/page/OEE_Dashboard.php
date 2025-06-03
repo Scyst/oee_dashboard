@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>OEE - DASHBOARD</title>
     <script src="../utils/libs/chart.umd.js"></script>
+    <script src="../utils/libs/chartjs-plugin-zoom.min.js"></script>
 
     <link rel="stylesheet" href="../style/style.css">
     <link rel="stylesheet" href="../style/piechart.css">
@@ -153,7 +154,14 @@
                         <div id="stopCauseBarError">Error loading scrap data</div>
                     </fieldset>
                     <fieldset>
-                        <h4>Parts Summary</h4>
+                        <h4>Production</h4>
+                        <select id="lineFilter">
+                            <option value="">All Lines</option>
+                        </select>
+
+                        <select id="modelFilter">
+                            <option value="">All Models</option>
+                        </select>
                         <div class="barchart-wrapper">
                             <canvas id="partsBarChart"></canvas>
                         </div>
@@ -187,32 +195,27 @@
     </script>
 
     <script>
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.style.display = "block";
+        async function populateDropdown(endpoint, selectId) {
+            try {
+                const res = await fetch(`../api/OEE_Dashboard/${endpoint}`);
+                const data = await res.json();
 
-            const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
-            const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
-
-            const dateInput = modal.querySelector('input[type="date"]');
-            const timeInput = modal.querySelector('input[type="time"]');
-
-            if (dateInput) dateInput.value = dateStr;
-            if (timeInput) timeInput.value = timeStr;
+                const select = document.getElementById(selectId);
+                data.forEach(value => {
+                    const option = document.createElement("option");
+                    option.value = value;
+                    option.textContent = value;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error(`Failed to load ${selectId} options:`, err);
+            }
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = "none";
-        }
-
-        window.onclick = function (event) {
-            document.querySelectorAll('.modal').forEach(modal => {
-                if (event.target === modal) {
-                    modal.style.display = "none";
-                }
-            });
-        }
+        window.addEventListener("load", () => {
+            populateDropdown("get_lines.php", "lineFilter");
+            populateDropdown("get_models.php", "modelFilter");
+        });
     </script>
 
     <script src="../script/datetime.js"></script>
