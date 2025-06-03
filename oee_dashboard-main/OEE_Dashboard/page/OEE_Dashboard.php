@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OEE API Test Form</title>
+    <title>OEE - DASHBOARD</title>
     <script src="../utils/libs/chart.umd.js"></script>
 
     <link rel="stylesheet" href="../style/style.css">
@@ -15,8 +15,13 @@
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
             <div class="OEE-head">
-                <h1 style="font-size: 2.5em;">Overall Equipment Effectiveness</h1>
-                <h2 style="font-size: 2em;">Assembly Line</h2>
+                <h2>OEE DASHBOARD</h2>        
+                <!-- Filter Row -->
+                <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
+                    <input type="date" id="startDate" onchange="fetchAndRenderBarCharts()">
+                    <p style="text-align: center; align-content: center;"> - </p>
+                    <input type="date" id="endDate" onchange="fetchAndRenderBarCharts()">
+                </div>
             </div>
             <div class="assis-tool">
                 <p id="date"></p>
@@ -40,7 +45,6 @@
                     </a>
                 </div>
             </div>
-
         </div>
 
         <div class="oee-piechart">
@@ -100,7 +104,7 @@
                         </div>
                     </fieldset>
                 </div>
-            </div>  
+            </div>
         </div>
 
         <div class="oee-linechart">
@@ -142,50 +146,30 @@
             <div style="display: block; width: 100%;">
                 <div class="bar-chart">
                     <fieldset>
-                        <h4>Stop Cause</h4>
+                        <h4>Stop & Cause</h4>
                         <div class="barchart-wrapper">
                             <canvas id="stopCauseBarChart"></canvas>
                         </div>
                         <div id="stopCauseBarError">Error loading scrap data</div>
                     </fieldset>
                     <fieldset>
-                        <h4>Scrap</h4>
+                        <h4>Parts Summary</h4>
                         <div class="barchart-wrapper">
-                            <canvas id="scrapBarChart"></canvas>
+                            <canvas id="partsBarChart"></canvas>
                         </div>
-                        <div id="scrapBarError">Error loading stop cause data</div>
+                        <div id="partsBarError">Error loading part summary</div>
                     </fieldset>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal for Scrap -->
-    <div id="scrapModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('scrapModal')">&times;</span>
-            <h2>Add Scrap</h2>
-            <form action="../api/OEE_Dashboard/add_scrap.php" method="POST">
-                <input type="date" name="log_date" required><br>
-                <input type="time" placeholder="Time" name="log_time" required><br>
-                <input type="text" placeholder="Part No" name="part_no" required><br>
-                <input type="number" placeholder="Scrap Count" name="scrap_count"><br>
-                <button type="submit">Submit Scrap</button>
-            </form>
-        </div>
-    </div>
-
     <script>
         window.addEventListener("load", () => {
             const now = new Date();
-
-            // Format as yyyy-mm-dd
             const dateStr = now.toISOString().split('T')[0];
-
-            // Format time as hh:mm
             const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
 
-            // Set all date and time fields
             document.querySelectorAll('input[type="date"]').forEach(input => {
                 if (!input.value) input.value = dateStr;
             });
@@ -194,7 +178,6 @@
                 if (!input.value) input.value = timeStr;
             });
 
-            // Special handling: set only startDate and endDate filter defaults to today
             const startInput = document.getElementById("startDate");
             const endInput = document.getElementById("endDate");
 
@@ -208,7 +191,6 @@
             const modal = document.getElementById(modalId);
             modal.style.display = "block";
 
-            // Set current date and time every time modal opens
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
             const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
@@ -224,7 +206,6 @@
             document.getElementById(modalId).style.display = "none";
         }
 
-        // Optional: close modal if clicking outside the content
         window.onclick = function (event) {
             document.querySelectorAll('.modal').forEach(modal => {
                 if (event.target === modal) {
@@ -240,6 +221,5 @@
     <script src="../script/OEE_piechart.js"></script>
     <script src="../script/OEE_linechart.js"></script>
     <script src="../script/OEE_barchart.js"></script>
-
 </body>
 </html>

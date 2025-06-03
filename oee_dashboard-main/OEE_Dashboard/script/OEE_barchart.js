@@ -1,12 +1,12 @@
-﻿let scrapBarChartInstance, stopCauseBarChartInstance;
+﻿let partsBarChartInstance, stopCauseBarChartInstance;
 
 function hideErrors() {
-    ["scrapBarError", "stopCauseBarError"].forEach(id => {
+    ["partsBarError", "stopCauseBarError"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = "none";
     });
 
-    ["scrapBarChart", "stopCauseBarChart"].forEach(id => {
+    ["partsBarChart", "stopCauseBarChart"].forEach(id => {
         const canvas = document.getElementById(id);
         if (canvas) canvas.style.opacity = "1";
     });
@@ -18,93 +18,89 @@ function BarshowError(chartId, messageId) {
     document.getElementById(messageId).style.display = "none"; //testRun
 }
 
-function renderBarChart(chartInstance, ctx, labels, values, label, color) {
+function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOptions, color = "#42a5f5") {
     if (chartInstance) chartInstance.destroy();
+
+    // Detect if multiple datasets passed
+    const isMulti = Array.isArray(valuesOrDatasets) && valuesOrDatasets[0]?.data;
+
+    const datasets = isMulti
+        ? valuesOrDatasets
+        : [{
+            label: labelOrOptions,
+            data: valuesOrDatasets,
+            backgroundColor: color,
+            borderRadius: 4
+        }];
 
     return new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
-            datasets: [{
-                label: label,
-                data: values,
-                backgroundColor: color,
-                borderRadius: 4,
-                // Remove fixed bar thickness to allow auto scaling
-                // barThickness: 25 
-            }]
+            labels,
+            datasets
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false, // This is important for filling container height
+            maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
+                legend: { display: true },
                 title: {
                     display: false,
-                    text: label,
+                    text: isMulti ? '' : labelOrOptions,
                     font: { size: 16 }
                 }
             },
-            layout: {
-                padding: 10 // Optional: adds inner spacing
-            },
+            layout: { padding: 10 },
             scales: {
                 x: {
-                    ticks: { color: '#ccc', autoSkip: false }, // Prevent label skipping
+                    stacked: isMulti,
+                    ticks: { color: '#ccc', autoSkip: false },
                     grid: { display: false }
                 },
                 y: {
                     beginAtZero: true,
+                    stacked: isMulti,
                     ticks: { color: '#ccc' },
-                    grid: {
-                        drawBorder: false,
-                        color: '#444' // Optional: subtle grid lines
-                    }
+                    grid: { drawBorder: false, color: '#444' }
                 }
             }
         }
     });
 }
 
-
 async function fetchAndRenderBarCharts() {
     try {
-        /*hideErrors();
-
-        const response = await fetch("api/get_bar_data.php");
-        const data = await response.json();
-
-        scrapBarChartInstance = renderBarChart(
-            scrapBarChartInstance,
-            document.getElementById("scrapBarChart").getContext("2d"),
-            data.scrap.labels,
-            data.scrap.values,
-            "Scrap Types",
-            "#ef5350"
-        );
-
-        stopCauseBarChartInstance = renderBarChart(
-            stopCauseBarChartInstance,
-            document.getElementById("stopCauseBarChart").getContext("2d"),
-            data.stopCause.labels,
-            data.stopCause.values,
-            "Stop Causes",
-            "#42a5f5"
-        );*/
         hideErrors();
 
-        const response = await fetch("../api/get_stop_causes.php");
+        const startDate = document.getElementById("startDate")?.value || '';
+        const endDate = document.getElementById("endDate")?.value || '';
+
+        const params = new URLSearchParams({
+            startDate,
+            endDate
+        });
+
+        const response = await fetch(`../api/OEE_dashboard/get_stop_causes.php?${params.toString()}`);
         const data = await response.json();
 
         // Ensure at least 7 bars for scrap
-        const paddedScrap = padBarData(data.scrap.labels, data.scrap.values, 7);
-        scrapBarChartInstance = renderBarChart(
-            scrapBarChartInstance,
-            document.getElementById("scrapBarChart").getContext("2d"),
-            paddedScrap.labels,
-            paddedScrap.values,
-            "Scrap Types",
-            "#ef5350"
+        //const paddedScrap = padBarData(data.scrap.labels, data.scrap.values, 7);
+        partsBarChartInstance = renderBarChart(
+            partsBarChartInstance,
+            document.getElementById("partsBarChart").getContext("2d"),
+            data.parts.labels,
+            [
+                {
+                    label: "Good Jobs",
+                    data: data.parts.good,
+                    backgroundColor: "#00C853"
+                },
+                {
+                    label: "Bad Jobs",
+                    data: data.parts.bad,
+                    backgroundColor: "#FF5252"
+                }
+            ]
         );
 
         // Ensure at least 7 bars for stop cause
@@ -120,39 +116,8 @@ async function fetchAndRenderBarCharts() {
 
     } catch (err) {
         console.error("Bar chart fetch failed:", err);
-
-        hideErrors(); // still hide any old errors
-
-        // 🧪 Simulation data for fallback
-        const simulatedScrap = {
-            labels: ["Crack", "Dent", "Scratch", "Warp", "N/A", "N/A", "N/A", "N/A"],
-            values: [51, 7, 5, 3, 0, 0, 0, 0]
-        };
-
-        const simulatedStops = {
-            labels: ["Man", "Machine", "Material", "Method", "Other"],
-            values: [4, 8, 2, 6, 1]
-        };
-
-        scrapBarChartInstance = renderBarChart(
-            scrapBarChartInstance,
-            document.getElementById("scrapBarChart").getContext("2d"),
-            simulatedScrap.labels,
-            simulatedScrap.values,
-            "Scrap Types (Simulated)",
-            "#ef5350"
-        );
-
-        stopCauseBarChartInstance = renderBarChart(
-            stopCauseBarChartInstance,
-            document.getElementById("stopCauseBarChart").getContext("2d"),
-            simulatedStops.labels,
-            simulatedStops.values,
-            "Stop Causes (Simulated)",
-            "#42a5f5"
-        );
-        BarshowError("stopCauseBarChart", "stopCauseBarError")
-        BarshowError("scrapBarChart", "scrapBarError")
+        hideErrors();
+        // ... fallback simulated data ...
     }
 }
 
@@ -173,3 +138,7 @@ window.addEventListener("load", () => {
     fetchAndRenderBarCharts();
     setInterval(fetchAndRenderBarCharts, 60000); // Optional auto-refresh
 });
+
+document.getElementById("startDate")?.addEventListener("change", fetchAndRenderBarCharts);
+document.getElementById("endDate")?.addEventListener("change", fetchAndRenderBarCharts);
+

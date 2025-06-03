@@ -31,11 +31,13 @@ body {
 }
 
 .OEE-head {
-    background-color: #0D0D0D;   
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    background-color: #0D0D0D;
     border: 1px solid #545454;
     padding: 10px;
     text-align: center;
-    align-content: center;
     height: 100%;
     width: 100%;
     min-width: 1250px;
