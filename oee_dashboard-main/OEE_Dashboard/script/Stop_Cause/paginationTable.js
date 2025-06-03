@@ -51,7 +51,6 @@ async function fetchPaginatedParts(page = 1) {
             tableBody.appendChild(tr);
         });
         updatePaginationControls(result.page, result.total);
-        //fetchStopCauseSummary({ startDate, endDate, line, machine, cause });
         renderCauseSummary(result.summary || [], result.grand_total_seconds || 0);
     } catch (error) {
         console.error("Failed to fetch paginated data:", error);
@@ -134,7 +133,7 @@ function formatDuration(seconds) {
     return `${hrs}h ${minsLeft}m`;
 }
 
-function renderCauseSummary(summary, totalSeconds = 0) {
+function renderCauseSummary(summary, totalSeconds = 0) { 
     const container = document.getElementById('causeSummary');
     container.innerHTML = ''; // Clear previous
 
@@ -148,25 +147,17 @@ function renderCauseSummary(summary, totalSeconds = 0) {
     totalSpan.textContent = `Total Stop Duration: ${formatDuration(totalSeconds)}`;
     wrapper.appendChild(totalSpan);
 
-    // Individual cause summaries
+    // Individual line summaries
     summary.forEach(item => {
         const span = document.createElement('span');
         span.style.marginRight = '20px';
         span.style.color = 'darkorange';
-        span.textContent = `${item.cause} – ${item.count} times (${formatDuration(item.total_seconds)})`;
+        span.textContent = `${item.line} – ${item.count} times (${formatDuration(item.total_seconds)})`;
         wrapper.appendChild(span);
     });
 
     container.appendChild(wrapper);
 }
-
-async function fetchStopCauseSummary(filters) {
-    const params = new URLSearchParams(filters);
-    const res = await fetch(`../api/Stop_Cause/get_cause_summary.php?${params}`);
-    const summary = await res.json();
-    renderCauseSummary(summary);
-}
-
 
 document.getElementById('editStopForm').addEventListener('submit', function (e) {
     e.preventDefault(); // Prevent page reload

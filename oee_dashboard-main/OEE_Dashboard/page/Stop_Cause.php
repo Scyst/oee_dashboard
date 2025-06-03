@@ -265,7 +265,6 @@
     </script>
 
     <script src="../script/datetime.js"></script>
-    <script src="../script/Stop_Cause/Cal_duration.js"></script>
     <script src="../script/Stop_Cause/export_data.js"></script>
     <script src="../script/Stop_Cause/paginationTable.js"></script>
 
