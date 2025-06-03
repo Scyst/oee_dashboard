@@ -164,7 +164,7 @@
                         <?php include '../api/pdTable/get_part_nos.php'; ?>
                     </datalist><br>
 
-                    <input list="LotList" name="Lot_no" placeholder="Lot No." required>
+                    <input list="LotList" name="lot_no" placeholder="Lot No." required>
                     <datalist id="LotList">
                         <?php include '../api/pdTable/get_lot_numbers.php'; ?>
                     </datalist><br>
@@ -219,7 +219,7 @@
                 </datalist><br>
 
                 <!-- Lot No -->
-                <input list="editLotList" name="Lot_no" id="edit_lot_no" placeholder="Lot No." required>
+                <input list="editLotList" name="lot_no" id="edit_lot_no" placeholder="Lot No." required>
                 <datalist id="editLotList">
                     <?php include '../api/pdTable/get_lot_numbers.php'; ?>
                 </datalist><br>

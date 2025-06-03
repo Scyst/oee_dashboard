@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $line = $_POST['line'];
     $model = $_POST['model'];
     $part_no = $_POST['part_no'];
+    $lot_no = $_POST['lot_no'];
     $count_value = $_POST['count_value'];
     $count_type = $_POST['count_type'];
     $note = $_POST['note'];
@@ -47,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    $sql = "UPDATE parts SET log_date = ?, log_time = ?, line = ?, model = ?, part_no = ?, count_value = ?, count_type = ?, note = ? WHERE id = ?";
-    $params = array($log_date, $log_time, $line, $model, $part_no, $count_value, $count_type, $note, $id);
+    $sql = "UPDATE parts SET log_date = ?, log_time = ?, line = ?, model = ?, part_no = ?, lot_no = ?, count_value = ?, count_type = ?, note = ? WHERE id = ?";
+    $params = array($log_date, $log_time, $line, $model, $part_no, $lot_no, $count_value, $count_type, $note, $id);
 
     $stmt = sqlsrv_query($conn, $sql, $params);
 
