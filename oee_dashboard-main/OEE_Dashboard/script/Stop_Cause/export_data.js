@@ -75,6 +75,38 @@ async function exportToExcel() {
         return;
     }
 
+    const summary = result.summary || [];
+    const grandSeconds = result.grand_total_seconds || 0;
+
+    // Format HH:MM:SS
+    function formatDuration(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // === Summary Table: per line + total ===
+    let totalOccurrences = 0;
+    const summaryRows = summary.map(row => {
+        totalOccurrences += row.count || 0;
+        return [
+            row.line || 'N/A',
+            row.count,
+            formatDuration(row.total_seconds || 0)
+        ];
+    });
+
+    const summaryTable = [
+        ["Stop Duration Summary (Grouped by Line)"],
+        ["Line", "Occurrences", "Total Duration (HH:MM:SS)"],
+        ...summaryRows,
+        ["Grand Total", totalOccurrences, formatDuration(grandSeconds)]
+    ];
+
+    const spacer = [[""], [""]];
+
+    // === Main Data Table ===
     const headers = ["Date", "Start", "End", "Line", "Machine/Station", "Cause", "Recovered By", "Note"];
     const data = result.data.map(row => [
         row.log_date,
@@ -87,9 +119,11 @@ async function exportToExcel() {
         row.note || ''
     ]);
 
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    const sheetData = [...summaryTable, ...spacer, headers, ...data];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "FilteredData");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "StopCauseExport");
 
     XLSX.writeFile(workbook, "Stop_Cause_History.xlsx");
 }
