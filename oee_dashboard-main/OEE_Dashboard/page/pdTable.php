@@ -95,7 +95,7 @@
                 <div style="display: flex; align-items: center;">
                     <div id="grandSummary" style="font-weight: bold;"></div>
                 </div>    
-                <div style="display: flex; gap: 5px; justify-content: center;">
+                <div style="display: flex; gap: 5px; justify-content: center; margin-bottom: -5px;">
                     <button onclick="openSummaryModal()">Show Detailed Summary</button>
                 </div>
             </div>
