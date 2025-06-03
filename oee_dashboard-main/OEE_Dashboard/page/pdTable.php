@@ -92,7 +92,7 @@
             </div>
 
             <div style="display: flex; justify-content: space-between; padding: 2px 10px;">
-                <div style="display: flex; align-items: center;">
+                <div style="display: flex; align-items: center; margin-left: 5px;">
                     <div id="grandSummary" style="font-weight: bold;"></div>
                 </div>    
                 <div style="display: flex; gap: 5px; justify-content: center; margin-bottom: -5px;">

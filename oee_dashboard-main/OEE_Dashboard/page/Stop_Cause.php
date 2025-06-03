@@ -81,7 +81,7 @@
 
             <div style="display: flex; height: 50px; align-items: center; max-width: calc(100vw - 40px); min-width: calc(100% - 20px); height: 40px;">
                 <!--h3 style="margin-left: 10px; min-width: fit-content;">Stop Cause History</h3-->
-                <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto; margin-left: 15px; border: solid 1px honeydew; padding: 5px 10px;"></div>
+                <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto; margin-left: 15px;"></div>
             </div>
 
             <div class="table-wrapper">
