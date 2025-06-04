@@ -86,3 +86,27 @@ BEGIN
 
     SET @i += 1;
 END;
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE performance_parameter (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    line VARCHAR(50) NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    part_no VARCHAR(100) NOT NULL,
+    planned_output INT NOT NULL,
+    updated_at DATETIME DEFAULT GETDATE(),
+
+    CONSTRAINT uc_line_model_part UNIQUE (line, model, part_no)
+);
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE oee_history (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    log_time DATETIME DEFAULT GETDATE(), -- when the summary was logged
+    oee_percent FLOAT NOT NULL,
+    quality_percent FLOAT NOT NULL,
+    performance_percent FLOAT NOT NULL,
+    availability_percent FLOAT NOT NULL
+);

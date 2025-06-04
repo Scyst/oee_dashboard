@@ -195,10 +195,8 @@
     </script>
 
     <script src="../script/datetime.js"></script>
-    <!--script src="../script/fetch_line&barchart.js"></!--script>
-    <script-- src="../script/fetch_piechart.js"></script-->
-    <script src="../script/OEE_piechart.js"></script>
-    <script src="../script/OEE_linechart.js"></script>
-    <script src="../script/OEE_barchart.js"></script>
+    <script src="../script/OEE_Dashboard/OEE_piechart.js"></script>
+    <!--script src="../script/OEE_Dashboard/OEE_linechart.js"></!--script-->
+    <script src="../script/OEE_Dashboard/OEE_barchart.js"></script>
 </body>
 </html>
