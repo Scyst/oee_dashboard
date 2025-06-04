@@ -127,3 +127,28 @@ function refetchSummaryInModal() {
             alert("Failed to load summary.");
         });
 }
+
+
+<script>
+    async function populateDropdown(endpoint, selectId) {
+        try {
+            const res = await fetch(`../api/OEE_Dashboard/${endpoint}`);
+            const data = await res.json();
+
+            const select = document.getElementById(selectId);
+            data.forEach(value => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = value;
+                select.appendChild(option);
+            });
+        } catch (err) {
+            console.error(`Failed to load ${selectId} options:`, err);
+        }
+    }
+
+    window.addEventListener("load", () => {
+        populateDropdown("get_lines.php", "lineFilter");
+        populateDropdown("get_models.php", "modelFilter");
+    });
+</script>

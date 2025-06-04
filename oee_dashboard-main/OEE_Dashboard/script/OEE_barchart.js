@@ -162,15 +162,76 @@ function padBarData(labels, values, minCount) {
     return { labels: paddedLabels, values: paddedValues };
 }
 
+function updateURLParamsFromFilters() {
+    const params = new URLSearchParams();
 
-window.addEventListener("load", () => {
+    const startDate = document.getElementById("startDate")?.value;
+    const endDate = document.getElementById("endDate")?.value;
+    const line = document.getElementById("lineFilter")?.value;
+    const model = document.getElementById("modelFilter")?.value;
+
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    if (line) params.set("line", line);
+    if (model) params.set("model", model);
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+}
+
+async function populateDropdown(selectId, apiPath, selectedValue = '') {
+    try {
+        const res = await fetch(apiPath);
+        const data = await res.json();
+
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        const label = selectId === 'lineFilter' ? 'Lines' : 'Models';
+        select.innerHTML = `<option value="">All ${label}</option>`;
+
+        data.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item;
+            option.textContent = item;
+            select.appendChild(option);
+        });
+
+        if (selectedValue) select.value = selectedValue;
+
+    } catch (err) {
+        console.error(`Failed to load ${selectId} options:`, err);
+    }
+}
+
+function handleFilterChange() {
+    updateURLParamsFromFilters();
     fetchAndRenderBarCharts();
+}
+
+window.addEventListener("load", async () => {
+    const params = new URLSearchParams(window.location.search);
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    const line = params.get("line");
+    const model = params.get("model");
+
+    if (startDate) document.getElementById("startDate").value = startDate;
+    if (endDate) document.getElementById("endDate").value = endDate;
+
+    // Load line/model dropdowns with selected values
+    await Promise.all([
+        populateDropdown("lineFilter", "../api/OEE_Dashboard/get_lines.php", line),
+        populateDropdown("modelFilter", "../api/OEE_Dashboard/get_models.php", model)
+    ]);
+
+    // Attach unified handler AFTER dropdowns are populated
+    ["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
+        document.getElementById(id)?.addEventListener("change", handleFilterChange);
+    });
+
+    handleFilterChange(); // Load initial charts with filters
     setInterval(fetchAndRenderBarCharts, 60000); // Optional auto-refresh
 });
-
-document.getElementById("startDate")?.addEventListener("change", fetchAndRenderBarCharts);
-document.getElementById("endDate")?.addEventListener("change", fetchAndRenderBarCharts);
-document.getElementById("lineFilter")?.addEventListener("change", fetchAndRenderBarCharts);
-document.getElementById("modelFilter")?.addEventListener("change", fetchAndRenderBarCharts);
 
 

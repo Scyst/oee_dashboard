@@ -19,6 +19,13 @@
                 <h2>OEE DASHBOARD</h2>        
                 <!-- Filter Row -->
                 <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
+                    <select id="lineFilter">
+                        <option value="">All Lines</option>
+                    </select>
+
+                    <select id="modelFilter">
+                        <option value="">All Models</option>
+                    </select>
                     <input type="date" id="startDate" onchange="fetchAndRenderBarCharts()">
                     <p style="text-align: center; align-content: center;"> - </p>
                     <input type="date" id="endDate" onchange="fetchAndRenderBarCharts()">
@@ -154,14 +161,7 @@
                         <div id="stopCauseBarError">Error loading scrap data</div>
                     </fieldset>
                     <fieldset>
-                        <h4>Production</h4>
-                        <select id="lineFilter">
-                            <option value="">All Lines</option>
-                        </select>
-
-                        <select id="modelFilter">
-                            <option value="">All Models</option>
-                        </select>
+                        <h4>Production Results</h4>
                         <div class="barchart-wrapper">
                             <canvas id="partsBarChart"></canvas>
                         </div>
@@ -194,33 +194,9 @@
         });
     </script>
 
-    <script>
-        async function populateDropdown(endpoint, selectId) {
-            try {
-                const res = await fetch(`../api/OEE_Dashboard/${endpoint}`);
-                const data = await res.json();
-
-                const select = document.getElementById(selectId);
-                data.forEach(value => {
-                    const option = document.createElement("option");
-                    option.value = value;
-                    option.textContent = value;
-                    select.appendChild(option);
-                });
-            } catch (err) {
-                console.error(`Failed to load ${selectId} options:`, err);
-            }
-        }
-
-        window.addEventListener("load", () => {
-            populateDropdown("get_lines.php", "lineFilter");
-            populateDropdown("get_models.php", "modelFilter");
-        });
-    </script>
-
     <script src="../script/datetime.js"></script>
-    <script src="../script/fetch_line&barchart.js"></script>
-    <script src="../script/fetch_piechart.js"></script>
+    <!--script src="../script/fetch_line&barchart.js"></!--script>
+    <script-- src="../script/fetch_piechart.js"></script-->
     <script src="../script/OEE_piechart.js"></script>
     <script src="../script/OEE_linechart.js"></script>
     <script src="../script/OEE_barchart.js"></script>
