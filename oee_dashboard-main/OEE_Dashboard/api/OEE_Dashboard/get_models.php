@@ -10,3 +10,4 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $models[] = $row['model'];
 }
 echo json_encode($models);
+?>

@@ -10,3 +10,4 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $lines[] = $row['line'];
 }
 echo json_encode($lines);
+?>
