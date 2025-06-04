@@ -105,7 +105,14 @@ function renderPieChartWithLoss(chartRef, ctx, label, value, lossBreakdown, main
 async function fetchAndRenderCharts() {
     try {
         hideErrors();
-        const response = await fetch("../api/get_oee_summary.php?log_date=<?=date('Y-m-d')?>&shift=A");
+        const params = new URLSearchParams({
+            startDate: document.getElementById("startDate")?.value || '',
+            endDate: document.getElementById("endDate")?.value || '',
+            line: document.getElementById("lineFilter")?.value || '',
+            model: document.getElementById("modelFilter")?.value || ''
+        });
+
+        const response = await fetch(`../api/get_oee_summary.php?${params.toString()}`);
         const data = await response.json();
         if (!data.success) throw new Error("Invalid data");
 
@@ -220,6 +227,10 @@ async function fetchAndRenderCharts() {
 }
 
 window.addEventListener("load", () => {
+    ["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
+        document.getElementById(id)?.addEventListener("change", fetchAndRenderCharts);
+    });
+
     fetchAndRenderCharts();
     setInterval(fetchAndRenderCharts, 60000);
 });
