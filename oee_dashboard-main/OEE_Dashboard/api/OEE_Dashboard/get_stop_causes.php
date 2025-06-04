@@ -20,10 +20,10 @@ if (!empty($line)) {
     $stopConditions[] = "LOWER(line) = LOWER(?)";
     $stopParams[] = $line;
 }
-if (!empty($model)) {
+/*if (!empty($model)) {
     $stopConditions[] = "LOWER(machine) = LOWER(?)"; // 'model' mapped to machine
     $stopParams[] = $model;
-}
+}*/
 
 $stopWhere = "WHERE " . implode(" AND ", $stopConditions);
 
