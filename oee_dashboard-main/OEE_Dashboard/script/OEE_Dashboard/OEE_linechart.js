@@ -11,11 +11,12 @@ function showError(chartId, messageId) {
     const canvas = document.getElementById(chartId);
     const errorMsg = document.getElementById(messageId);
     if (canvas) canvas.style.opacity = "1";
-    if (errorMsg) errorMsg.style.display = "block";
+    if (errorMsg) errorMsg.style.display = "none";
 }
 
 function renderCombinedLineChart(labels, datasets) {
-    const ctx = document.getElementById("oeeLineChart").getContext("2d");
+    const canvas = document.getElementById("oeeLineChart");
+    const ctx = canvas.getContext("2d");
     if (oeeLineChart) oeeLineChart.destroy();
 
     oeeLineChart = new Chart(ctx, {
@@ -25,12 +26,11 @@ function renderCombinedLineChart(labels, datasets) {
             datasets: datasets
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 2.5,
+            responsive: true,          // ✅ allows scaling
+            maintainAspectRatio: false, // ✅ allows full height/width
             plugins: {
                 title: {
-                    display: true,
+                    display: false,
                     text: "OEE Trends",
                     font: { size: 16, weight: "bold" },
                     color: "#fff"
@@ -54,8 +54,7 @@ function renderCombinedLineChart(labels, datasets) {
                     beginAtZero: true,
                     max: 100,
                     ticks: { color: "#ccc", font: { size: 10 } },
-                    grid: { color: "#444" },
-                    title: { display: false }
+                    grid: { color: "#444" }
                 }
             },
             layout: { padding: 10 }

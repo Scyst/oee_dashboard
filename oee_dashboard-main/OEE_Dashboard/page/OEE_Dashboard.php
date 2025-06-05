@@ -118,11 +118,11 @@
         <div class="oee-linechart">
             <div style="width: 100%">
                 <fieldset>
-                    <h4>OEE / Quality / Performance / Availability</h4>
+                    <!--h4>OEE / Quality / Performance / Availability</!--h4-->
                     <div class="linechart-wrapper">
                         <canvas id="oeeLineChart"></canvas>
                     </div>
-                    <div id="oeeLineError" class="chart-error">Fetch Failed</div>
+                    <!--div id="oeeLineError" class="chart-error">Fetch Failed</!--div-->
                 </fieldset>
             </div>
         </div>

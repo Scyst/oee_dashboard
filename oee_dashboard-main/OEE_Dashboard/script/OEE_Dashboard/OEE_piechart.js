@@ -63,7 +63,7 @@ function renderSimplePieChart(chartRef, ctx, label, rawValue, mainColor) {
                 const textX = Math.round((width - ctx.measureText(text).width) / 2);
                 const textY = height / 2;
 
-                ctx.fillStyle = "#333";
+                ctx.fillStyle = "#ffffff";
                 ctx.fillText(text, textX, textY);
                 ctx.save();
             }
