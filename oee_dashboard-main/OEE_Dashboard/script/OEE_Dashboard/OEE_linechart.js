@@ -66,7 +66,23 @@ async function fetchAndRenderLineCharts() {
     try {
         hideErrors();
 
-        const response = await fetch("../api/OEE_Dashboard/get_oee_linechart.php");
+        const startDate = document.getElementById("startDate")?.value || '';
+        const endDate   = document.getElementById("endDate")?.value || '';
+        const line      = document.getElementById("lineFilter")?.value || '';
+        const model     = document.getElementById("modelFilter")?.value || '';
+
+        const params = new URLSearchParams({
+            startDate,
+            endDate,
+            line,
+            model
+        });
+
+        // ⏎ Update browser URL (preserve filters on refresh)
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+
+        const response = await fetch(`../api/OEE_Dashboard/get_oee_linechart.php?${params.toString()}`);
         const data = await response.json();
 
         if (!data.success) throw new Error("Data error");
@@ -119,12 +135,29 @@ async function fetchAndRenderLineCharts() {
 
     } catch (err) {
         console.error("Line chart fetch failed:", err);
-
         showError("oeeLineChart", "oeeLineError");
     }
 }
 
 window.addEventListener("load", () => {
+    const params = new URLSearchParams(window.location.search);
+
+    const startDate = params.get("startDate");
+    const endDate   = params.get("endDate");
+    const line      = params.get("line");
+    const model     = params.get("model");
+
+    if (startDate) document.getElementById("startDate").value = startDate;
+    if (endDate)   document.getElementById("endDate").value   = endDate;
+    if (line)      document.getElementById("lineFilter").value = line;
+    if (model)     document.getElementById("modelFilter").value = model;
+
     fetchAndRenderLineCharts();
     setInterval(fetchAndRenderLineCharts, 60000);
 });
+
+// 🔄 Auto update on any filter change
+["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
+    document.getElementById(id)?.addEventListener("change", fetchAndRenderLineCharts);
+});
+

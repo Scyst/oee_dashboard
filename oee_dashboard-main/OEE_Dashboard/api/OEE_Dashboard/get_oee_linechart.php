@@ -2,15 +2,16 @@
 require_once("../../api/db.php");
 header('Content-Type: application/json');
 
-$log_date = $_GET['log_date'] ?? date('Y-m-d');
-$line     = $_GET['line'] ?? null;
-$model    = $_GET['model'] ?? null;
+$startDate = $_GET['startDate'] ?? date('Y-m-d');
+$endDate   = $_GET['endDate'] ?? date('Y-m-d');
+$line      = $_GET['line'] ?? null;
+$model     = $_GET['model'] ?? null;
 
 // ---- WHERE filters ----
-$whereParts = ["log_date = ?"];
-$whereStops = ["log_date = ?"];
-$paramsParts = [$log_date];
-$paramsStops = [$log_date];
+$whereParts = ["log_time BETWEEN ? AND ?"];
+$whereStops = ["stop_begin BETWEEN ? AND ?"];
+$paramsParts = [$startDate, $endDate];
+$paramsStops = [$startDate, $endDate];
 
 if (!empty($line)) {
     $whereParts[] = "LOWER(line) = LOWER(?)";
@@ -82,7 +83,6 @@ for ($hour = 0; $hour < 24; $hour++) {
 
     $plannedOutput = 0;
     if (!empty($model)) {
-        // try direct lookup if model is given
         foreach ($planMap as $key => $value) {
             if (str_starts_with($key, strtolower($model) . "|")) {
                 $plannedOutput = $value;
@@ -90,8 +90,10 @@ for ($hour = 0; $hour < 24; $hour++) {
             }
         }
     }
+
+    // fallback if not found
     if ($plannedOutput === 0 && count($planMap) > 0) {
-        $plannedOutput = round(array_sum($planMap) / count($planMap)); // fallback average
+        $plannedOutput = round(array_sum($planMap) / count($planMap));
     }
 
     $downtime = $downtimeData[$hour] ?? 0;
