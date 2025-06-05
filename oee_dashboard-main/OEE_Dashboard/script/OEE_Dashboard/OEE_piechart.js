@@ -16,15 +16,18 @@ function hideErrors() {
     });
 }
 
-function renderSimplePieChart(chartRef, ctx, label, value, mainColor) {
+function renderSimplePieChart(chartRef, ctx, label, rawValue, mainColor) {
     if (chartRef) chartRef.destroy();
+
+    const value = Math.min(rawValue, 100);           // Clamp to 100
+    const loss = Math.max(0, 100 - value);           // Avoid negative loss
 
     return new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: [label, 'Loss'],
             datasets: [{
-                data: [value, 100 - value],
+                data: [value, loss],
                 backgroundColor: [mainColor, '#e0e0e0'],
                 cutout: '80%',
                 borderWidth: 0.5
@@ -32,21 +35,39 @@ function renderSimplePieChart(chartRef, ctx, label, value, mainColor) {
         },
         options: {
             plugins: {
-                title: {
-                    display: true,
-                    text: `${label}: ${value.toFixed(1)}%`,
-                    font: { size: 14 }
-                },
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: (context) => `${context.label}: ${context.formattedValue}%`
+                        label: (context) => `${context.label}: ${context.parsed.toFixed(1)}%`
                     }
+                },
+                title: { display: false },
+                centerText: {
+                    display: true,
+                    text: `${rawValue.toFixed(1)}%`
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'centerText',
+            beforeDraw(chart) {
+                const { width } = chart;
+                const { height } = chart;
+                const ctx = chart.ctx;
+                ctx.restore();
+                const fontSize = (height / 150).toFixed(2);
+                ctx.font = `${fontSize}em sans-serif`;
+                ctx.textBaseline = "middle";
+
+                const text = chart.options.plugins.centerText.text;
+                const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                const textY = height / 2;
+
+                ctx.fillStyle = "#333";
+                ctx.fillText(text, textX, textY);
+                ctx.save();
+            }
+        }]
     });
 }
 
