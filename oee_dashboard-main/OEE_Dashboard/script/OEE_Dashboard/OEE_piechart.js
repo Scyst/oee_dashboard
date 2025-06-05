@@ -49,11 +49,9 @@ function renderPieChartWithLoss(chartRef, ctx, label, value, lossBreakdown, main
     const backgroundColor = [mainColor];
 
     const lossColors = {
-        Man: '#65A6FA',
-        Machine: '#BB109D',
-        Method: '#FF914D',
-        Material: '#FFDE59',
-        Other: '#D9D9D9'
+        Quality: '#65A6FA',
+        Performance: '#FF914D',
+        Availability: '#FFDE59',
     };
 
     for (const [lossType, val] of Object.entries(lossBreakdown)) {

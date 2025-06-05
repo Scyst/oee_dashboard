@@ -5,6 +5,7 @@ header('Content-Type: application/json');
 // Get filters
 $startDate = $_GET['startDate'] ?? date('Y-m-d');
 $endDate   = $_GET['endDate'] ?? date('Y-m-d');
+
 $line      = $_GET['line'] ?? null;
 $model     = $_GET['model'] ?? null;
 
@@ -73,12 +74,34 @@ $stopSql = "
 $stopStmt = sqlsrv_query($conn, $stopSql, $params);
 $stopData = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
 $downtime = (int) $stopData['downtime'];
-$plannedTime = 480; // 8 hours
-$runtime = $plannedTime - $downtime;
+$days = (new DateTime($startDate))->diff(new DateTime($endDate))->days + 1;
+$plannedTime = 480 * $days; // 8 hours/day
+$runtime = max(0, $plannedTime - $downtime);
 
 // ---------- Step 3: Metrics ----------
 $qualityPercent = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
+
 $availabilityPercent = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
+
+if ($totalPlannedOutput === 0) {
+    // Count distinct part types (model + part + line)
+    $distinctPartSql = "
+        SELECT COUNT(DISTINCT model + '|' + part_no + '|' + line) AS type_count
+        FROM parts
+        WHERE log_date BETWEEN ? AND ?
+        " . (!empty($line) ? " AND line = ?" : "") . (!empty($model) ? " AND model = ?" : "");
+
+    $distinctParams = [$startDate, $endDate];
+    if (!empty($line))  $distinctParams[] = $line;
+    if (!empty($model)) $distinctParams[] = $model;
+
+    $distinctStmt = sqlsrv_query($conn, $distinctPartSql, $distinctParams);
+    $distinctRow = sqlsrv_fetch_array($distinctStmt, SQLSRV_FETCH_ASSOC);
+    $typeCount = (int) $distinctRow['type_count'];
+
+    $totalPlannedOutput = $typeCount * 100; // fallback planned output
+}
+
 $performancePercent = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
 
 $oee = ($availabilityPercent / 100) * ($performancePercent / 100) * ($qualityPercent / 100) * 100;
