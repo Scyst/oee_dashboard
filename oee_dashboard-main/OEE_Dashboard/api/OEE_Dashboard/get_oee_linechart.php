@@ -3,10 +3,10 @@ require_once("../../api/db.php");
 header('Content-Type: application/json');
 
 $log_date = $_GET['log_date'] ?? date('Y-m-d');
-$line = $_GET['line'] ?? null;
-$model = $_GET['model'] ?? null;
+$line     = $_GET['line'] ?? null;
+$model    = $_GET['model'] ?? null;
 
-// Build filters
+// ---- WHERE filters ----
 $whereParts = ["log_date = ?"];
 $whereStops = ["log_date = ?"];
 $paramsParts = [$log_date];
@@ -26,7 +26,7 @@ if (!empty($model)) {
 $wherePartsStr = "WHERE " . implode(" AND ", $whereParts);
 $whereStopsStr = "WHERE " . implode(" AND ", $whereStops);
 
-// 1. Get hourly aggregated part counts
+// ---- 1. Get parts data ----
 $partSql = "
     SELECT 
         DATEPART(HOUR, log_time) AS hour,
@@ -35,7 +35,6 @@ $partSql = "
     FROM parts
     $wherePartsStr
     GROUP BY DATEPART(HOUR, log_time)
-    ORDER BY hour
 ";
 $partStmt = sqlsrv_query($conn, $partSql, $paramsParts);
 $partData = [];
@@ -46,7 +45,7 @@ while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     ];
 }
 
-// 2. Get hourly downtime
+// ---- 2. Get downtime data ----
 $stopSql = "
     SELECT 
         DATEPART(HOUR, stop_begin) AS hour,
@@ -61,7 +60,7 @@ while ($row = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
     $downtimeData[(int)$row['hour']] = (int)$row['downtime'];
 }
 
-// 3. Get planned output from performance_parameter
+// ---- 3. Get planned output from performance_parameter ----
 $planSql = "
     SELECT model, part_no, planned_output
     FROM performance_parameter
@@ -70,42 +69,47 @@ $planParams = !empty($line) ? [$line] : [];
 $planStmt = sqlsrv_query($conn, $planSql, $planParams);
 $planMap = [];
 while ($row = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
-    $key = strtolower(trim($row['model'])) . '|' . strtolower(trim($row['part_no']));
+    $key = strtolower(trim($row['model'])) . "|" . strtolower(trim($row['part_no']));
     $planMap[$key] = (int)$row['planned_output'];
 }
 
-// 4. Build hourly OEE breakdown
-$hourly = [];
+// ---- 4. Build hourly linechart data ----
+$records = [];
 for ($hour = 0; $hour < 24; $hour++) {
     $FG = $partData[$hour]['FG'] ?? 0;
     $Defects = $partData[$hour]['Defects'] ?? 0;
-    $totalProduced = $FG + $Defects;
+    $produced = $FG + $Defects;
 
-    // Assume actual model/part_no combination is not unique per hour,
-    // so we use average planned_output as fallback
     $plannedOutput = 0;
-    if ($totalProduced > 0 && !empty($model) && isset($planMap[strtolower($model) . '|'])) {
-        $plannedOutput = $planMap[strtolower($model) . '|'];
-    } elseif (!empty($planMap)) {
+    if (!empty($model)) {
+        // try direct lookup if model is given
+        foreach ($planMap as $key => $value) {
+            if (str_starts_with($key, strtolower($model) . "|")) {
+                $plannedOutput = $value;
+                break;
+            }
+        }
+    }
+    if ($plannedOutput === 0 && count($planMap) > 0) {
         $plannedOutput = round(array_sum($planMap) / count($planMap)); // fallback average
     }
 
     $downtime = $downtimeData[$hour] ?? 0;
-    $plannedTime = 60; // 1 hour = 60 min
-    $runtime = max($plannedTime - $downtime, 0);
+    $plannedTime = 60;
+    $runtime = max(0, $plannedTime - $downtime);
 
     $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
-    $performance = $plannedOutput > 0 ? ($totalProduced / $plannedOutput) * 100 : 0;
-    $quality = ($totalProduced > 0) ? ($FG / $totalProduced) * 100 : 0;
+    $performance = $plannedOutput > 0 ? ($produced / $plannedOutput) * 100 : 0;
+    $quality = $produced > 0 ? ($FG / $produced) * 100 : 0;
     $oee = ($availability / 100) * ($performance / 100) * ($quality / 100) * 100;
 
-    $hourly[] = [
-        "hour" => $hour,
+    $records[] = [
+        "date" => sprintf("%02d:00", $hour),
         "availability" => round($availability, 1),
-        "performance" => round($performance, 1),
-        "quality" => round($quality, 1),
-        "oee" => round($oee, 1)
+        "performance"  => round($performance, 1),
+        "quality"      => round($quality, 1),
+        "oee"          => round($oee, 1)
     ];
 }
 
-echo json_encode(["success" => true, "data" => $hourly]);
+echo json_encode(["success" => true, "records" => $records]);

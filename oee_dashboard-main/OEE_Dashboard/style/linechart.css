@@ -33,8 +33,6 @@
     height: 80%;
     width: 100%;
     align-content: center;
-    /*margin-top: 10px;
-    margin-right: 10px;*/
     position: absolute;
     right: 5px;
     margin: 0 auto;
@@ -44,6 +42,7 @@
 .oee-linechart canvas {
     margin: 0 auto;
     width: 100%;
+    height: 100%;
 }
 
 .chart-error {
@@ -54,6 +53,5 @@
     color: red;
     font-size: 20px;
     font-weight: bold;
-    /* display: none; */
     z-index: 10;
 }
