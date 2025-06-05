@@ -14,18 +14,18 @@ $partConditions = ["log_date BETWEEN ? AND ?"];
 $partParams = [$startDate, $endDate];
 
 if (!empty($line)) {
-    $whereParts[] = "LOWER(line) = LOWER(?)";
-    $paramsParts[] = $line;
-    $whereStops[] = "LOWER(line) = LOWER(?)";
-    $paramsStops[] = $line;
+    $stopConditions[] = "LOWER(line) = LOWER(?)";
+    $stopParams[] = $line;
+    $partConditions[] = "LOWER(line) = LOWER(?)";
+    $partParams[] = $line;
 }
 if (!empty($model)) {
-    $whereParts[] = "LOWER(model) = LOWER(?)";
-    $paramsParts[] = $model;
+    $partConditions[] = "LOWER(model) = LOWER(?)";
+    $partParams[] = $model;
 }
 
-$wherePartsStr = "WHERE " . implode(" AND ", $whereParts);
-$whereStopsStr = "WHERE " . implode(" AND ", $whereStops);
+$stopWhere = "WHERE " . implode(" AND ", $stopConditions);
+$partWhere = "WHERE " . implode(" AND ", $partConditions);
 
 // ---------- Step 1: Output (FG + NG + etc.) ----------
 $partSql = "
@@ -33,11 +33,11 @@ $partSql = "
         SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
         SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN count_value ELSE 0 END) AS Defects
     FROM parts
-    $wherePartsStr
+    $partWhere
     GROUP BY model, part_no, line
 ";
 
-$partStmt = sqlsrv_query($conn, $partSql, $paramsParts);
+$partStmt = sqlsrv_query($conn, $partSql, $partParams);
 if (!$partStmt) {
     echo json_encode(["success" => false, "message" => "Part query failed.", "sql_error" => sqlsrv_errors()]);
     exit;
@@ -71,10 +71,10 @@ while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
 $stopSql = "
     SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
     FROM stop_causes
-    $whereStopsStr
+    $stopWhere
 ";
 
-$stopStmt = sqlsrv_query($conn, $stopSql, $paramsStops);
+$stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
 $stopData = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
 $downtime = (int) $stopData['downtime'];
 $days = (new DateTime($startDate))->diff(new DateTime($endDate))->days + 1;
