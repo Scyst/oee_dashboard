@@ -116,37 +116,14 @@
         </div>
 
         <div class="oee-linechart">
-            <div style="display: block;width: 100%">
-                <div class="line-chart">
-                    <fieldset>
-                        <h4>OEE</h4>
-                        <div class="linechart-wrapper">
-                            <canvas id="oeeLineChart"></canvas>
-                        </div>
-                        <div id="oeeLineError" class="chart-error">Fetch Failed</div>
-                    </fieldset>
-                    <fieldset>
-                        <h4>Quality</h4>
-                        <div class="linechart-wrapper">
-                            <canvas id="qualityLineChart"></canvas>
-                        </div>
-                        <div id="qualityLineError" class="chart-error">Fetch Failed</div>
-                    </fieldset>
-                    <fieldset>
-                        <h4>Performance</h4>
-                        <div class="linechart-wrapper">
-                            <canvas id="performanceLineChart"></canvas>
-                        </div>
-                        <div id="performanceLineError" class="chart-error">Fetch Failed</div>
-                    </fieldset>
-                    <fieldset>
-                        <h4>Availability</h4>
-                        <div class="linechart-wrapper">
-                            <canvas id="availabilityLineChart"></canvas>
-                        </div>
-                        <div id="availabilityLineError" class="chart-error">Fetch Failed</div>
-                    </fieldset>
-                </div>
+            <div style="width: 100%">
+                <fieldset>
+                    <h4>OEE / Quality / Performance / Availability</h4>
+                    <div class="linechart-wrapper">
+                        <canvas id="oeeLineChart"></canvas>
+                    </div>
+                    <div id="oeeLineError" class="chart-error">Fetch Failed</div>
+                </fieldset>
             </div>
         </div>
 
