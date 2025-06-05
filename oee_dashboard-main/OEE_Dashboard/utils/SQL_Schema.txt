@@ -104,7 +104,7 @@ CREATE TABLE performance_parameter (
 
 CREATE TABLE oee_history (
     id INT IDENTITY(1,1) PRIMARY KEY,
-    log_time DATETIME DEFAULT GETDATE(), -- when the summary was logged
+    log_time DATETIME DEFAULT GETDATE(),
     oee_percent FLOAT NOT NULL,
     quality_percent FLOAT NOT NULL,
     performance_percent FLOAT NOT NULL,
