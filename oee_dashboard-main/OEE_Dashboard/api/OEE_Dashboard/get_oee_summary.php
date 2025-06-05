@@ -5,24 +5,27 @@ header('Content-Type: application/json');
 // Get filters
 $startDate = $_GET['startDate'] ?? date('Y-m-d');
 $endDate   = $_GET['endDate'] ?? date('Y-m-d');
-
 $line      = $_GET['line'] ?? null;
 $model     = $_GET['model'] ?? null;
 
-// Build WHERE clause
-$conditions = ["log_date BETWEEN ? AND ?"];
-$params = [$startDate, $endDate];
+$whereParts = ["log_date = ?"];
+$whereStops = ["log_date = ?"];
+$paramsParts = [$log_date];
+$paramsStops = [$log_date];
 
 if (!empty($line)) {
-    $conditions[] = "LOWER(line) = LOWER(?)";
-    $params[] = $line;
+    $whereParts[] = "LOWER(line) = LOWER(?)";
+    $paramsParts[] = $line;
+    $whereStops[] = "LOWER(line) = LOWER(?)";
+    $paramsStops[] = $line;
 }
 if (!empty($model)) {
-    $conditions[] = "LOWER(model) = LOWER(?)";
-    $params[] = $model;
+    $whereParts[] = "LOWER(model) = LOWER(?)";
+    $paramsParts[] = $model;
 }
 
-$whereClause = "WHERE " . implode(" AND ", $conditions);
+$wherePartsStr = "WHERE " . implode(" AND ", $whereParts);
+$whereStopsStr = "WHERE " . implode(" AND ", $whereStops);
 
 // ---------- Step 1: Output (FG + NG + etc.) ----------
 $partSql = "
@@ -30,11 +33,11 @@ $partSql = "
         SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
         SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN count_value ELSE 0 END) AS Defects
     FROM parts
-    $whereClause
+    $wherePartsStr
     GROUP BY model, part_no, line
 ";
 
-$partStmt = sqlsrv_query($conn, $partSql, $params);
+$partStmt = sqlsrv_query($conn, $partSql, $paramsParts);
 if (!$partStmt) {
     echo json_encode(["success" => false, "message" => "Part query failed.", "sql_error" => sqlsrv_errors()]);
     exit;
@@ -68,10 +71,10 @@ while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
 $stopSql = "
     SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
     FROM stop_causes
-    $whereClause
+    $whereStopsStr
 ";
 
-$stopStmt = sqlsrv_query($conn, $stopSql, $params);
+$stopStmt = sqlsrv_query($conn, $stopSql, $paramsStops);
 $stopData = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
 $downtime = (int) $stopData['downtime'];
 $days = (new DateTime($startDate))->diff(new DateTime($endDate))->days + 1;

@@ -5,35 +5,17 @@ header('Content-Type: application/json');
 // Shared date filters
 $startDate = $_GET['startDate'] ?? date('Y-m-d');
 $endDate   = $_GET['endDate'] ?? date('Y-m-d');
-
-// Extract shared filters
 $line  = $_GET['line'] ?? null;
 $model = $_GET['model'] ?? null;
 
-// -----------------------------
-// STOP CAUSE FILTERING
-// -----------------------------
 $stopConditions = ["log_date BETWEEN ? AND ?"];
 $stopParams = [$startDate, $endDate];
-
-if (!empty($line)) {
-    $stopConditions[] = "LOWER(line) = LOWER(?)";
-    $stopParams[] = $line;
-}
-/*if (!empty($model)) {
-    $stopConditions[] = "LOWER(machine) = LOWER(?)"; // 'model' mapped to machine
-    $stopParams[] = $model;
-}*/
-
-$stopWhere = "WHERE " . implode(" AND ", $stopConditions);
-
-// -----------------------------
-// PART FILTERING
-// -----------------------------
 $partConditions = ["log_date BETWEEN ? AND ?"];
 $partParams = [$startDate, $endDate];
 
 if (!empty($line)) {
+    $stopConditions[] = "LOWER(line) = LOWER(?)";
+    $stopParams[] = $line;
     $partConditions[] = "LOWER(line) = LOWER(?)";
     $partParams[] = $line;
 }
@@ -42,6 +24,7 @@ if (!empty($model)) {
     $partParams[] = $model;
 }
 
+$stopWhere = "WHERE " . implode(" AND ", $stopConditions);
 $partWhere = "WHERE " . implode(" AND ", $partConditions);
 
 // -----------------------------
