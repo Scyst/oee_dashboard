@@ -1,9 +1,8 @@
 let oeeChart, qualityChart, performanceChart, availabilityChart;
 
 function LineshowError(chartId, messageId) {
-    document.getElementById(chartId).style.opacity = "1"; // optional visual effect 0.4
-    document.getElementById(messageId).style.display = "block"; //default
-    document.getElementById(messageId).style.display = "none";//testRun
+    document.getElementById(chartId).style.opacity = "1";
+    document.getElementById(messageId).style.display = "none"; // testRun
 }
 
 function hideErrors() {
@@ -17,72 +16,29 @@ function hideErrors() {
     });
 }
 
-function createEmptyChart(ctx, message) {
-    return new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Error'],
-            datasets: [{
-                data: [1],
-                backgroundColor: ['#f44336'],
-                cutout: '80%',
-                borderColor: false,
-                borderWidth: 0
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'left'
-                }
-            }
-        }
-    });
-}
-
-function renderPieChartWithLoss(chartRef, ctx, label, value, lossBreakdown, mainColor) {
+function renderSimplePieChart(chartRef, ctx, label, value, mainColor) {
     if (chartRef) chartRef.destroy();
 
-    const labels = [label];
-    const data = [value];
-    const backgroundColor = [mainColor];
-
-    const lossColors = {
-        Quality: '#65A6FA',
-        Performance: '#FF914D',
-        Availability: '#FFDE59',
-    };
-
-    for (const [lossType, val] of Object.entries(lossBreakdown)) {
-        labels.push(lossType);
-        data.push(val);
-        backgroundColor.push(lossColors[lossType] || '#ccc');
-    }
-
     return new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: labels,
+            labels: [label, 'Loss'],
             datasets: [{
-                data: data,
-                backgroundColor: backgroundColor,
+                data: [value, 100 - value],
+                backgroundColor: [mainColor, '#e0e0e0'],
                 cutout: '80%',
-                borderColor: true,
-                borderWidth: 0.5,
-                hoverOffset: 1
+                borderWidth: 0.5
             }]
         },
         options: {
             plugins: {
                 title: {
-                    display: false,
+                    display: true,
                     text: `${label}: ${value.toFixed(1)}%`,
-                    font: { size: 16 }
+                    font: { size: 14 }
                 },
                 legend: {
-                    display: false,
-                    position: 'left'
+                    display: false
                 },
                 tooltip: {
                     callbacks: {
@@ -97,6 +53,7 @@ function renderPieChartWithLoss(chartRef, ctx, label, value, lossBreakdown, main
 async function fetchAndRenderCharts() {
     try {
         hideErrors();
+
         const params = new URLSearchParams({
             startDate: document.getElementById("startDate")?.value || '',
             endDate: document.getElementById("endDate")?.value || '',
@@ -106,116 +63,48 @@ async function fetchAndRenderCharts() {
 
         const response = await fetch(`../api/OEE_Dashboard/get_oee_summary.php?${params.toString()}`);
         const data = await response.json();
+
         if (!data.success) throw new Error("Invalid data");
 
-        oeeChart = renderPieChartWithLoss(
+        oeeChart = renderSimplePieChart(
             oeeChart,
             document.getElementById("oeePieChart").getContext("2d"),
             'OEE',
             data.oee,
-            data.loss_breakdown,
             '#00BF63'
         );
 
-        qualityChart = renderPieChartWithLoss(
+        qualityChart = renderSimplePieChart(
             qualityChart,
             document.getElementById("qualityPieChart").getContext("2d"),
             'Quality',
             data.quality,
-            data.quality_loss_breakdown,
-            '#00BF63'
+            '#66bb6a'
         );
 
-        performanceChart = renderPieChartWithLoss(
+        performanceChart = renderSimplePieChart(
             performanceChart,
             document.getElementById("performancePieChart").getContext("2d"),
             'Performance',
             data.performance,
-            data.performance_loss_breakdown,
-            '#00BF63'
+            '#ffa726'
         );
 
-        availabilityChart = renderPieChartWithLoss(
+        availabilityChart = renderSimplePieChart(
             availabilityChart,
             document.getElementById("availabilityPieChart").getContext("2d"),
             'Availability',
             data.availability,
-            data.availability_loss_breakdown,
-            '#00BF63'
+            '#42a5f5'
         );
-
 
     } catch (err) {
         console.error("Chart fetch failed:", err);
-
-        if (oeeChart) oeeChart.destroy();
-        if (qualityChart) qualityChart.destroy();
-        if (performanceChart) performanceChart.destroy();
-        if (availabilityChart) availabilityChart.destroy();
-
-        // Simulated fallback values
-        const simulated = {
-            oee: 65.5,
-            quality: 92.3,
-            performance: 78.6,
-            availability: 88.4,
-            loss_breakdown: {
-                Man: 10, Machine: 12, Method: 6, Material: 5, Other: 1
-            },
-            quality_loss_breakdown: {
-                Man: 3, Machine: 2, Method: 1, Material: 1, Other: 1
-            },
-            performance_loss_breakdown: {
-                Man: 8, Machine: 7, Method: 3, Material: 1, Other: 2
-            },
-            availability_loss_breakdown: {
-                Man: 6, Machine: 4, Method: 3, Material: 2, Other: 2
-            }
-        };
-
-        oeeChart = renderPieChartWithLoss(
-            oeeChart,
-            document.getElementById("oeePieChart").getContext("2d"),
-            'OEE',
-            simulated.oee,
-            simulated.loss_breakdown,
-            '#00BF63'
-        );
-
-        qualityChart = renderPieChartWithLoss(
-            qualityChart,
-            document.getElementById("qualityPieChart").getContext("2d"),
-            'Quality',
-            simulated.quality,
-            simulated.quality_loss_breakdown,
-            '#00BF63'
-        );
-
-        performanceChart = renderPieChartWithLoss(
-            performanceChart,
-            document.getElementById("performancePieChart").getContext("2d"),
-            'Performance',
-            simulated.performance,
-            simulated.performance_loss_breakdown,
-            '#00BF63'
-        );
-
-        availabilityChart = renderPieChartWithLoss(
-            availabilityChart,
-            document.getElementById("availabilityPieChart").getContext("2d"),
-            'Availability',
-            simulated.availability,
-            simulated.availability_loss_breakdown,
-            '#00BF63'
-        );
-
-        // Optional visual cue for simulated data
         LineshowError("oeePieChart", "oeeError");
         LineshowError("qualityPieChart", "qualityError");
         LineshowError("performancePieChart", "performanceError");
         LineshowError("availabilityPieChart", "availabilityError");
     }
-
 }
 
 window.addEventListener("load", () => {
