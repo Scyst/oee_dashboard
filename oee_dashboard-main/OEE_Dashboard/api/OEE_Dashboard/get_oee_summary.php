@@ -8,10 +8,10 @@ $endDate   = $_GET['endDate'] ?? date('Y-m-d');
 $line      = $_GET['line'] ?? null;
 $model     = $_GET['model'] ?? null;
 
-$whereParts = ["log_date = ?"];
-$whereStops = ["log_date = ?"];
-$paramsParts = [$log_date];
-$paramsStops = [$log_date];
+$stopConditions = ["log_date BETWEEN ? AND ?"];
+$stopParams = [$startDate, $endDate];
+$partConditions = ["log_date BETWEEN ? AND ?"];
+$partParams = [$startDate, $endDate];
 
 if (!empty($line)) {
     $whereParts[] = "LOWER(line) = LOWER(?)";
