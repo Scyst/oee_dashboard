@@ -82,7 +82,7 @@ async function fetchAndRenderCharts() {
             model: document.getElementById("modelFilter")?.value || ''
         });
 
-        const response = await fetch(`../api/OEE_Dashboard/get_oee_summary.php?${params.toString()}`);
+        const response = await fetch(`../api/OEE_Dashboard/get_oee_piechart.php?${params.toString()}`);
         const data = await response.json();
 
         if (!data.success) throw new Error("Invalid data");

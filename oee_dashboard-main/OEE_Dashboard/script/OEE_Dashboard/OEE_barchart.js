@@ -99,7 +99,7 @@ async function fetchAndRenderBarCharts() {
             model
         });
 
-        const response = await fetch(`../api/OEE_Dashboard/get_stop_causes.php?${params.toString()}`);
+        const response = await fetch(`../api/OEE_Dashboard/get_oee_barchart.php?${params.toString()}`);
         const data = await response.json();
 
         const partLabels = data.parts.labels;

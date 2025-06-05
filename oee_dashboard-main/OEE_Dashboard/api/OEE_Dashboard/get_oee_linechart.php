@@ -1,5 +1,5 @@
 <?php
-require_once("../api/db.php");
+require_once("../../api/db.php");
 header('Content-Type: application/json');
 
 $log_date = $_GET['log_date'] ?? date('Y-m-d');
