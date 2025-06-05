@@ -32,12 +32,6 @@ function createEmptyChart(ctx, message) {
         },
         options: {
             plugins: {
-                /*title: {
-                    display: true,
-                    text: message,
-                    color: '#f44336',
-                    font: { size: 16 }
-                },*/
                 legend: {
                     display: true,
                     position: 'left'
