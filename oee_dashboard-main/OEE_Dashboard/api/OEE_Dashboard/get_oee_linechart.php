@@ -2,12 +2,13 @@
 require_once("../../api/db.php");
 header('Content-Type: application/json');
 
+// Get filters
 $startDate = $_GET['startDate'] ?? date('Y-m-d');
 $endDate   = $_GET['endDate'] ?? date('Y-m-d');
 $line      = $_GET['line'] ?? null;
 $model     = $_GET['model'] ?? null;
 
-// ---- WHERE filters ----
+// -- WHERE clauses for parts and stops
 $whereParts = ["log_time BETWEEN ? AND ?"];
 $whereStops = ["stop_begin BETWEEN ? AND ?"];
 $paramsParts = [$startDate, $endDate];
@@ -27,41 +28,44 @@ if (!empty($model)) {
 $wherePartsStr = "WHERE " . implode(" AND ", $whereParts);
 $whereStopsStr = "WHERE " . implode(" AND ", $whereStops);
 
-// ---- 1. Get parts data ----
+// --- 1. Get parts per hour ---
 $partSql = "
     SELECT 
-        DATEPART(HOUR, log_time) AS hour,
+        FORMAT(log_time, 'yyyy-MM-dd HH:00') AS datetime_hour,
         SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
         SUM(CASE WHEN count_type IN ('NG','REWORK','HOLD','SCRAP','ETC.') THEN count_value ELSE 0 END) AS Defects
     FROM parts
     $wherePartsStr
-    GROUP BY DATEPART(HOUR, log_time)
+    GROUP BY FORMAT(log_time, 'yyyy-MM-dd HH:00')
+    ORDER BY datetime_hour
 ";
 $partStmt = sqlsrv_query($conn, $partSql, $paramsParts);
 $partData = [];
 while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
-    $partData[(int)$row['hour']] = [
+    $hour = $row['datetime_hour'];
+    $partData[$hour] = [
         'FG' => (int)$row['FG'],
         'Defects' => (int)$row['Defects']
     ];
 }
 
-// ---- 2. Get downtime data ----
+// --- 2. Get stop time per hour ---
 $stopSql = "
     SELECT 
-        DATEPART(HOUR, stop_begin) AS hour,
+        FORMAT(stop_begin, 'yyyy-MM-dd HH:00') AS datetime_hour,
         SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
     FROM stop_causes
     $whereStopsStr
-    GROUP BY DATEPART(HOUR, stop_begin)
+    GROUP BY FORMAT(stop_begin, 'yyyy-MM-dd HH:00')
+    ORDER BY datetime_hour
 ";
 $stopStmt = sqlsrv_query($conn, $stopSql, $paramsStops);
 $downtimeData = [];
 while ($row = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
-    $downtimeData[(int)$row['hour']] = (int)$row['downtime'];
+    $downtimeData[$row['datetime_hour']] = (int)$row['downtime'];
 }
 
-// ---- 3. Get planned output from performance_parameter ----
+// --- 3. Get planned output from performance_parameter ---
 $planSql = "
     SELECT model, part_no, planned_output
     FROM performance_parameter
@@ -74,13 +78,18 @@ while ($row = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
     $planMap[$key] = (int)$row['planned_output'];
 }
 
-// ---- 4. Build hourly linechart data ----
+// --- 4. Build timeline (merge all timestamps) ---
+$allTimestamps = array_unique(array_merge(array_keys($partData), array_keys($downtimeData)));
+sort($allTimestamps);
+
+// --- 5. Build response ---
 $records = [];
-for ($hour = 0; $hour < 24; $hour++) {
-    $FG = $partData[$hour]['FG'] ?? 0;
-    $Defects = $partData[$hour]['Defects'] ?? 0;
+foreach ($allTimestamps as $hourKey) {
+    $FG = $partData[$hourKey]['FG'] ?? 0;
+    $Defects = $partData[$hourKey]['Defects'] ?? 0;
     $produced = $FG + $Defects;
 
+    // Try to match specific planned output
     $plannedOutput = 0;
     if (!empty($model)) {
         foreach ($planMap as $key => $value) {
@@ -91,12 +100,11 @@ for ($hour = 0; $hour < 24; $hour++) {
         }
     }
 
-    // fallback if not found
     if ($plannedOutput === 0 && count($planMap) > 0) {
         $plannedOutput = round(array_sum($planMap) / count($planMap));
     }
 
-    $downtime = $downtimeData[$hour] ?? 0;
+    $downtime = $downtimeData[$hourKey] ?? 0;
     $plannedTime = 60;
     $runtime = max(0, $plannedTime - $downtime);
 
@@ -106,7 +114,7 @@ for ($hour = 0; $hour < 24; $hour++) {
     $oee = ($availability / 100) * ($performance / 100) * ($quality / 100) * 100;
 
     $records[] = [
-        "date" => sprintf("%02d:00", $hour),
+        "date" => $hourKey,
         "availability" => round($availability, 1),
         "performance"  => round($performance, 1),
         "quality"      => round($quality, 1),
@@ -115,3 +123,4 @@ for ($hour = 0; $hour < 24; $hour++) {
 }
 
 echo json_encode(["success" => true, "records" => $records]);
+?>
