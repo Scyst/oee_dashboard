@@ -84,10 +84,10 @@ function ensureDefaultDateInputs() {
     });
 }
 
-function formatMinutes(mins) {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return `${h}h ${m}m`;
+function formatMinutes(minutes) {
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hrs.toLocaleString()}h ${mins.toLocaleString()}m`;
 }
 
 // ---- Entry point ----
