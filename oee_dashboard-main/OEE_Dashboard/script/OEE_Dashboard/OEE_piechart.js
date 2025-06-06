@@ -120,23 +120,23 @@ async function fetchAndRenderCharts() {
         );
         document.getElementById("oeeInfo").innerHTML = `
             <small>
-                FG: ${data.fg} pcs<br>
-                Defects: ${data.defects} pcs<br>
-                Total: ${data.actual_output} pcs
+                FG: ${data.fg.toLocaleString()} pcs<br>
+                Defects: ${data.defects.toLocaleString()} pcs<br>
+                Total: ${data.actual_output.toLocaleString()} pcs
             </small>
         `;
 
         document.getElementById("qualityInfo").innerHTML = `
             <small>
-                FG: ${data.fg} pcs<br>
-                Defects: ${data.defects} pcs
+                FG: ${data.fg.toLocaleString()} pcs<br>
+                Defects: ${data.defects.toLocaleString()} pcs
             </small>
         `;
 
         document.getElementById("performanceInfo").innerHTML = `
             <small>
-                Actual: ${data.actual_output} pcs<br>
-                Planned: ${data.planned_output} pcs
+                Actual: ${data.actual_output.toLocaleString()} pcs<br>
+                Planned: ${data.planned_output.toLocaleString()} pcs
             </small>
         `;
 
@@ -147,6 +147,7 @@ async function fetchAndRenderCharts() {
                 Runtime: ${formatMinutes(data.runtime)}
             </small>
         `;
+
     } catch (err) {
         console.error("Pie chart fetch failed:", err);
         LineshowError("oeePieChart", "oeeError");
