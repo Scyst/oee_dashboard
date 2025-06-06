@@ -20,11 +20,11 @@ async function applyFiltersAndInitCharts() {
     fetchAndRenderLineCharts?.();
     fetchAndRenderBarCharts?.();
 
-    setInterval(() => {
+    /*setInterval(() => {
         fetchAndRenderCharts?.();
         fetchAndRenderLineCharts?.();
         fetchAndRenderBarCharts?.();
-    }, 60000); // Optional auto-refresh
+    }, 60000); // Optional auto-refresh*/
 }
 
 function handleFilterChange() {
@@ -47,9 +47,6 @@ function handleFilterChange() {
     document.getElementById(id)?.addEventListener("change", handleFilterChange);
 });
 
-// Call when page loads
-window.addEventListener("load", applyFiltersAndInitCharts);
-
 // Support script dependency
 async function populateDropdown(id, url, selectedValue = "") {
     const select = document.getElementById(id);
@@ -68,3 +65,25 @@ async function populateDropdown(id, url, selectedValue = "") {
         select.appendChild(opt);
     });
 }
+
+// Call when page loads
+window.addEventListener("load", applyFiltersAndInitCharts);
+window.addEventListener("load", () => {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
+
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        if (!input.value) input.value = dateStr;
+    });
+
+    document.querySelectorAll('input[type="time"]').forEach(input => {
+        if (!input.value) input.value = timeStr;
+    });
+
+    const startInput = document.getElementById("startDate");
+    const endInput = document.getElementById("endDate");
+
+    if (startInput && !startInput.value) startInput.value = dateStr;
+    if (endInput && !endInput.value) endInput.value = dateStr;
+});

@@ -179,31 +179,3 @@ async function populateDropdown(selectId, apiPath, selectedValue = '') {
         console.error(`Failed to load ${selectId} options:`, err);
     }
 }
-
-function handleFilterChange() {
-    updateURLParamsFromFilters();
-    fetchAndRenderBarCharts();
-}
-
-window.addEventListener("load", async () => {
-    const params = new URLSearchParams(window.location.search);
-    const startDate = params.get("startDate");
-    const endDate = params.get("endDate");
-    const line = params.get("line");
-    const model = params.get("model");
-
-    if (startDate) document.getElementById("startDate").value = startDate;
-    if (endDate) document.getElementById("endDate").value = endDate;
-
-    await Promise.all([
-        populateDropdown("lineFilter", "../api/OEE_Dashboard/get_lines.php", line),
-        populateDropdown("modelFilter", "../api/OEE_Dashboard/get_models.php", model)
-    ]);
-
-    ["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
-        document.getElementById(id)?.addEventListener("change", handleFilterChange);
-    });
-
-    handleFilterChange(); // initial load
-    setInterval(fetchAndRenderBarCharts, 60000);
-});

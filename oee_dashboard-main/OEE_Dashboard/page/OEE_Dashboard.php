@@ -134,69 +134,6 @@
         </div>
     </div>
 
-    <script>
-        window.addEventListener("load", () => {
-            const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
-            const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
-
-            document.querySelectorAll('input[type="date"]').forEach(input => {
-                if (!input.value) input.value = dateStr;
-            });
-
-            document.querySelectorAll('input[type="time"]').forEach(input => {
-                if (!input.value) input.value = timeStr;
-            });
-
-            const startInput = document.getElementById("startDate");
-            const endInput = document.getElementById("endDate");
-
-            if (startInput && !startInput.value) startInput.value = dateStr;
-            if (endInput && !endInput.value) endInput.value = dateStr;
-        });
-    </script>
-
-    <script>
-        function onFilterChange() {
-            const startDate = document.getElementById("startDate")?.value || '';
-            const endDate   = document.getElementById("endDate")?.value || '';
-            const line      = document.getElementById("lineFilter")?.value || '';
-            const model     = document.getElementById("modelFilter")?.value || '';
-
-            const params = new URLSearchParams({ startDate, endDate, line, model });
-
-            // Save filters to browser URL
-            const newUrl = `${window.location.pathname}?${params.toString()}`;
-            window.history.replaceState({}, '', newUrl);
-
-            // Call all chart refresh functions
-            fetchAndRenderCharts?.();
-            fetchAndRenderLineCharts?.();
-            fetchAndRenderBarCharts?.(); // if available
-        }
-    </script>
-
-    <script>
-        window.addEventListener("load", () => {
-            const params = new URLSearchParams(window.location.search);
-
-            const startDate = params.get("startDate");
-            const endDate   = params.get("endDate");
-            const line      = params.get("line");
-            const model     = params.get("model");
-
-            if (startDate) document.getElementById("startDate").value = startDate;
-            if (endDate) document.getElementById("endDate").value = endDate;
-            if (line) document.getElementById("lineFilter").value = line;
-            if (model) document.getElementById("modelFilter").value = model;
-
-            // Trigger chart loads with remembered values
-            fetchAndRenderCharts?.();
-            fetchAndRenderLineCharts?.();
-            fetchAndRenderBarCharts?.();
-        });
-    </script>
-
     <script src="../script/datetime.js"></script>
     <script src="../script/OEE_Dashboard/OEE_piechart.js"></script>
     <script src="../script/OEE_Dashboard/OEE_linechart.js"></script>
