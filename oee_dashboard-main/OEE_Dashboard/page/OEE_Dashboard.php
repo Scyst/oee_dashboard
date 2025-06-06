@@ -61,14 +61,6 @@
                     <fieldset>
                         <h4>OEE</h4>
                         <div class="align_legend">
-                            <!--div id="customLegend" class="legend-container">
-                                <div class="legend-item"><span style="background: #00BF63"></span>OEE</div>
-                                <div class="legend-item"><span style="background: #65A6FA"></span>Man</div>
-                                <div class="legend-item"><span style="background: #BB109D"></span>Machine</div>
-                                <div class="legend-item"><span style="background: #FF914D"></span>Method</div>
-                                <div class="legend-item"><span style="background: #FFDE59"></span>Material</div>
-                                <div class="legend-item"><span style="background: #D9D9D9"></span>Other</div>
-                            </div-->
                             <div class="piechart-wrapper">
                                 <canvas id="oeePieChart"></canvas>
                                 <div class="error-message" id="oeeError">⚠️</div>
@@ -78,9 +70,6 @@
                     <fieldset>
                         <h4>Quality</h4>
                         <div class="align_legend">
-                            <!--div id="customLegend" class="legend-container">
-                                <div class="legend-item"><span style="background: #00BF63"></span>Quality</div>
-                            </div-->
                             <div class="piechart-wrapper">
                                 <canvas id="qualityPieChart"></canvas>
                                 <div class="error-message" id="qualityError">⚠️</div>
@@ -90,9 +79,6 @@
                     <fieldset>
                         <h4>Performance</h4>
                         <div class="align_legend">
-                            <!--div id="customLegend" class="legend-container">
-                                <div class="legend-item"><span style="background: #00BF63"></span>Performance</div>
-                            </div-->
                             <div class="piechart-wrapper">
                                 <canvas id="performancePieChart"></canvas>
                                 <div class="error-message" id="performanceError">⚠️</div>
@@ -102,9 +88,6 @@
                     <fieldset>
                         <h4>Availability</h4>
                         <div class="align_legend">
-                            <!--div id="customLegend" class="legend-container">
-                                <div class="legend-item"><span style="background: #00BF63"></span>Availability</div>
-                            </div-->
                             <div class="piechart-wrapper">
                                 <canvas id="availabilityPieChart"></canvas>
                                 <div class="error-message" id="availabilityError">⚠️</div>
