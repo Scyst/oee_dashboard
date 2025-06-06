@@ -47,6 +47,7 @@ $totalFG = 0;
 $totalDefects = 0;
 $totalActualOutput = 0;
 $totalPlannedOutput = 0;
+$days = (new DateTime($startDate))->diff(new DateTime($endDate))->days + 1;
 
 while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     $fg = (int)$row['FG'];
@@ -59,11 +60,12 @@ while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     $totalDefects += $defects;
     $totalActualOutput += ($fg + $defects);
 
-    // Get planned output
+    // Get planned output and multiply by hours/day
     $planSql = "SELECT planned_output FROM performance_parameter WHERE model = ? AND part_no = ? AND line = ?";
     $planStmt = sqlsrv_query($conn, $planSql, [$modelVal, $partNo, $lineVal]);
     if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
-        $totalPlannedOutput += (int)$planRow['planned_output'];
+        $hourlyOutput = (int)$planRow['planned_output'];
+        $totalPlannedOutput += ($hourlyOutput * 8 * $days);  // <-- hourly × 8h/day × days
     }
 }
 
@@ -77,22 +79,21 @@ $stopSql = "
 $stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
 $stopData = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
 $downtime = (int) $stopData['downtime'];
-$days = (new DateTime($startDate))->diff(new DateTime($endDate))->days + 1;
-$plannedTime = 480 * $days; // 8 hours/day
+$plannedTime = 480 * $days;
 $runtime = max(0, $plannedTime - $downtime);
 
 // ---------- Step 3: Metrics ----------
 $qualityPercent = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
-
 $availabilityPercent = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
 
+// --- Fallback if no planned output found ---
 if ($totalPlannedOutput === 0) {
-    // Count distinct part types (model + part + line)
     $distinctPartSql = "
         SELECT COUNT(DISTINCT model + '|' + part_no + '|' + line) AS type_count
         FROM parts
-        WHERE log_date BETWEEN ? AND ?
-        " . (!empty($line) ? " AND line = ?" : "") . (!empty($model) ? " AND model = ?" : "");
+        WHERE log_date BETWEEN ? AND ?"
+        . (!empty($line) ? " AND line = ?" : "")
+        . (!empty($model) ? " AND model = ?" : "");
 
     $distinctParams = [$startDate, $endDate];
     if (!empty($line))  $distinctParams[] = $line;
@@ -102,11 +103,10 @@ if ($totalPlannedOutput === 0) {
     $distinctRow = sqlsrv_fetch_array($distinctStmt, SQLSRV_FETCH_ASSOC);
     $typeCount = (int) $distinctRow['type_count'];
 
-    $totalPlannedOutput = $typeCount * 100; // fallback planned output
+    $totalPlannedOutput = $typeCount * 100 * 8 * $days; // fallback: 100/hr × 8hr × days
 }
 
 $performancePercent = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
-
 $oee = ($availabilityPercent / 100) * ($performancePercent / 100) * ($qualityPercent / 100) * 100;
 
 // ---------- Final Output ----------
