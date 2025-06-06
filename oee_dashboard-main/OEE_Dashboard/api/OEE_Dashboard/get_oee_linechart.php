@@ -7,103 +7,108 @@ $endDate   = $_GET['endDate'] ?? date('Y-m-d');
 $line      = $_GET['line'] ?? null;
 $model     = $_GET['model'] ?? null;
 
-$records = [];
+$start = new DateTime($startDate);
+$end = new DateTime($endDate);
+$diffDays = (int)$start->diff($end)->format('%a') + 1;
+
+// Ensure at least 15 days of data
+if ($diffDays < 15) {
+    $start = (clone $end)->modify('-14 days');
+}
+
 $period = new DatePeriod(
-    new DateTime($startDate),
+    $start,
     new DateInterval('P1D'),
-    (new DateTime($endDate))->modify('+1 day')
+    (clone $end)->modify('+1 day')
 );
 
-foreach ($period as $date) {
-    $logDate = $date->format('Y-m-d');
+$records = [];
 
-    // Part Query
+foreach ($period as $dateObj) {
+    $dateStr = $dateObj->format('Y-m-d');
+    $dateLabel = $dateObj->format('d-m-y');
+
+    // ---------- Part Data ----------
     $partSql = "
         SELECT model, part_no, line,
             SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
             SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN count_value ELSE 0 END) AS Defects
         FROM parts
-        WHERE log_date = ?
-        " . (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
-            (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "") . "
-        GROUP BY model, part_no, line
-    ";
-    $params = [$logDate];
-    if (!empty($line))  $params[] = $line;
+        WHERE log_date = ?" .
+        (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
+        (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "") .
+        " GROUP BY model, part_no, line";
+
+    $params = [$dateStr];
+    if (!empty($line)) $params[] = $line;
     if (!empty($model)) $params[] = $model;
 
-    $partStmt = sqlsrv_query($conn, $partSql, $params);
-    if (!$partStmt) continue;
+    $stmt = sqlsrv_query($conn, $partSql, $params);
 
-    $FG = $Defects = $ActualOutput = $PlannedOutput = 0;
-    $typesSeen = [];
+    $totalFG = 0;
+    $totalDefects = 0;
+    $totalActualOutput = 0;
+    $totalPlannedOutput = 0;
 
-    while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
+    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
         $fg = (int)$row['FG'];
-        $def = (int)$row['Defects'];
+        $defects = (int)$row['Defects'];
         $modelVal = $row['model'];
         $partNo = $row['part_no'];
         $lineVal = $row['line'];
 
-        $FG += $fg;
-        $Defects += $def;
-        $ActualOutput += ($fg + $def);
-        $typesSeen[] = $modelVal . "|" . $partNo . "|" . $lineVal;
+        $totalFG += $fg;
+        $totalDefects += $defects;
+        $totalActualOutput += ($fg + $defects);
 
-        // Get planned output from performance_parameter
-        $planStmt = sqlsrv_query($conn,
-            "SELECT planned_output FROM performance_parameter WHERE model = ? AND part_no = ? AND line = ?",
-            [$modelVal, $partNo, $lineVal]
-        );
+        $planStmt = sqlsrv_query($conn, "SELECT planned_output FROM performance_parameter WHERE model = ? AND part_no = ? AND line = ?", [$modelVal, $partNo, $lineVal]);
         if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
-            $PlannedOutput += (int)$planRow['planned_output'];
+            $totalPlannedOutput += (int)$planRow['planned_output'];
         }
     }
 
-    // Fallback for planned output
-    if ($PlannedOutput === 0 && count($typesSeen) > 0) {
-        $PlannedOutput = count(array_unique($typesSeen)) * 100;
-    }
-
-    // Downtime
-    $stopSql = "
-        SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
-        FROM stop_causes
-        WHERE log_date = ?
-        " . (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "");
-    $stopParams = [$logDate];
+    // ---------- Downtime ----------
+    $stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM stop_causes WHERE log_date = ?" .
+        (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "");
+    $stopParams = [$dateStr];
     if (!empty($line)) $stopParams[] = $line;
 
     $stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
-    $downtime = 0;
-    if ($stopStmt && $stopRow = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
-        $downtime = (int)$stopRow['downtime'];
-    }
+    $stopData = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
+    $downtime = (int) $stopData['downtime'];
 
-    $plannedTime = 480;
+    $plannedTime = 480; // 8 hours/day
     $runtime = max(0, $plannedTime - $downtime);
 
-    // Metrics
-    $quality = ($FG + $Defects) > 0 ? ($FG / ($FG + $Defects)) * 100 : 0;
+    $quality = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
     $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
-    $performance = $PlannedOutput > 0 ? ($ActualOutput / $PlannedOutput) * 100 : 0;
+
+    if ($totalPlannedOutput === 0) {
+        // fallback: count distinct model|part|line
+        $countSql = "SELECT COUNT(DISTINCT model + '|' + part_no + '|' + line) AS count FROM parts WHERE log_date = ?" .
+            (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
+            (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "");
+        $countParams = [$dateStr];
+        if (!empty($line)) $countParams[] = $line;
+        if (!empty($model)) $countParams[] = $model;
+
+        $countStmt = sqlsrv_query($conn, $countSql, $countParams);
+        $countRow = sqlsrv_fetch_array($countStmt, SQLSRV_FETCH_ASSOC);
+        $typeCount = (int) $countRow['count'];
+
+        $totalPlannedOutput = $typeCount * 100; // fallback
+    }
+
+    $performance = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
     $oee = ($availability / 100) * ($performance / 100) * ($quality / 100) * 100;
 
     $records[] = [
-        "date" => $date->format("d-m-y"),
+        "date" => $dateLabel,
         "availability" => round($availability, 1),
-        "performance"  => round($performance, 1),
-        "quality"      => round($quality, 1),
-        "oee"          => round($oee, 1)
+        "performance" => round($performance, 1),
+        "quality" => round($quality, 1),
+        "oee" => round($oee, 1)
     ];
 }
 
-// Only keep last 15 days if more
-if (count($records) > 15) {
-    $records = array_slice($records, -15);
-}
-
-echo json_encode([
-    "success" => true,
-    "records" => $records
-]);
+echo json_encode(["success" => true, "records" => $records]);
