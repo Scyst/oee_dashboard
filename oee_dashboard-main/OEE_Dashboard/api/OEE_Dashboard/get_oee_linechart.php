@@ -32,12 +32,13 @@ foreach ($period as $dateObj) {
     $partSql = "
         SELECT model, part_no, line,
             SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
-            SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN count_value ELSE 0 END) AS Defects
+            SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN count_value ELSE 0 END) AS Defects,
+            DATEPART(HOUR, log_time) AS hour
         FROM parts
         WHERE log_date = ?" .
         (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
         (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "") .
-        " GROUP BY model, part_no, line";
+        " GROUP BY model, part_no, line, DATEPART(HOUR, log_time)";
 
     $params = [$dateStr];
     if (!empty($line)) $params[] = $line;
@@ -49,6 +50,7 @@ foreach ($period as $dateObj) {
     $totalDefects = 0;
     $totalActualOutput = 0;
     $totalPlannedOutput = 0;
+    $activeHours = [];
 
     while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
         $fg = (int)$row['FG'];
@@ -56,10 +58,12 @@ foreach ($period as $dateObj) {
         $modelVal = $row['model'];
         $partNo = $row['part_no'];
         $lineVal = $row['line'];
+        $hour = (int)$row['hour'];
 
         $totalFG += $fg;
         $totalDefects += $defects;
         $totalActualOutput += ($fg + $defects);
+        $activeHours[$hour] = true;
 
         $planStmt = sqlsrv_query(
             $conn,
@@ -67,21 +71,29 @@ foreach ($period as $dateObj) {
             [$modelVal, $partNo, $lineVal]
         );
         if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
-            $totalPlannedOutput += ((int)$planRow['planned_output']) * 8; // Multiply by 8 hours/day
+            $totalPlannedOutput += ((int)$planRow['planned_output']); // already hourly
         }
     }
 
-    // ---------- Downtime ----------
-    $stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM stop_causes WHERE log_date = ?" .
-        (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "");
+    // ---------- Stop Data ----------
+    $stopSql = "SELECT DATEPART(HOUR, stop_begin) AS hour,
+                    SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
+                FROM stop_causes
+                WHERE log_date = ?" .
+        (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
+        " GROUP BY DATEPART(HOUR, stop_begin)";
+
     $stopParams = [$dateStr];
     if (!empty($line)) $stopParams[] = $line;
 
     $stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
-    $stopData = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
-    $downtime = (int) $stopData['downtime'];
+    $downtime = 0;
+    while ($row = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
+        $downtime += (int)$row['downtime'];
+        $activeHours[(int)$row['hour']] = true;
+    }
 
-    $plannedTime = 480; // 8 hours/day
+    $plannedTime = count($activeHours) * 60; // 60 minutes per active hour
     $runtime = max(0, $plannedTime - $downtime);
 
     $quality = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
@@ -100,10 +112,11 @@ foreach ($period as $dateObj) {
         $countRow = sqlsrv_fetch_array($countStmt, SQLSRV_FETCH_ASSOC);
         $typeCount = (int) $countRow['count'];
 
-        $totalPlannedOutput = $typeCount * 100 * 8; // fallback: 100/hr × 8h/day
+        $totalPlannedOutput = $typeCount * 100; // fallback: 100/hr
     }
 
-    $performance = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
+    $expectedOutput = $totalPlannedOutput * count($activeHours); // convert hourly to daily
+    $performance = $expectedOutput > 0 ? ($totalActualOutput / $expectedOutput) * 100 : 0;
     $oee = ($availability / 100) * ($performance / 100) * ($quality / 100) * 100;
 
     $records[] = [

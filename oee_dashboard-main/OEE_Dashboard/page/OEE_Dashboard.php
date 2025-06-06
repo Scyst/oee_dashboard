@@ -1,143 +1,181 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>OEE - DASHBOARD</title>
-    <script src="../utils/libs/chart.umd.js"></script>
-    <script src="../utils/libs/chartjs-plugin-zoom.min.js"></script>
+<?php
+require_once("../../api/db.php");
+header('Content-Type: application/json');
 
-    <link rel="stylesheet" href="../style/style.css">
-    <link rel="stylesheet" href="../style/piechart.css">
-    <link rel="stylesheet" href="../style/linechart.css">
-    <link rel="stylesheet" href="../style/barchart.css">
-</head>
+$startDate = $_GET['startDate'] ?? date('Y-m-d');
+$endDate   = $_GET['endDate'] ?? date('Y-m-d');
+$line      = $_GET['line'] ?? null;
+$model     = $_GET['model'] ?? null;
 
-<body>
-    <div style="height: calc(100vh - 20px);">
-        <div class="Header">
+$start = new DateTime($startDate);
+$end = new DateTime($endDate);
+$diffDays = (int)$start->diff($end)->format('%a') + 1;
 
-            <div class="OEE-head">
-                <h2>OEE DASHBOARD</h2>        
-                <!-- Filter Row -->
-                <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
-                    <select id="lineFilter" onchange="onFilterChange()">
-                        <option value="">All Lines</option>
-                    </select>
+if ($diffDays < 15) {
+    $start = (clone $end)->modify('-14 days');
+}
 
-                    <select id="modelFilter" onchange="onFilterChange()">
-                        <option value="">All Models</option>
-                    </select>
-                    <input type="date" id="startDate" onchange="onFilterChange()">
-                    <p style="text-align: center; align-content: center;"> - </p>
-                    <input type="date" id="endDate" onchange="onFilterChange()">
-                </div>
-            </div>
+$period = new DatePeriod(
+    $start,
+    new DateInterval('P1D'),
+    (clone $end)->modify('+1 day')
+);
 
-            <div class="assis-tool">
-                <p id="date"></p>
-                <p id="time"></p>
+$records = [];
 
-                <div class="tool-buttons">
-                    <a href="OEE_Dashboard.php">
-                        <button>
-                            <img src="../icons/reports-icon.png" alt="Save">
-                        </button>
-                    </a>
-                    <a href="pdTable.php">
-                        <button>
-                            <img src="../icons/db.png" alt="Database">
-                        </button>
-                    </a>
-                    <a href="Stop_Cause.php">
-                        <button>
-                            <img src="../icons/clipart2496353.png" alt="Settings">
-                        </button>
-                    </a>
-                </div>
-            </div>
-        </div>
+function calculatePlannedTime($dateStr, $latestTimeStr) {
+    $startWork = new DateTime("$dateStr 08:00:00");
+    $latest = new DateTime("$dateStr $latestTimeStr");
+    
+    if ($latest <= $startWork) return 0;
 
-        <div class="oee-piechart">
-            <div style="display: block;width: 100%">
-                <div class="pie-chart">
-                    <fieldset>
-                        <h4>OEE</h4>
-                        <div class="align_legend">
-                            <div class="piechart-wrapper">
-                                <canvas id="oeePieChart"></canvas>
-                                <div class="error-message" id="oeeError">⚠️</div>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <fieldset>
-                        <h4>Quality</h4>
-                        <div class="align_legend">
-                            <div class="piechart-wrapper">
-                                <canvas id="qualityPieChart"></canvas>
-                                <div class="error-message" id="qualityError">⚠️</div>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <fieldset>
-                        <h4>Performance</h4>
-                        <div class="align_legend">
-                            <div class="piechart-wrapper">
-                                <canvas id="performancePieChart"></canvas>
-                                <div class="error-message" id="performanceError">⚠️</div>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <fieldset>
-                        <h4>Availability</h4>
-                        <div class="align_legend">
-                            <div class="piechart-wrapper">
-                                <canvas id="availabilityPieChart"></canvas>
-                                <div class="error-message" id="availabilityError">⚠️</div>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
-            </div>
-        </div>
+    // Round up to next hour
+    $latest->modify('+59 minutes');
+    $latest->setTime($latest->format('H'), 0);
 
-        <div class="oee-linechart">
-            <div style="width: 100%">
-                <fieldset>
-                    <!--h4>OEE / Quality / Performance / Availability</!--h4-->
-                    <div class="linechart-wrapper">
-                        <canvas id="oeeLineChart"></canvas>
-                    </div>
-                    <!--div id="oeeLineError" class="chart-error">Fetch Failed</!--div-->
-                </fieldset>
-            </div>
-        </div>
+    $plannedMinutes = ($latest->getTimestamp() - $startWork->getTimestamp()) / 60;
 
-        <div class="stop_scarp-barchart">
-            <div style="display: block; width: 100%;">
-                <div class="bar-chart">
-                    <fieldset>
-                        <h4>Stop & Cause</h4>
-                        <div class="barchart-wrapper">
-                            <canvas id="stopCauseBarChart"></canvas>
-                        </div>
-                        <div id="stopCauseBarError">Error loading scrap data</div>
-                    </fieldset>
-                    <fieldset>
-                        <h4>Production Results</h4>
-                        <div class="barchart-wrapper">
-                            <canvas id="partsBarChart"></canvas>
-                        </div>
-                        <div id="partsBarError">Error loading part summary</div>
-                    </fieldset>
-                </div>
-            </div>
-        </div>
-    </div>
+    // Subtract break durations
+    $breaks = [
+        ['11:30', '12:30'],
+        ['17:00', '17:30'],
+        ['23:30', '00:30'],
+        ['05:00', '05:30']
+    ];
 
-    <script src="../script/datetime.js"></script>
-    <script src="../script/OEE_Dashboard/OEE_piechart.js"></script>
-    <script src="../script/OEE_Dashboard/OEE_linechart.js"></script>
-    <script src="../script/OEE_Dashboard/OEE_barchart.js"></script>
-    <script src="../script/OEE_Dashboard/filterManager.js"></script>
-</body>
-</html>
+    foreach ($breaks as [$bStart, $bEnd]) {
+        $breakStart = new DateTime("$dateStr $bStart");
+        $breakEnd = new DateTime("$dateStr $bEnd");
+
+        // handle overnight breaks (e.g. 23:30 - 00:30)
+        if ($breakEnd < $breakStart) {
+            $breakEnd->modify('+1 day');
+        }
+
+        if ($latest > $breakStart) {
+            $overlapStart = max($startWork, $breakStart);
+            $overlapEnd = min($latest, $breakEnd);
+            if ($overlapEnd > $overlapStart) {
+                $plannedMinutes -= ($overlapEnd->getTimestamp() - $overlapStart->getTimestamp()) / 60;
+            }
+        }
+    }
+
+    return max(0, round($plannedMinutes));
+}
+
+foreach ($period as $dateObj) {
+    $dateStr = $dateObj->format('Y-m-d');
+    $dateLabel = $dateObj->format('d-m-y');
+
+    // ---------- Check latest log time ----------
+    $logTimeSql = "
+        SELECT MAX(latest_time) AS max_time FROM (
+            SELECT MAX(log_time) AS latest_time FROM parts WHERE log_date = ?
+            UNION ALL
+            SELECT MAX(stop_end) FROM stop_causes WHERE log_date = ?
+        ) AS all_times";
+
+    $logStmt = sqlsrv_query($conn, $logTimeSql, [$dateStr, $dateStr]);
+    $logRow = sqlsrv_fetch_array($logStmt, SQLSRV_FETCH_ASSOC);
+    $latestTimeStr = $logRow['max_time'] ? $logRow['max_time']->format('H:i:s') : null;
+
+    if (!$latestTimeStr) {
+        $records[] = [
+            "date" => $dateLabel,
+            "availability" => 0,
+            "performance" => 0,
+            "quality" => 0,
+            "oee" => 0
+        ];
+        continue;
+    }
+
+    $plannedTime = calculatePlannedTime($dateStr, $latestTimeStr);
+
+    // ---------- Part Data ----------
+    $partSql = "
+        SELECT model, part_no, line,
+            SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
+            SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN count_value ELSE 0 END) AS Defects
+        FROM parts
+        WHERE log_date = ?" .
+        (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
+        (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "") .
+        " GROUP BY model, part_no, line";
+
+    $params = [$dateStr];
+    if (!empty($line)) $params[] = $line;
+    if (!empty($model)) $params[] = $model;
+
+    $stmt = sqlsrv_query($conn, $partSql, $params);
+
+    $totalFG = 0;
+    $totalDefects = 0;
+    $totalActualOutput = 0;
+    $totalPlannedOutput = 0;
+
+    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+        $fg = (int)$row['FG'];
+        $defects = (int)$row['Defects'];
+        $modelVal = $row['model'];
+        $partNo = $row['part_no'];
+        $lineVal = $row['line'];
+
+        $totalFG += $fg;
+        $totalDefects += $defects;
+        $totalActualOutput += ($fg + $defects);
+
+        $planStmt = sqlsrv_query(
+            $conn,
+            "SELECT planned_output FROM performance_parameter WHERE model = ? AND part_no = ? AND line = ?",
+            [$modelVal, $partNo, $lineVal]
+        );
+        if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
+            $hourlyOutput = (int)$planRow['planned_output'];
+            $totalPlannedOutput += $hourlyOutput * ($plannedTime / 60); // planned per active hour
+        }
+    }
+
+    // ---------- Downtime ----------
+    $stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM stop_causes WHERE log_date = ?" .
+        (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "");
+    $stopParams = [$dateStr];
+    if (!empty($line)) $stopParams[] = $line;
+
+    $stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
+    $stopData = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
+    $downtime = (int) $stopData['downtime'];
+    $runtime = max(0, $plannedTime - $downtime);
+
+    $quality = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
+    $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
+
+    if ($totalPlannedOutput === 0 && $plannedTime > 0) {
+        $countSql = "SELECT COUNT(DISTINCT model + '|' + part_no + '|' + line) AS count FROM parts WHERE log_date = ?" .
+            (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
+            (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "");
+        $countParams = [$dateStr];
+        if (!empty($line)) $countParams[] = $line;
+        if (!empty($model)) $countParams[] = $model;
+
+        $countStmt = sqlsrv_query($conn, $countSql, $countParams);
+        $countRow = sqlsrv_fetch_array($countStmt, SQLSRV_FETCH_ASSOC);
+        $typeCount = (int) $countRow['count'];
+
+        $totalPlannedOutput = $typeCount * 100 * ($plannedTime / 60);
+    }
+
+    $performance = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
+    $oee = ($availability / 100) * ($performance / 100) * ($quality / 100) * 100;
+
+    $records[] = [
+        "date" => $dateLabel,
+        "availability" => round($availability, 1),
+        "performance" => round($performance, 1),
+        "quality" => round($quality, 1),
+        "oee" => round($oee, 1)
+    ];
+}
+
+echo json_encode(["success" => true, "records" => $records]);
