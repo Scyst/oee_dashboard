@@ -120,9 +120,10 @@ async function fetchAndRenderCharts() {
         );
         document.getElementById("oeeInfo").innerHTML = `
             <small>
-                FG: ${data.fg.toLocaleString()} pcs<br>
-                Defects: ${data.defects.toLocaleString()} pcs<br>
-                Total: ${data.actual_output.toLocaleString()} pcs
+                OEE: ${data.oee.toFixed(1)}%<br>
+                Quality Loss: ${(100 - data.quality).toFixed(1)}%<br>
+                Performance Loss: ${(100 - data.performance).toFixed(1)}%<br>
+                Availability Loss: ${(100 - data.availability).toFixed(1)}%
             </small>
         `;
 
