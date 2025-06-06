@@ -15,8 +15,7 @@ function showError(chartId, messageId) {
 }
 
 function renderCombinedLineChart(labels, datasets) {
-    const canvas = document.getElementById("oeeLineChart");
-    const ctx = canvas.getContext("2d");
+    const ctx = document.getElementById("oeeLineChart").getContext("2d");
     if (oeeLineChart) oeeLineChart.destroy();
 
     oeeLineChart = new Chart(ctx, {
@@ -37,7 +36,7 @@ function renderCombinedLineChart(labels, datasets) {
                 },
                 legend: {
                     display: true,
-                    labels: { color: '#ccc' }
+                    labels: { color: "#ccc" }
                 },
                 tooltip: {
                     backgroundColor: "#333",
@@ -47,25 +46,14 @@ function renderCombinedLineChart(labels, datasets) {
             },
             scales: {
                 x: {
-                    ticks: {
-                        color: "#ccc",
-                        font: { size: 10 }
-                    },
-                    grid: {
-                        display: false,
-                        color: "#444"
-                    }
+                    ticks: { color: "#ccc", font: { size: 10 } },
+                    grid: { display: false, color: "#444" }
                 },
                 y: {
                     beginAtZero: true,
                     max: 100,
-                    ticks: {
-                        color: "#ccc",
-                        font: { size: 10 }
-                    },
-                    grid: {
-                        color: "#444"
-                    }
+                    ticks: { color: "#ccc", font: { size: 10 } },
+                    grid: { color: "#444" }
                 }
             },
             layout: {
@@ -79,16 +67,12 @@ async function fetchAndRenderLineCharts() {
     try {
         hideErrors();
 
-        const startDate = document.getElementById("startDate")?.value || '';
-        const endDate   = document.getElementById("endDate")?.value || '';
-        const line      = document.getElementById("lineFilter")?.value || '';
-        const model     = document.getElementById("modelFilter")?.value || '';
-
-        const params = new URLSearchParams({ startDate, endDate, line, model });
-
-        // update the browser URL
-        const newUrl = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState({}, '', newUrl);
+        const params = new URLSearchParams({
+            startDate: document.getElementById("startDate")?.value || '',
+            endDate: document.getElementById("endDate")?.value || '',
+            line: document.getElementById("lineFilter")?.value || '',
+            model: document.getElementById("modelFilter")?.value || ''
+        });
 
         const response = await fetch(`../api/OEE_Dashboard/get_oee_linechart.php?${params.toString()}`);
         const data = await response.json();
@@ -144,24 +128,3 @@ async function fetchAndRenderLineCharts() {
         showError("oeeLineChart", "oeeLineError");
     }
 }
-
-window.addEventListener("load", () => {
-    const params = new URLSearchParams(window.location.search);
-
-    const startDate = params.get("startDate");
-    const endDate   = params.get("endDate");
-    const line      = params.get("line");
-    const model     = params.get("model");
-
-    if (startDate) document.getElementById("startDate").value = startDate;
-    if (endDate)   document.getElementById("endDate").value = endDate;
-    if (line)      document.getElementById("lineFilter").value = line;
-    if (model)     document.getElementById("modelFilter").value = model;
-
-    fetchAndRenderLineCharts();
-    setInterval(fetchAndRenderLineCharts, 60000);
-});
-
-["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
-    document.getElementById(id)?.addEventListener("change", fetchAndRenderLineCharts);
-});

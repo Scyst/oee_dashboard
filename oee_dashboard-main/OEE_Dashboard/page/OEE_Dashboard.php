@@ -175,7 +175,7 @@
             fetchAndRenderBarCharts?.(); // if available
         }
     </script>
-     
+
     <script>
         window.addEventListener("load", () => {
             const params = new URLSearchParams(window.location.search);
@@ -201,5 +201,6 @@
     <script src="../script/OEE_Dashboard/OEE_piechart.js"></script>
     <script src="../script/OEE_Dashboard/OEE_linechart.js"></script>
     <script src="../script/OEE_Dashboard/OEE_barchart.js"></script>
+    <script src="../script/OEE_Dashboard/filterManager.js"></script>
 </body>
 </html>

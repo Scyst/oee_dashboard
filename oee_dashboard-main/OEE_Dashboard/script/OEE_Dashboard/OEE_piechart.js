@@ -20,7 +20,7 @@ function renderSimplePieChart(chartRef, ctx, label, rawValue, mainColor) {
     if (chartRef) chartRef.destroy();
 
     const value = Math.min(rawValue, 100); // Clamp to 100
-    const loss = Math.max(0, 100 - value); // Avoid negative
+    const loss = Math.max(0, 100 - value);
 
     return new Chart(ctx, {
         type: 'doughnut',
@@ -57,11 +57,9 @@ function renderSimplePieChart(chartRef, ctx, label, rawValue, mainColor) {
                 const fontSize = (height / 150).toFixed(2);
                 ctx.font = `${fontSize}em sans-serif`;
                 ctx.textBaseline = "middle";
-
                 const text = chart.options.plugins.centerText.text;
                 const textX = Math.round((width - ctx.measureText(text).width) / 2);
                 const textY = height / 2;
-
                 ctx.fillStyle = "#ffffff";
                 ctx.fillText(text, textX, textY);
                 ctx.save();
@@ -74,20 +72,19 @@ async function fetchAndRenderCharts() {
     try {
         hideErrors();
 
-        const startDate = document.getElementById("startDate")?.value || '';
-        const endDate = document.getElementById("endDate")?.value || '';
-        const line = document.getElementById("lineFilter")?.value || '';
-        const model = document.getElementById("modelFilter")?.value || '';
+        const params = new URLSearchParams({
+            startDate: document.getElementById("startDate")?.value || '',
+            endDate: document.getElementById("endDate")?.value || '',
+            line: document.getElementById("lineFilter")?.value || '',
+            model: document.getElementById("modelFilter")?.value || ''
+        });
 
-        const params = new URLSearchParams({ startDate, endDate, line, model });
-
-        // ✅ Save filter to URL (preserve on reload)
+        // ✅ Update URL for memory
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState({}, '', newUrl);
 
         const response = await fetch(`../api/OEE_Dashboard/get_oee_piechart.php?${params.toString()}`);
         const data = await response.json();
-
         if (!data.success) throw new Error("Invalid data");
 
         oeeChart = renderSimplePieChart(
@@ -130,26 +127,3 @@ async function fetchAndRenderCharts() {
         LineshowError("availabilityPieChart", "availabilityError");
     }
 }
-
-window.addEventListener("load", () => {
-    // ✅ Apply filters from URL if available
-    const params = new URLSearchParams(window.location.search);
-
-    const startDate = params.get("startDate");
-    const endDate = params.get("endDate");
-    const line = params.get("line");
-    const model = params.get("model");
-
-    if (startDate) document.getElementById("startDate").value = startDate;
-    if (endDate) document.getElementById("endDate").value = endDate;
-    if (line) document.getElementById("lineFilter").value = line;
-    if (model) document.getElementById("modelFilter").value = model;
-
-    fetchAndRenderCharts();
-    setInterval(fetchAndRenderCharts, 60000);
-});
-
-// 🔁 Refetch on filter changes
-["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
-    document.getElementById(id)?.addEventListener("change", fetchAndRenderCharts);
-});

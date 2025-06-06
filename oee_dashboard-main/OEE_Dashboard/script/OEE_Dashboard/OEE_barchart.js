@@ -14,16 +14,14 @@ function hideErrors() {
 }
 
 function BarshowError(chartId, messageId) {
-    document.getElementById(chartId).style.opacity = "1"; //0.4
-   //document.getElementById(messageId).style.display = "block"; //default
-    document.getElementById(messageId).style.display = "none"; //testRun
+    document.getElementById(chartId).style.opacity = "1";
+    document.getElementById(messageId).style.display = "none";
 }
 
 function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOptions, color = "#42a5f5") {
     if (chartInstance) chartInstance.destroy();
 
     const isMulti = Array.isArray(valuesOrDatasets) && valuesOrDatasets[0]?.data;
-
     const datasets = isMulti
         ? valuesOrDatasets
         : [{
@@ -35,32 +33,18 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
 
     return new Chart(ctx, {
         type: 'bar',
-        data: {
-            labels,
-            datasets
-        },
+        data: { labels, datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: { display: true },
-                title: {
-                    display: false,
-                    text: isMulti ? '' : labelOrOptions,
-                    font: { size: 16 }
-                },
+                title: { display: false },
                 zoom: {
-                    pan: {
-                        enabled: true,
-                        mode: 'x'
-                    },
+                    pan: { enabled: true, mode: 'x' },
                     zoom: {
-                        wheel: {
-                            enabled: true
-                        },
-                        pinch: {
-                            enabled: true
-                        },
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
                         mode: 'x'
                     }
                 }
@@ -83,73 +67,6 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
     });
 }
 
-async function fetchAndRenderBarCharts() {
-    try {
-        hideErrors();
-
-        const startDate = document.getElementById("startDate")?.value || '';
-        const endDate = document.getElementById("endDate")?.value || '';
-        const line = document.getElementById("lineFilter")?.value || '';
-        const model = document.getElementById("modelFilter")?.value || '';
-
-        const params = new URLSearchParams({
-            startDate,
-            endDate,
-            line,
-            model
-        });
-
-        const response = await fetch(`../api/OEE_Dashboard/get_oee_barchart.php?${params.toString()}`);
-        const data = await response.json();
-
-        const partLabels = data.parts.labels;
-
-        const countTypes = {
-            FG:     { label: "Good",    color: "#00C853" },
-            NG:     { label: "NG",      color: "#FF5252" },
-            HOLD:   { label: "Hold",    color: "#FFD600" },
-            REWORK: { label: "Rework",  color: "#2979FF" },
-            SCRAP:  { label: "Scrap",   color: "#9E9E9E" },
-            ETC:    { label: "ETC",     color: "#AA00FF" }
-        };
-
-        const partDatasets = [];
-
-        for (const [type, { label, color }] of Object.entries(countTypes)) {
-            if (data.parts[type]) {
-                partDatasets.push({
-                    label,
-                    data: data.parts[type],
-                    backgroundColor: color
-                });
-            }
-        }
-
-        partsBarChartInstance = renderBarChart(
-            partsBarChartInstance,
-            document.getElementById("partsBarChart").getContext("2d"),
-            partLabels,
-            partDatasets
-        );
-
-        // Ensure at least 7 bars for stop cause
-        const paddedStopCause = padBarData(data.stopCause.labels, data.stopCause.values, 7);
-        stopCauseBarChartInstance = renderBarChart(
-            stopCauseBarChartInstance,
-            document.getElementById("stopCauseBarChart").getContext("2d"),
-            paddedStopCause.labels,
-            paddedStopCause.values,
-            "Stop Causes",
-            "#42a5f5"
-        );
-
-    } catch (err) {
-        console.error("Bar chart fetch failed:", err);
-        hideErrors();
-        // ... fallback simulated data ...
-    }
-}
-
 function padBarData(labels, values, minCount) {
     const paddedLabels = [...labels];
     const paddedValues = [...values];
@@ -162,9 +79,69 @@ function padBarData(labels, values, minCount) {
     return { labels: paddedLabels, values: paddedValues };
 }
 
+async function fetchAndRenderBarCharts() {
+    try {
+        hideErrors();
+
+        const startDate = document.getElementById("startDate")?.value || '';
+        const endDate = document.getElementById("endDate")?.value || '';
+        const line = document.getElementById("lineFilter")?.value || '';
+        const model = document.getElementById("modelFilter")?.value || '';
+
+        const params = new URLSearchParams({ startDate, endDate, line, model });
+
+        // ✅ Update URL so filter stays synced
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+
+        const response = await fetch(`../api/OEE_Dashboard/get_oee_barchart.php?${params.toString()}`);
+        const data = await response.json();
+
+        // ----- Part Bar Chart -----
+        const partLabels = data.parts.labels;
+
+        const countTypes = {
+            FG:     { label: "Good",    color: "#00C853" },
+            NG:     { label: "NG",      color: "#FF5252" },
+            HOLD:   { label: "Hold",    color: "#FFD600" },
+            REWORK: { label: "Rework",  color: "#2979FF" },
+            SCRAP:  { label: "Scrap",   color: "#9E9E9E" },
+            ETC:    { label: "ETC",     color: "#AA00FF" }
+        };
+
+        const partDatasets = Object.entries(countTypes).map(([type, { label, color }]) => {
+            return data.parts[type]
+                ? { label, data: data.parts[type], backgroundColor: color }
+                : null;
+        }).filter(Boolean);
+
+        partsBarChartInstance = renderBarChart(
+            partsBarChartInstance,
+            document.getElementById("partsBarChart").getContext("2d"),
+            partLabels,
+            partDatasets
+        );
+
+        // ----- Stop Cause Bar Chart -----
+        const padded = padBarData(data.stopCause.labels, data.stopCause.values, 7);
+
+        stopCauseBarChartInstance = renderBarChart(
+            stopCauseBarChartInstance,
+            document.getElementById("stopCauseBarChart").getContext("2d"),
+            padded.labels,
+            padded.values,
+            "Stop Causes",
+            "#42a5f5"
+        );
+
+    } catch (err) {
+        console.error("Bar chart fetch failed:", err);
+        hideErrors();
+    }
+}
+
 function updateURLParamsFromFilters() {
     const params = new URLSearchParams();
-
     const startDate = document.getElementById("startDate")?.value;
     const endDate = document.getElementById("endDate")?.value;
     const line = document.getElementById("lineFilter")?.value;
@@ -183,7 +160,6 @@ async function populateDropdown(selectId, apiPath, selectedValue = '') {
     try {
         const res = await fetch(apiPath);
         const data = await res.json();
-
         const select = document.getElementById(selectId);
         if (!select) return;
 
@@ -219,19 +195,15 @@ window.addEventListener("load", async () => {
     if (startDate) document.getElementById("startDate").value = startDate;
     if (endDate) document.getElementById("endDate").value = endDate;
 
-    // Load line/model dropdowns with selected values
     await Promise.all([
         populateDropdown("lineFilter", "../api/OEE_Dashboard/get_lines.php", line),
         populateDropdown("modelFilter", "../api/OEE_Dashboard/get_models.php", model)
     ]);
 
-    // Attach unified handler AFTER dropdowns are populated
     ["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
         document.getElementById(id)?.addEventListener("change", handleFilterChange);
     });
 
-    handleFilterChange(); // Load initial charts with filters
-    setInterval(fetchAndRenderBarCharts, 60000); // Optional auto-refresh
+    handleFilterChange(); // initial load
+    setInterval(fetchAndRenderBarCharts, 60000);
 });
-
-
