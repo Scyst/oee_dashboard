@@ -61,9 +61,13 @@ foreach ($period as $dateObj) {
         $totalDefects += $defects;
         $totalActualOutput += ($fg + $defects);
 
-        $planStmt = sqlsrv_query($conn, "SELECT planned_output FROM performance_parameter WHERE model = ? AND part_no = ? AND line = ?", [$modelVal, $partNo, $lineVal]);
+        $planStmt = sqlsrv_query(
+            $conn,
+            "SELECT planned_output FROM performance_parameter WHERE model = ? AND part_no = ? AND line = ?",
+            [$modelVal, $partNo, $lineVal]
+        );
         if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
-            $totalPlannedOutput += (int)$planRow['planned_output'];
+            $totalPlannedOutput += ((int)$planRow['planned_output']) * 8; // Multiply by 8 hours/day
         }
     }
 
@@ -83,8 +87,8 @@ foreach ($period as $dateObj) {
     $quality = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
     $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
 
+    // ---------- Fallback for Planned Output ----------
     if ($totalPlannedOutput === 0) {
-        // fallback: count distinct model|part|line
         $countSql = "SELECT COUNT(DISTINCT model + '|' + part_no + '|' + line) AS count FROM parts WHERE log_date = ?" .
             (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
             (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "");
@@ -96,7 +100,7 @@ foreach ($period as $dateObj) {
         $countRow = sqlsrv_fetch_array($countStmt, SQLSRV_FETCH_ASSOC);
         $typeCount = (int) $countRow['count'];
 
-        $totalPlannedOutput = $typeCount * 100; // fallback
+        $totalPlannedOutput = $typeCount * 100 * 8; // fallback: 100/hr × 8h/day
     }
 
     $performance = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
