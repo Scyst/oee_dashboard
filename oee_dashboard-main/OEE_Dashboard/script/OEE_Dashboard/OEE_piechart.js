@@ -118,7 +118,35 @@ async function fetchAndRenderCharts() {
             data.availability,
             '#42a5f5'
         );
+        document.getElementById("oeeInfo").innerHTML = `
+            <small>
+                FG: ${data.fg} pcs<br>
+                Defects: ${data.defects} pcs<br>
+                Total: ${data.actual_output} pcs
+            </small>
+        `;
 
+        document.getElementById("qualityInfo").innerHTML = `
+            <small>
+                FG: ${data.fg} pcs<br>
+                Defects: ${data.defects} pcs
+            </small>
+        `;
+
+        document.getElementById("performanceInfo").innerHTML = `
+            <small>
+                Actual: ${data.actual_output} pcs<br>
+                Planned: ${data.planned_output} pcs
+            </small>
+        `;
+
+        document.getElementById("availabilityInfo").innerHTML = `
+            <small>
+                Planned: ${formatMinutes(data.planned_time)}<br>
+                Downtime: ${formatMinutes(data.downtime)}<br>
+                Runtime: ${formatMinutes(data.runtime)}
+            </small>
+        `;
     } catch (err) {
         console.error("Pie chart fetch failed:", err);
         LineshowError("oeePieChart", "oeeError");

@@ -61,7 +61,10 @@
             <div style="display: block;width: 100%">
                 <div class="pie-chart">
                     <fieldset>
-                        <h4>OEE</h4>
+                        <div>
+                            <h4>OEE</h4>
+                            <div class="chart-info" id="oeeInfo"></div>
+                        </div>
                         <div class="align_legend">
                             <div class="piechart-wrapper">
                                 <canvas id="oeePieChart"></canvas>
@@ -70,7 +73,10 @@
                         </div>
                     </fieldset>
                     <fieldset>
-                        <h4>Quality</h4>
+                        <div>
+                            <h4>Quality</h4>
+                            <div class="chart-info" id="qualityInfo"></div>
+                        </div>
                         <div class="align_legend">
                             <div class="piechart-wrapper">
                                 <canvas id="qualityPieChart"></canvas>
@@ -79,7 +85,10 @@
                         </div>
                     </fieldset>
                     <fieldset>
-                        <h4>Performance</h4>
+                        <div>
+                            <h4>Performance</h4>
+                            <div class="chart-info" id="performanceInfo"></div>
+                        </div>
                         <div class="align_legend">
                             <div class="piechart-wrapper">
                                 <canvas id="performancePieChart"></canvas>
@@ -88,7 +97,10 @@
                         </div>
                     </fieldset>
                     <fieldset>
-                        <h4>Availability</h4>
+                        <div>
+                            <h4>Availability</h4>
+                            <div class="chart-info" id="availabilityInfo"></div>
+                        </div>
                         <div class="align_legend">
                             <div class="piechart-wrapper">
                                 <canvas id="availabilityPieChart"></canvas>

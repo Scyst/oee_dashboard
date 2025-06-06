@@ -38,21 +38,22 @@
     align-content: center;
 }
 
-/*.pie-chart canvas {
-}*/
-
 .error-message {
     position: absolute;
     top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
-    /*background: rgba(255, 255, 255, 0.9);
-    padding: 10px 20px;
-    border: 1px solid red;
-    border-radius: 8px;*/
     color: red;
     font-size: 32px;
     font-weight: bold;
     display: none; /* hidden by default */
     z-index: 10;
+}
+
+.chart-info {
+    text-align: justify;
+    margin-top: 40px;
+    position: absolute;
+    margin-left: 20px;
+    font-size: 1.2rem;
 }
