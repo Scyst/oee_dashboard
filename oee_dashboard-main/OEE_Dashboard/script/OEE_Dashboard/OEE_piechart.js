@@ -139,32 +139,32 @@ async function fetchAndRenderCharts() {
 
         document.getElementById("oeeInfo").innerHTML = `
             <small>
-                OEE: ${oeePercent.toFixed(1)}%<br>
-                Quality Loss: ${qualityLoss.toFixed(1)}%<br>
-                Performance Loss: ${performanceLoss.toFixed(1)}%<br>
-                Availability Loss: ${availabilityLoss.toFixed(1)}%
+                OEE : ${oeePercent.toFixed(2)}%<br>
+                Q Loss : ${qualityLoss.toFixed(2)}%<br>
+                P Loss : ${performanceLoss.toFixed(2)}%<br>
+                A Loss : ${availabilityLoss.toFixed(2)}%
             </small>
         `;
 
         document.getElementById("qualityInfo").innerHTML = `
             <small>
-                FG: ${data.fg.toLocaleString()} pcs<br>
-                Defects: ${data.defects.toLocaleString()} pcs
+                FG : ${data.fg.toLocaleString()} pcs<br>
+                Defects : ${data.defects.toLocaleString()} pcs
             </small>
         `;
 
         document.getElementById("performanceInfo").innerHTML = `
             <small>
-                Actual: ${data.actual_output.toLocaleString()} pcs<br>
-                Planned: ${data.planned_output.toLocaleString()} pcs
+                Actual : ${data.actual_output.toLocaleString()} pcs<br>
+                Planned : ${data.planned_output.toLocaleString()} pcs
             </small>
         `;
 
         document.getElementById("availabilityInfo").innerHTML = `
             <small>
-                Planned: ${formatMinutes(data.planned_time)}<br>
-                Downtime: ${formatMinutes(data.downtime)}<br>
-                Runtime: ${formatMinutes(data.runtime)}
+                Planned : ${formatMinutes(data.planned_time)}<br>
+                Downtime : ${formatMinutes(data.downtime)}<br>
+                Runtime : ${formatMinutes(data.runtime)}
             </small>
         `;
 
