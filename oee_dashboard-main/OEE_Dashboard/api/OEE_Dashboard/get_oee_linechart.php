@@ -89,9 +89,9 @@ foreach ($datePeriod as $dateObj) {
     $runtime = max(0, $plannedTime - $downtime);
 
     // CALCULATE %
-    $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
-    $performance  = $plannedOutput > 0 ? ($actualOutput / $plannedOutput) * 100 : 0;
-    $quality      = ($FG + $defects) > 0 ? ($FG / ($FG + $defects)) * 100 : 0;
+    $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 100;
+    $performance  = $plannedOutput > 0 ? ($actualOutput / $plannedOutput) * 100 : 100;
+    $quality      = ($FG + $defects) > 0 ? ($FG / ($FG + $defects)) * 100 : 100;
     $oee          = ($availability / 100) * ($performance / 100) * ($quality / 100) * 100;
 
     $records[] = [

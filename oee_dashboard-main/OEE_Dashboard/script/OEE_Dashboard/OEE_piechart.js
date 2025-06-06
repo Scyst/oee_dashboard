@@ -28,7 +28,7 @@ function renderSimplePieChart(chartRef, ctx, label, rawValue, mainColor) {
             labels: [label, 'Loss'],
             datasets: [{
                 data: [value, loss],
-                backgroundColor: [mainColor, '#e0e0e0'],
+                backgroundColor: [mainColor, '#9E9E9E'],
                 cutout: '80%',
                 borderWidth: 0.5
             }]
@@ -100,7 +100,7 @@ async function fetchAndRenderCharts() {
             document.getElementById("qualityPieChart").getContext("2d"),
             'Quality',
             data.quality,
-            '#66bb6a'
+            '#ab47bc'
         );
 
         performanceChart = renderSimplePieChart(

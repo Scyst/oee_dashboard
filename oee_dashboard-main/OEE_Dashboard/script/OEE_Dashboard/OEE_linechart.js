@@ -30,7 +30,7 @@ function renderCombinedLineChart(labels, datasets) {
             maintainAspectRatio: false,
             plugins: {
                 title: {
-                    display: true,
+                    display: false,
                     text: "OEE Trends (Daily Average)",
                     font: { size: 16, weight: "bold" },
                     color: "#fff"
@@ -99,22 +99,22 @@ async function fetchAndRenderLineCharts() {
             {
                 label: "OEE (%)",
                 data: data.records.map(r => r.oee),
-                borderColor: "#42a5f5",
-                backgroundColor: "rgba(66, 165, 245, 0.3)",
-                tension: 0.3,
-                fill: true,
-                pointRadius: 3,
-                pointBackgroundColor: "#42a5f5"
-            },
-            {
-                label: "Quality (%)",
-                data: data.records.map(r => r.quality),
                 borderColor: "#66bb6a",
                 backgroundColor: "rgba(102, 187, 106, 0.3)",
                 tension: 0.3,
                 fill: true,
                 pointRadius: 3,
                 pointBackgroundColor: "#66bb6a"
+            },
+            {
+                label: "Quality (%)",
+                data: data.records.map(r => r.quality),
+                borderColor: "#ab47bc",
+                backgroundColor: "rgba(171, 71, 188, 0.3)",
+                tension: 0.3,
+                fill: true,
+                pointRadius: 3,
+                pointBackgroundColor: "#ab47bc"
             },
             {
                 label: "Performance (%)",
@@ -129,12 +129,12 @@ async function fetchAndRenderLineCharts() {
             {
                 label: "Availability (%)",
                 data: data.records.map(r => r.availability),
-                borderColor: "#ab47bc",
-                backgroundColor: "rgba(171, 71, 188, 0.3)",
+                borderColor: "#42a5f5",
+                backgroundColor: "rgba(66, 165, 245, 0.3)",
                 tension: 0.3,
                 fill: true,
                 pointRadius: 3,
-                pointBackgroundColor: "#ab47bc"
+                pointBackgroundColor: "#42a5f5"
             }
         ];
 
