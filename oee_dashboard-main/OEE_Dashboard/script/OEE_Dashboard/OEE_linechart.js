@@ -11,7 +11,7 @@ function showError(chartId, messageId) {
     const canvas = document.getElementById(chartId);
     const errorMsg = document.getElementById(messageId);
     if (canvas) canvas.style.opacity = "1";
-    if (errorMsg) errorMsg.style.display = "none";
+    if (errorMsg) errorMsg.style.display = "block";
 }
 
 function renderCombinedLineChart(labels, datasets) {
@@ -26,12 +26,12 @@ function renderCombinedLineChart(labels, datasets) {
             datasets: datasets
         },
         options: {
-            responsive: true,          // ✅ allows scaling
-            maintainAspectRatio: false, // ✅ allows full height/width
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 title: {
-                    display: false,
-                    text: "OEE Trends",
+                    display: true,
+                    text: "OEE Trends (Daily Average)",
                     font: { size: 16, weight: "bold" },
                     color: "#fff"
                 },
@@ -47,17 +47,30 @@ function renderCombinedLineChart(labels, datasets) {
             },
             scales: {
                 x: {
-                    ticks: { color: "#ccc", font: { size: 10 } },
-                    grid: { display: false, color: "#444" }
+                    ticks: {
+                        color: "#ccc",
+                        font: { size: 10 }
+                    },
+                    grid: {
+                        display: false,
+                        color: "#444"
+                    }
                 },
                 y: {
                     beginAtZero: true,
                     max: 100,
-                    ticks: { color: "#ccc", font: { size: 10 } },
-                    grid: { color: "#444" }
+                    ticks: {
+                        color: "#ccc",
+                        font: { size: 10 }
+                    },
+                    grid: {
+                        color: "#444"
+                    }
                 }
             },
-            layout: { padding: 10 }
+            layout: {
+                padding: 10
+            }
         }
     });
 }
@@ -71,20 +84,14 @@ async function fetchAndRenderLineCharts() {
         const line      = document.getElementById("lineFilter")?.value || '';
         const model     = document.getElementById("modelFilter")?.value || '';
 
-        const params = new URLSearchParams({
-            startDate,
-            endDate,
-            line,
-            model
-        });
+        const params = new URLSearchParams({ startDate, endDate, line, model });
 
-        // ⏎ Update browser URL (preserve filters on refresh)
+        // update the browser URL
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState({}, '', newUrl);
 
         const response = await fetch(`../api/OEE_Dashboard/get_oee_linechart.php?${params.toString()}`);
         const data = await response.json();
-
         if (!data.success) throw new Error("Data error");
 
         const labels = data.records.map(r => r.date);
@@ -93,9 +100,9 @@ async function fetchAndRenderLineCharts() {
                 label: "OEE (%)",
                 data: data.records.map(r => r.oee),
                 borderColor: "#42a5f5",
-                backgroundColor: "#42a5f533",
-                tension: 0.1,
-                fill: false,
+                backgroundColor: "rgba(66, 165, 245, 0.3)",
+                tension: 0.3,
+                fill: true,
                 pointRadius: 3,
                 pointBackgroundColor: "#42a5f5"
             },
@@ -103,9 +110,9 @@ async function fetchAndRenderLineCharts() {
                 label: "Quality (%)",
                 data: data.records.map(r => r.quality),
                 borderColor: "#66bb6a",
-                backgroundColor: "#66bb6a33",
-                tension: 0.1,
-                fill: false,
+                backgroundColor: "rgba(102, 187, 106, 0.3)",
+                tension: 0.3,
+                fill: true,
                 pointRadius: 3,
                 pointBackgroundColor: "#66bb6a"
             },
@@ -113,9 +120,9 @@ async function fetchAndRenderLineCharts() {
                 label: "Performance (%)",
                 data: data.records.map(r => r.performance),
                 borderColor: "#ffa726",
-                backgroundColor: "#ffa72633",
-                tension: 0.1,
-                fill: false,
+                backgroundColor: "rgba(255, 167, 38, 0.3)",
+                tension: 0.3,
+                fill: true,
                 pointRadius: 3,
                 pointBackgroundColor: "#ffa726"
             },
@@ -123,16 +130,15 @@ async function fetchAndRenderLineCharts() {
                 label: "Availability (%)",
                 data: data.records.map(r => r.availability),
                 borderColor: "#ab47bc",
-                backgroundColor: "#ab47bc33",
-                tension: 0.1,
-                fill: false,
+                backgroundColor: "rgba(171, 71, 188, 0.3)",
+                tension: 0.3,
+                fill: true,
                 pointRadius: 3,
                 pointBackgroundColor: "#ab47bc"
             }
         ];
 
         renderCombinedLineChart(labels, datasets);
-
     } catch (err) {
         console.error("Line chart fetch failed:", err);
         showError("oeeLineChart", "oeeLineError");
@@ -148,7 +154,7 @@ window.addEventListener("load", () => {
     const model     = params.get("model");
 
     if (startDate) document.getElementById("startDate").value = startDate;
-    if (endDate)   document.getElementById("endDate").value   = endDate;
+    if (endDate)   document.getElementById("endDate").value = endDate;
     if (line)      document.getElementById("lineFilter").value = line;
     if (model)     document.getElementById("modelFilter").value = model;
 
@@ -156,8 +162,6 @@ window.addEventListener("load", () => {
     setInterval(fetchAndRenderLineCharts, 60000);
 });
 
-// 🔄 Auto update on any filter change
 ["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
     document.getElementById(id)?.addEventListener("change", fetchAndRenderLineCharts);
 });
-
