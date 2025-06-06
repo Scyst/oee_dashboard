@@ -118,12 +118,31 @@ async function fetchAndRenderCharts() {
             data.availability,
             '#42a5f5'
         );
+
+        const oeePercent = data.oee;
+        const quality = data.quality;
+        const performance = data.performance;
+        const availability = data.availability;
+
+        const totalLoss = 100 - oeePercent;
+
+        // Contribution ratios (based on multiplication impact)
+        const qualityRatio = (100 - quality) / 100;
+        const performanceRatio = (100 - performance) / 100;
+        const availabilityRatio = (100 - availability) / 100;
+
+        const totalRatio = qualityRatio + performanceRatio + availabilityRatio;
+
+        const qualityLoss = totalLoss * (qualityRatio / totalRatio);
+        const performanceLoss = totalLoss * (performanceRatio / totalRatio);
+        const availabilityLoss = totalLoss * (availabilityRatio / totalRatio);
+
         document.getElementById("oeeInfo").innerHTML = `
             <small>
-                OEE: ${data.oee.toFixed(1)}%<br>
-                Quality Loss: ${(100 - data.quality).toFixed(1)}%<br>
-                Performance Loss: ${(100 - data.performance).toFixed(1)}%<br>
-                Availability Loss: ${(100 - data.availability).toFixed(1)}%
+                OEE: ${oeePercent.toFixed(1)}%<br>
+                Quality Loss: ${qualityLoss.toFixed(1)}%<br>
+                Performance Loss: ${performanceLoss.toFixed(1)}%<br>
+                Availability Loss: ${availabilityLoss.toFixed(1)}%
             </small>
         `;
 
