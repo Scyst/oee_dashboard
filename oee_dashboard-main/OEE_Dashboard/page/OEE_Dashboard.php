@@ -15,22 +15,24 @@
 <body>
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
+
             <div class="OEE-head">
                 <h2>OEE DASHBOARD</h2>        
                 <!-- Filter Row -->
                 <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
-                    <select id="lineFilter">
+                    <select id="lineFilter" onchange="onFilterChange()">
                         <option value="">All Lines</option>
                     </select>
 
-                    <select id="modelFilter">
+                    <select id="modelFilter" onchange="onFilterChange()">
                         <option value="">All Models</option>
                     </select>
-                    <input type="date" id="startDate" onchange="fetchAndRenderBarCharts()">
+                    <input type="date" id="startDate" onchange="onFilterChange()">
                     <p style="text-align: center; align-content: center;"> - </p>
-                    <input type="date" id="endDate" onchange="fetchAndRenderBarCharts()">
+                    <input type="date" id="endDate" onchange="onFilterChange()">
                 </div>
             </div>
+
             <div class="assis-tool">
                 <p id="date"></p>
                 <p id="time"></p>
@@ -151,6 +153,47 @@
 
             if (startInput && !startInput.value) startInput.value = dateStr;
             if (endInput && !endInput.value) endInput.value = dateStr;
+        });
+    </script>
+
+    <script>
+        function onFilterChange() {
+            const startDate = document.getElementById("startDate")?.value || '';
+            const endDate   = document.getElementById("endDate")?.value || '';
+            const line      = document.getElementById("lineFilter")?.value || '';
+            const model     = document.getElementById("modelFilter")?.value || '';
+
+            const params = new URLSearchParams({ startDate, endDate, line, model });
+
+            // Save filters to browser URL
+            const newUrl = `${window.location.pathname}?${params.toString()}`;
+            window.history.replaceState({}, '', newUrl);
+
+            // Call all chart refresh functions
+            fetchAndRenderCharts?.();
+            fetchAndRenderLineCharts?.();
+            fetchAndRenderBarCharts?.(); // if available
+        }
+    </script>
+     
+    <script>
+        window.addEventListener("load", () => {
+            const params = new URLSearchParams(window.location.search);
+
+            const startDate = params.get("startDate");
+            const endDate   = params.get("endDate");
+            const line      = params.get("line");
+            const model     = params.get("model");
+
+            if (startDate) document.getElementById("startDate").value = startDate;
+            if (endDate) document.getElementById("endDate").value = endDate;
+            if (line) document.getElementById("lineFilter").value = line;
+            if (model) document.getElementById("modelFilter").value = model;
+
+            // Trigger chart loads with remembered values
+            fetchAndRenderCharts?.();
+            fetchAndRenderLineCharts?.();
+            fetchAndRenderBarCharts?.();
         });
     </script>
 
