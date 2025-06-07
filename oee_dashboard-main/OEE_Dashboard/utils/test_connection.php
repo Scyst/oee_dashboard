@@ -1,5 +1,5 @@
 <?php
-require_once 'db.php'; // make sure db.php returns $conn
+require_once '../api/db.php'; // make sure db.php returns $conn
 
 if ($conn) {
     echo "✅ Connected!";

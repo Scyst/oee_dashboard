@@ -1,5 +1,5 @@
 <?php
-require_once("../api/paraManage/db.php");
+require_once("../../api/db.php");
 header('Content-Type: application/json');
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
