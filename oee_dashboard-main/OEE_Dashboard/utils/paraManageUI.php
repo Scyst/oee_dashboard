@@ -1,47 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Parameter Manager</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <style>
+    input[type="text"] {
+      text-transform: uppercase;
+    }
+  </style>
+
 </head>
 <body class="bg-dark text-white p-4">
   <div class="container">
     <h2 class="mb-4">Parameter Manager</h2>
 
     <form id="paramForm" class="row g-3">
-      <input type="hidden" id="paramId">
+      <input type="hidden" id="paramId" />
       <div class="col-md-3">
-        <input type="text" class="form-control" id="line" placeholder="Line" required>
+        <input type="text" class="form-control" id="line" placeholder="Line" required />
       </div>
       <div class="col-md-3">
-        <input type="text" class="form-control" id="model" placeholder="Model" required>
+        <input type="text" class="form-control" id="model" placeholder="Model" required />
       </div>
       <div class="col-md-3">
-        <input type="text" class="form-control" id="partNo" placeholder="Part No." required>
+        <input type="text" class="form-control" id="partNo" placeholder="Part No." required />
       </div>
       <div class="col-md-2">
-        <input type="number" class="form-control" id="plannedOutput" placeholder="Planned Output" required>
+        <input type="number" class="form-control" id="plannedOutput" placeholder="Planned Output" required />
       </div>
       <div class="col-md-1">
         <button type="submit" class="btn btn-success w-100">Save</button>
       </div>
     </form>
 
-    <table class="table table-dark table-striped mt-4">
-      <thead>
-        <tr>
-          <th>Line</th>
-          <th>Model</th>
-          <th>Part No.</th>
-          <th>Planned Output</th>
-          <th>Updated At</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="paramTable"></tbody>
-    </table>
+    <hr>
+
+    <div class="mt-4"> 
+      <div class="row mb-2">
+        <div class="col-md-4 mx-auto">
+          <input type="text" class="form-control" id="searchInput" placeholder="Search parameters...">
+        </div>
+      </div>
+
+      <table class="table table-dark table-striped">
+        <thead>
+          <tr>
+            <th>Line</th>
+            <th>Model</th>
+            <th>Part No.</th>
+            <th>Planned Output</th>
+            <th>Updated At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="paramTable"></tbody>
+      </table>
+    </div>
+
   </div>
 
   <script>
@@ -49,16 +66,15 @@
       const res = await fetch('../api/paraManage/paraManage.php?action=read');
       const data = await res.json();
       const tbody = document.getElementById('paramTable');
-
-      console.log(data);
       tbody.innerHTML = '';
-      data.data.forEach(row => {
+
+      data.forEach(row => {
         tbody.innerHTML += `
           <tr>
             <td>${row.line}</td>
             <td>${row.model}</td>
             <td>${row.part_no}</td>
-            <td>${row.planned_output.toLocaleString()}</td>
+            <td>${Number(row.planned_output).toLocaleString()}</td>
             <td>${new Date(row.updated_at).toLocaleString()}</td>
             <td>
               <button class="btn btn-sm btn-warning" onclick='editParam(${JSON.stringify(row)})'>Edit</button>
@@ -66,6 +82,27 @@
             </td>
           </tr>`;
       });
+
+      filterTable(); // Apply filter after table is reloaded
+    }
+
+    // Filter table rows based on search input
+    function filterTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#paramTable tr');
+
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(search) ? '' : 'none';
+      });
+    }
+
+    function editParam(data) {
+      document.getElementById('paramId').value = data.id;
+      document.getElementById('line').value = data.line;
+      document.getElementById('model').value = data.model;
+      document.getElementById('partNo').value = data.part_no;
+      document.getElementById('plannedOutput').value = data.planned_output;
     }
 
     async function deleteParam(id) {
@@ -74,38 +111,39 @@
       loadParameters();
     }
 
-    function editParam(data) {
-      document.getElementById('paramId').value = data.data.id;
-      document.getElementById('line').value = data.data.line;
-      document.getElementById('model').value = data.data.model;
-      document.getElementById('partNo').value = data.data.part_no;
-      document.getElementById('plannedOutput').value = data.data.planned_output;
-    }
-
     document.getElementById('paramForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const id = formData.get('paramId');
-      const action = id ? 'update' : 'create';
+      const form = e.target;
+      const id = document.getElementById('paramId').value;
 
       const payload = {
         id,
-        line: formData.get('line'),
-        model: formData.get('model'),
-        part_no: formData.get('partNo'),
-        planned_output: formData.get('plannedOutput')
+        line: form.line.value.trim().toUpperCase(),
+        model: form.model.value.trim().toUpperCase(),
+        part_no: form.partNo.value.trim().toUpperCase(),
+        planned_output: parseInt(form.plannedOutput.value, 10)
       };
 
-      await fetch(`../api/paraManage/paraManage.php?action=${action}`, {
+      const action = id ? 'update' : 'create';
+      const res = await fetch(`../api/paraManage/paraManage.php?action=${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      e.target.reset();
-      document.getElementById('paramId').value = '';
-      loadParameters();
+      const result = await res.json();
+      if (result.success) {
+        if (!id) {
+          // Only reset if it's a new entry
+          form.plannedOutput.value = '';
+        }
+        await loadParameters();
+      } else {
+        alert("Failed to save parameter. Make sure the combination is unique.");
+      }
     });
+
+    document.getElementById('searchInput').addEventListener('input', filterTable);
 
     loadParameters();
   </script>
