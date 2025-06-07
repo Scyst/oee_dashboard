@@ -139,7 +139,6 @@ async function fetchAndRenderCharts() {
 
         document.getElementById("oeeInfo").innerHTML = `
             <small>
-                OEE : ${oeePercent.toFixed(2)}%<br>
                 Q Loss : ${qualityLoss.toFixed(2)}%<br>
                 P Loss : ${performanceLoss.toFixed(2)}%<br>
                 A Loss : ${availabilityLoss.toFixed(2)}%
