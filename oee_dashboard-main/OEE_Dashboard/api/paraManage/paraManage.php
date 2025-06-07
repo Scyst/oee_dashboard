@@ -53,6 +53,58 @@ switch ($action) {
         echo json_encode(["success" => $stmt ? true : false]);
         break;
 
+    case 'bulk_import':
+        if (!is_array($input)) {
+            echo json_encode(["success" => false, "message" => "Invalid data"]);
+            break;
+        }
+
+        $success = true;
+        $imported = 0;
+        $errors = [];
+
+        foreach ($input as $i => $row) {
+            $line = strtoupper(trim($row['line'] ?? ''));
+            $model = strtoupper(trim($row['model'] ?? ''));
+            $part_no = strtoupper(trim($row['part_no'] ?? ''));
+            $planned_output = (int)($row['planned_output'] ?? 0);
+
+            if (!$line || !$model || !$part_no || !$planned_output) {
+                $errors[] = "Row " . ($i + 2) . " has missing or invalid data."; // +2 because of Excel header + 1-based index
+                continue;
+            }
+
+            $check = sqlsrv_query($conn, "SELECT id FROM parameter WHERE line = ? AND model = ? AND part_no = ?", [$line, $model, $part_no]);
+            if ($check && $existing = sqlsrv_fetch_array($check, SQLSRV_FETCH_ASSOC)) {
+                $stmt = sqlsrv_query($conn, "
+                    UPDATE parameter SET planned_output = ?, updated_at = GETDATE() WHERE id = ?",
+                    [$planned_output, $existing['id']]
+                );
+            } else {
+                $stmt = sqlsrv_query($conn, "
+                    INSERT INTO parameter (line, model, part_no, planned_output) VALUES (?, ?, ?, ?)",
+                    [$line, $model, $part_no, $planned_output]
+                );
+            }
+
+            if ($stmt) {
+                $imported++;
+            } else {
+                $errors[] = "Row " . ($i + 2) . " failed to save.";
+                $success = false;
+            }
+        }
+
+        echo json_encode([
+            "success" => $success,
+            "imported" => $imported,
+            "message" => $success
+                ? "Imported $imported row(s) successfully."
+                : "Import completed with some errors.",
+            "errors" => $errors
+        ]);
+        break;
+
     default:
         echo json_encode(["success" => false, "message" => "Invalid action"]);
         break;

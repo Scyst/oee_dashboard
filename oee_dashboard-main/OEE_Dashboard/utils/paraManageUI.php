@@ -36,14 +36,23 @@
     </form>
 
     <hr>
-
-    <div class="mt-4"> 
-      <div class="row mb-2">
-        <div class="col-md-4 mx-auto">
-          <input type="text" class="form-control" id="searchInput" placeholder="Search parameters...">
-        </div>
+    
+    
+    <div class="row mb-2 align-items-center">
+      <div class="col-md-4">
+        <input type="text" class="form-control" id="searchInput" placeholder="Search parameters...">
       </div>
 
+      <div class="col-md-5 text-end">
+        <button class="btn btn-sm btn-primary me-2" onclick="triggerImport()">Import</button>
+        <button class="btn btn-sm btn-success" onclick="exportToExcel()">Export</button>
+      </div>
+
+      <!-- Hidden file input triggered by import button -->
+      <input type="file" id="importFile" accept=".csv, .xlsx, .xls" class="form-control mt-2 d-none" onchange="handleImport(event)">
+    </div>
+
+    <div>
       <table class="table table-dark table-striped">
         <thead>
           <tr>
@@ -62,9 +71,13 @@
   </div>
 
   <script>
+    let allData = [];
+
     async function loadParameters() {
       const res = await fetch('../api/paraManage/paraManage.php?action=read');
       const data = await res.json();
+      allData = data; // ✅ Store globally for export
+
       const tbody = document.getElementById('paramTable');
       tbody.innerHTML = '';
 
@@ -83,7 +96,7 @@
           </tr>`;
       });
 
-      filterTable(); // Apply filter after table is reloaded
+      filterTable(); // Apply search filter after loading
     }
 
     // Filter table rows based on search input
@@ -147,5 +160,63 @@
 
     loadParameters();
   </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script>
+        // Trigger file input when "Import" is clicked
+    function triggerImport() {
+      document.getElementById('importFile').click();
+    }
+
+    // Export current data
+    function exportToExcel() {
+      if (!allData || allData.length === 0) {
+        alert("No data to export.");
+        return;
+      }
+
+      const headers = ["Line", "Model", "Part No.", "Planned Output", "Updated At"];
+      const rows = allData.map(row => [
+        row.line, row.model, row.part_no, row.planned_output, row.updated_at
+      ]);
+
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Parameters");
+
+      XLSX.writeFile(workbook, "parameter_data.xlsx");
+    }
+
+    // Handle file selection
+    async function handleImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const workbook = XLSX.read(e.target.result, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+
+        // Confirm and send to backend
+        if (rows.length && confirm(`Import ${rows.length} rows?`)) {
+          const res = await fetch('../api/paraManage/paraManage.php?action=bulk_import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rows)
+          });
+
+          const result = await res.json();
+          alert(result.message || "Import finished.");
+          loadParameters();
+        }
+      };
+      reader.readAsBinaryString(file);
+    }
+
+  </script>
+
 </body>
 </html>
