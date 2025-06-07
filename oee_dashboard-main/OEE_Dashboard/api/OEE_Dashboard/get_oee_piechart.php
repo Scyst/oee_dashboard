@@ -105,7 +105,7 @@ while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     $totalDefects += $defects;
     $totalActualOutput += ($fg + $defects);
 
-    $planSql = "SELECT planned_output FROM performance_parameter WHERE model = ? AND part_no = ? AND line = ?";
+    $planSql = "SELECT planned_output FROM parameter WHERE model = ? AND part_no = ? AND line = ?";
     $planStmt = sqlsrv_query($conn, $planSql, [$modelVal, $partNo, $lineVal]);
     if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
         $hourlyOutput = (int)$planRow['planned_output'];

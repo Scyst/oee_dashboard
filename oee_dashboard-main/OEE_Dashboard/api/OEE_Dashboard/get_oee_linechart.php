@@ -128,7 +128,7 @@ foreach ($period as $dateObj) {
 
         $planStmt = sqlsrv_query(
             $conn,
-            "SELECT planned_output FROM performance_parameter WHERE model = ? AND part_no = ? AND line = ?",
+            "SELECT planned_output FROM parameter WHERE model = ? AND part_no = ? AND line = ?",
             [$modelVal, $partNo, $lineVal]
         );
         if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {

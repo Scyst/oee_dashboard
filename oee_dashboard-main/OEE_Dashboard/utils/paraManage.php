@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Performance Parameter Management</title>
+  <title>Parameter Management</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     body { font-family: Arial; padding: 20px; }
@@ -15,7 +15,7 @@
   </style>
 </head>
 <body>
-  <h2>Performance Parameter Management</h2>
+  <h2>Parameter Management</h2>
 
   <form id="parameterForm">
     <input type="hidden" id="param_id">
