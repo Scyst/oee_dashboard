@@ -12,6 +12,10 @@
 </head>
 
 <body style="width: 100vw; height: fit-content; min-width: fit-content;">
+    <a href="paraManageUI.php">
+        <button style="position: fixed; height: 20px; width: 20px; background-color: transparent; cursor: auto;">
+        </button>
+    </a>
 
     <div style="height: calc(100vh - 20px);">
         <div class="Header">

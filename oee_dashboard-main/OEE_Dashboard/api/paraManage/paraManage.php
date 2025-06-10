@@ -62,6 +62,7 @@ switch ($action) {
         $success = true;
         $imported = 0;
         $errors = [];
+        //file_put_contents('import_debug.txt', print_r($input, true));
 
         foreach ($input as $i => $row) {
             $line = strtoupper(trim($row['line'] ?? ''));
@@ -82,7 +83,8 @@ switch ($action) {
                 );
             } else {
                 $stmt = sqlsrv_query($conn, "
-                    INSERT INTO parameter (line, model, part_no, planned_output) VALUES (?, ?, ?, ?)",
+                    INSERT INTO parameter (line, model, part_no, planned_output, updated_at)
+                    VALUES (?, ?, ?, ?, GETDATE())",
                     [$line, $model, $part_no, $planned_output]
                 );
             }
@@ -90,7 +92,7 @@ switch ($action) {
             if ($stmt) {
                 $imported++;
             } else {
-                $errors[] = "Row " . ($i + 2) . " failed to save.";
+                $errors[] = "Row " . ($i + 2) . " failed: " . print_r(sqlsrv_errors(), true);
                 $success = false;
             }
         }

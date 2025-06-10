@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Parameter Manager</title>
-    <script src="libs/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="libs/bootstrap.min.css">
+    <script src="../utils/libs/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
   <style>
     input[type="text"] {
       text-transform: uppercase;
@@ -15,7 +15,10 @@
 </head>
 <body class="bg-dark text-white p-4">
   <div class="container">
-    <h2 class="mb-4">Parameter Manager</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">Parameter Manager</h2>
+      <a href="OEE_Dashboard.php" class="btn btn-outline-secondary">Home</a>
+    </div>
 
     <form id="paramForm" class="row g-3">
       <input type="hidden" id="paramId" />
@@ -45,8 +48,10 @@
         <input type="text" class="form-control" id="searchInput" placeholder="Search parameters...">
       </div>
 
+      <div class="col-md-6 text-end"></div>
+
       <!-- Import/Export buttons on the right -->
-      <div class="col-md-9 text-end">
+      <div class="col-md-3 text-end">
         <button class="btn btn-sm btn-primary me-2" onclick="triggerImport()">Import</button>
         <button class="btn btn-sm btn-success" onclick="exportToExcel()">Export</button>
       </div>
@@ -173,7 +178,7 @@
         return;
       }
       
-      const headers = ["Line", "Model", "Part No.", "Planned Output", "Updated At"];
+      const headers = ["Line", "Model", "Part No", "Planned Output", "Updated At"];
       const rows = allData.map(row => [
         row.line, row.model, row.part_no, row.planned_output, row.updated_at
       ]);
@@ -194,54 +199,76 @@
     async function handleImport(event) {
       const file = event.target.files[0];
       if (!file) return;
-      
+
       const reader = new FileReader();
-      
+
       reader.onload = async (e) => {
         let rows = [];
-        
+
+        if (file.name.endsWith('.csv')) {
+          // Parse CSV manually
+          const text = e.target.result;
+          const lines = text.trim().split('\n');
+          const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+          for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim());
+            const row = {};
+            headers.forEach((h, j) => {
+              const key = h.toLowerCase().replace(/ /g, '_'); // Normalize keys
+              row[key] = values[j];
+            });
+
+            // Normalize expected keys
+            rows.push({
+              line: row.line || '',
+              model: row.model || '',
+              part_no: row.part_no || '',
+              planned_output: parseInt(row.planned_output) || 0
+            });
+          }
+
+        } else {
+          // Excel handling via SheetJS
+          const workbook = XLSX.read(e.target.result, { type: "binary" });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+          rows = rawRows.map(row => ({
+            line: row["Line"] || row["line"] || '',
+            model: row["Model"] || row["model"] || '',
+            part_no: row["Part No"] || row["part_no"] || '',
+            planned_output: parseInt(row["Planned Output"] || row["planned_output"] || 0)
+          }));
+        }
+
+        if (rows.length && confirm(`Import ${rows.length} row(s)?`)) {
+          const res = await fetch('../api/paraManage/paraManage.php?action=bulk_import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rows)
+          });
+
+          const result = await res.json();
+          alert(result.message || "Import completed.");
+
+          if (result.errors && result.errors.length > 0) {
+            console.warn("Import warnings:", result.errors);
+          }
+
+          console.log("Sending to backend:", rows);
+          if (typeof loadParameters === 'function') loadParameters();
+        }
+      };
+
+      // Choose reader type
       if (file.name.endsWith('.csv')) {
-        // Parse CSV manually
-        const text = e.target.result;
-        const lines = text.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-        for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(',').map(v => v.trim());
-          const row = {};
-          headers.forEach((h, j) => row[h] = values[j]);
-          rows.push(row);
-        }
+        reader.readAsText(file);
       } else {
-        // Use SheetJS for Excel files
-        const workbook = XLSX.read(e.target.result, { type: "binary" });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        rows = XLSX.utils.sheet_to_json(sheet);
+        reader.readAsBinaryString(file);
       }
-
-      if (rows.length && confirm(`Import ${rows.length} row(s)?`)) {
-        const res = await fetch('../api/paraManage/paraManage.php?action=bulk_import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(rows)
-        });
-
-        const result = await res.json();
-        alert(result.message || "Import completed.");
-        if (result.errors && result.errors.length > 0) {
-          console.warn("Import warnings:", result.errors);
-        }
-
-        loadParameters?.();
-      }
-    };
-
-    if (file.name.endsWith('.csv')) {
-      reader.readAsText(file);
-    } else {
-      reader.readAsBinaryString(file);
     }
-  }
   </script>
 
 </body>
