@@ -39,16 +39,18 @@
     
     
     <div class="row mb-2 align-items-center">
-      <div class="col-md-4">
+      <!-- Search box on the left -->
+      <div class="col-md-3">
         <input type="text" class="form-control" id="searchInput" placeholder="Search parameters...">
       </div>
 
-      <div class="col-md-5 text-end">
+      <!-- Import/Export buttons on the right -->
+      <div class="col-md-9 text-end">
         <button class="btn btn-sm btn-primary me-2" onclick="triggerImport()">Import</button>
         <button class="btn btn-sm btn-success" onclick="exportToExcel()">Export</button>
       </div>
 
-      <!-- Hidden file input triggered by import button -->
+      <!-- Hidden file input for import -->
       <input type="file" id="importFile" accept=".csv, .xlsx, .xls" class="form-control mt-2 d-none" onchange="handleImport(event)">
     </div>
 
