@@ -16,39 +16,9 @@
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
             <div class="OEE-head">
-                <h1>PRODUCTION HISTORY</h1>
-                <!--h2 style="font-size: 2em;">Assembly Line</!--h2-->
-            </div>
-            <div class="assis-tool">
-                <p id="date"></p>
-                <p id="time"></p>
-
-                <div class="tool-buttons">
-                    <a href="OEE_Dashboard.php">
-                        <button>
-                            <img src="../icons/reports-icon.png" alt="Save">
-                        </button>
-                    </a>
-                    <a href="pdTable.php">
-                        <button>
-                            <img src="../icons/db.png" alt="Database">
-                        </button>
-                    </a>
-                    <a href="Stop_Cause.php">
-                        <button>
-                            <img src="../icons/clipart2496353.png" alt="Settings">
-                        </button>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="production-history">
-
-            <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
-
+                <h2>PRODUCTION HISTORY</h2>
                 <!-- Filter -->
-                <div style="display: flex; gap: 5px; justify-content: center;">
+                <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
                     <input list="searchlist" id="searchInput" placeholder="Search Part No." oninput="fetchPaginatedParts(1)" />
                     <datalist id="searchlist">
                         <?php include '../api/pdTable/get_part_nos.php'; ?>
@@ -83,27 +53,55 @@
                     <p style="text-align: center; align-content: center;"> - </p>
                     <input type="date" id="endDate" onchange="applyDateRangeFilter()">
                 </div>
+            </div>
 
+            <div class="assis-tool">
+                <p id="date"></p>
+                <p id="time"></p>
+
+                <div class="tool-buttons">
+                    <a href="OEE_Dashboard.php">
+                        <button>
+                            <img src="../icons/reports-icon.png" alt="Save">
+                        </button>
+                    </a>
+                    <a href="pdTable.php">
+                        <button>
+                            <img src="../icons/db.png" alt="Database">
+                        </button>
+                    </a>
+                    <a href="Stop_Cause.php">
+                        <button>
+                            <img src="../icons/clipart2496353.png" alt="Settings">
+                        </button>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="production-history">
+
+            <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
+                <div   div style="display: flex; justify-content: space-between; padding: 2px 10px;">
+                    <div style="display: flex; align-items: center; margin-left: 5px;">
+                        <div id="grandSummary" style="font-weight: bold;"></div>
+                    </div>    
+                </div>
+                
                 <div>
+                    <button onclick="openSummaryModal()">Show Detailed Summary</button>
                     <button onclick="exportToExcel()">Export to Excel</button>
                     <!--button onclick="exportToPDF()">Export to PDF</!--button-->
                     <button onclick="openModal('partModal')">Add</button>
                 </div>
-            </div>
 
-            <div style="display: flex; justify-content: space-between; padding: 2px 10px;">
-                <div style="display: flex; align-items: center; margin-left: 5px;">
+                <div id="partSummaryWrapper" style="display: none;">
                     <div id="grandSummary" style="font-weight: bold;"></div>
-                </div>    
-                <div style="display: flex; gap: 5px; justify-content: center; margin-bottom: -5px;">
-                    <button onclick="openSummaryModal()">Show Detailed Summary</button>
+                    <div id="partSummary" style="overflow-x: auto;"></div>
                 </div>
             </div>
 
-            <div id="partSummaryWrapper" style="display: none;">
-                <div id="grandSummary" style="font-weight: bold;"></div>
-                <div id="partSummary" style="overflow-x: auto;"></div>
-            </div>
+            
 
             <div class="table-wrapper">
                 <table id="partTable" border="1">
@@ -255,29 +253,35 @@
     <script>
         window.addEventListener("load", () => {
             const now = new Date();
-
-            // Format as yyyy-mm-dd
             const dateStr = now.toISOString().split('T')[0];
-
-            // Format time as hh:mm
             const timeStr = now.toTimeString().split(':').slice(0, 2).join(':');
 
-            // Set all date and time fields
-            document.querySelectorAll('input[type="date"]').forEach(input => {
-                if (!input.value) input.value = dateStr;
-            });
+            // Try to load saved values from localStorage
+            const savedStart = localStorage.getItem('oee_startDate');
+            const savedEnd = localStorage.getItem('oee_endDate');
 
-            document.querySelectorAll('input[type="time"]').forEach(input => {
-                if (!input.value) input.value = timeStr;
-            });
-
-            // Special handling: set only startDate and endDate filter defaults to today
             const startInput = document.getElementById("startDate");
             const endInput = document.getElementById("endDate");
 
-            if (startInput && !startInput.value) startInput.value = dateStr;
-            if (endInput && !endInput.value) endInput.value = dateStr;
+            // Set saved values if found, otherwise set default (today)
+            if (startInput) startInput.value = savedStart || dateStr;
+            if (endInput) endInput.value = savedEnd || dateStr;
+
+            // Set default time fields (if needed elsewhere)
+            document.querySelectorAll('input[type="time"]').forEach(input => {
+                if (!input.value) input.value = timeStr;
+            });
         });
+
+        function applyDateRangeFilter() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+
+            localStorage.setItem('oee_startDate', start);
+            localStorage.setItem('oee_endDate', end);
+
+            fetchPaginatedParts(1); // Or your filtering function
+        }
     </script>
 
     <script>

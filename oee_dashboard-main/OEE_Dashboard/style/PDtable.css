@@ -12,7 +12,7 @@
 .production-history .table-wrapper {
     overflow-x: auto;
     padding: 10px;
-    height: calc( 100% - 140px);
+    height: calc( 100% - 100px);
 }
 
 .production-history table {

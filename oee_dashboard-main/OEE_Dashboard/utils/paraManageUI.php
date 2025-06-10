@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Parameter Manager</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <script src="libs/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="libs/bootstrap.min.css">
   <style>
     input[type="text"] {
       text-transform: uppercase;
@@ -163,61 +164,84 @@
     loadParameters();
   </script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
   <script>
-        // Trigger file input when "Import" is clicked
-    function triggerImport() {
-      document.getElementById('importFile').click();
-    }
-
+    
     // Export current data
     function exportToExcel() {
       if (!allData || allData.length === 0) {
         alert("No data to export.");
         return;
       }
-
+      
       const headers = ["Line", "Model", "Part No.", "Planned Output", "Updated At"];
       const rows = allData.map(row => [
         row.line, row.model, row.part_no, row.planned_output, row.updated_at
       ]);
-
+      
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Parameters");
-
+      
       XLSX.writeFile(workbook, "parameter_data.xlsx");
+    }
+    
+    // Trigger file input when "Import" is clicked
+    function triggerImport() {
+      document.getElementById('importFile').click();
     }
 
     // Handle file selection
     async function handleImport(event) {
       const file = event.target.files[0];
       if (!file) return;
-
+      
       const reader = new FileReader();
+      
       reader.onload = async (e) => {
+        let rows = [];
+        
+      if (file.name.endsWith('.csv')) {
+        // Parse CSV manually
+        const text = e.target.result;
+        const lines = text.trim().split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',').map(v => v.trim());
+          const row = {};
+          headers.forEach((h, j) => row[h] = values[j]);
+          rows.push(row);
+        }
+      } else {
+        // Use SheetJS for Excel files
         const workbook = XLSX.read(e.target.result, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(sheet);
+        rows = XLSX.utils.sheet_to_json(sheet);
+      }
 
-        // Confirm and send to backend
-        if (rows.length && confirm(`Import ${rows.length} rows?`)) {
-          const res = await fetch('../api/paraManage/paraManage.php?action=bulk_import', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(rows)
-          });
+      if (rows.length && confirm(`Import ${rows.length} row(s)?`)) {
+        const res = await fetch('../api/paraManage/paraManage.php?action=bulk_import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rows)
+        });
 
-          const result = await res.json();
-          alert(result.message || "Import finished.");
-          loadParameters();
+        const result = await res.json();
+        alert(result.message || "Import completed.");
+        if (result.errors && result.errors.length > 0) {
+          console.warn("Import warnings:", result.errors);
         }
-      };
+
+        loadParameters?.();
+      }
+    };
+
+    if (file.name.endsWith('.csv')) {
+      reader.readAsText(file);
+    } else {
       reader.readAsBinaryString(file);
     }
-
+  }
   </script>
 
 </body>
