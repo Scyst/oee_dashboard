@@ -1,6 +1,4 @@
 <?php
-//call by deletePart() in pdTable.js
-
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -14,7 +12,6 @@ if (!$conn) {
     exit();
 }
 
-// Parse JSON input if Content-Type is JSON
 $input = $_SERVER['CONTENT_TYPE'] === 'application/json'
     ? json_decode(file_get_contents('php://input'), true)
     : $_POST;

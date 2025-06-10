@@ -1,10 +1,8 @@
 <?php
-//call by pdTable.js in function editPart(id)
-require_once '../../api/db.php'; // Adjust the path to your db.php file
+require_once '../../api/db.php';
 
 header('Content-Type: application/json');
 
-// Check for ID parameter
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     echo json_encode(['success' => false, 'message' => 'Invalid or missing ID']);
     exit;

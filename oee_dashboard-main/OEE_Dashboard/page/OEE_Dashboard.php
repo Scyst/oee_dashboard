@@ -115,7 +115,6 @@
         <div class="oee-linechart">
             <div style="width: 100%">
                 <fieldset>
-                    <!--h4>OEE / Quality / Performance / Availability</!--h4-->
                     <div class="linechart-wrapper">
                         <canvas id="oeeLineChart"></canvas>
                     </div>

@@ -48,14 +48,14 @@
 }
 
 .severe-cause {
-    background-color: #ffcccc; /* Red tint */
+    background-color: #ffcccc;
 }
 .critical-duration {
-    background-color: #ffe5b4; /* Orange tint */
+    background-color: #ffe5b4; 
 }
 .moderate-duration {
-    background-color: #ffffcc; /* Yellow tint */
+    background-color: #ffffcc; 
 }
 .normal-duration {
-    background-color: #e0ffe0; /* Light green */
+    background-color: #e0ffe0;
 }

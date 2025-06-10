@@ -198,7 +198,7 @@
                 <input type="date" name="log_date" id="edit_date" required><br>
                 <input type="time" name="log_time" id="edit_time" step="1" required><br>
 
-                <!-- Line (datalist or text input) -->
+                <!-- Line -->
                 <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
                 <datalist id="editLineList">
                     <?php include '../api/pdTable/get_lines.php'; ?>
@@ -280,7 +280,7 @@
             localStorage.setItem('oee_startDate', start);
             localStorage.setItem('oee_endDate', end);
 
-            fetchPaginatedParts(1); // Or your filtering function
+            fetchPaginatedParts(1);
         }
     </script>
 
@@ -305,7 +305,7 @@
             document.getElementById(modalId).style.display = "none";
         }
 
-        // Optional: close modal if clicking outside the content
+        // close modal if clicking outside the content
         window.onclick = function (event) {
             document.querySelectorAll('.modal').forEach(modal => {
                 if (event.target === modal) {

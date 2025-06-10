@@ -1,9 +1,7 @@
 <?php
-//call in paginationTable.js
 require_once("../../api/db.php");
 header('Content-Type: application/json');
 
-// Get values
 $log_date = $_POST['log_date'] ?? '';
 $log_time = $_POST['log_time'] ?? '';
 $part_no  = $_POST['part_no'] ?? '';

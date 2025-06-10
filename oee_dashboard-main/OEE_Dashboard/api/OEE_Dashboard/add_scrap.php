@@ -1,6 +1,4 @@
 <?php
-//call by scrapModal in OEE_Dashboard.php
-
 require_once("../api/db.php");
 
 $data = json_decode(file_get_contents("php://input"), true);

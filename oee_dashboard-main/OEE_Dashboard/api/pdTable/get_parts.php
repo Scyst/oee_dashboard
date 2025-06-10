@@ -1,6 +1,4 @@
 <?php
-//call by fetchParts() in pdTable.js & fetchPaginatedParts() in paginationTble.js
-
 header('Content-Type: application/json');
 require_once("../../api/db.php");
 

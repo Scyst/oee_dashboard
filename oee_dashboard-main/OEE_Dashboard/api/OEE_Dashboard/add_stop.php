@@ -1,6 +1,4 @@
 <?php
-//call by scrapModal in OEE_Dashboard.php
-
 require_once("../api/db.php");
 
 $log_date = $_POST['log_date'];

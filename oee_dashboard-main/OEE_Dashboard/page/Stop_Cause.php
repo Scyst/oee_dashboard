@@ -173,7 +173,7 @@
 
                 <input type="time" name="stop_end" id="edit_stopEnd" step="1" required><br>
 
-                <!-- Line (datalist or text input) -->
+                <!-- Line -->
                 <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
                 <datalist id="editLineList">
                     <?php include '../api/Stop_Cause/get_lines.php'; ?>

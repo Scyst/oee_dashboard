@@ -1,6 +1,4 @@
 <?php
-//call by pdTable.js
-
 header('Content-Type: application/json');
 require_once '../../api/db.php';
 

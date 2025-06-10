@@ -77,6 +77,6 @@
 
 #summaryTableContainer table th.equal-col,
 #summaryTableContainer table td.equal-col {
-    width: 11%; /* adjust depending on layout preference */
+    width: 11%;
     word-wrap: break-word;
 }
