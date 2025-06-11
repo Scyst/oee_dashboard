@@ -38,6 +38,25 @@
   min-width: 250px;
 }
 
+.dropdown-username {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: normal;
+  color: #ccc;
+  font-size: 14px;
+  border-bottom: 1px solid #444;
+  margin-bottom: 4px;
+}
+
+.dropdown-username img {
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) invert(1);
+}
 
 .dropdown-item-icon {
   display: flex;

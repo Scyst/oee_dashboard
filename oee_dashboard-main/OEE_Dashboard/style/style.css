@@ -46,7 +46,7 @@ body {
 .assis-tool {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: space-evenly;
     background-color: #0D0D0D;   
     border: 1px solid #545454;
     padding: 10px;

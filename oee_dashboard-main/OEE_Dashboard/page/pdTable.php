@@ -8,12 +8,16 @@
     <script src="../utils/libs/jspdf.umd.min.js"></script>
     <script src="../utils/libs/jspdf.plugin.autotable.js"></script>
     <script src="../utils/libs/xlsx.full.min.js"></script>
+    <script src="../utils/libs/bootstrap.bundle.min.js"></script>
 
+    <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
+    <link rel="stylesheet" href="../style/dropdown.css">
     <link rel="stylesheet" href="../style/style.css">
     <link rel="stylesheet" href="../style/pdTable.css">
 </head>
 
 <body style="width: 100vw; height: fit-content; min-width: fit-content;">
+    <?php include('components/nav_dropdown.php'); ?>
 
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
@@ -60,31 +64,13 @@
             <div class="assis-tool">
                 <p id="date"></p>
                 <p id="time"></p>
-
-                <div class="tool-buttons">
-                    <a href="../auth/logout_to_dashboard.php">
-                        <button>
-                            <img src="../icons/reports-icon.png" alt="Save">
-                        </button>
-                    </a>
-                    <a href="pdTable.php">
-                        <button>
-                            <img src="../icons/db.png" alt="Database">
-                        </button>
-                    </a>
-                    <a href="Stop_Cause.php">
-                        <button>
-                            <img src="../icons/clipart2496353.png" alt="Settings">
-                        </button>
-                    </a>
-                </div>
             </div>
         </div>
 
         <div class="production-history">
 
             <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
-                <div   div style="display: flex; justify-content: space-between; padding: 2px 10px;">
+                <div style="display: flex; justify-content: space-between; padding: 2px 10px;">
                     <div style="display: flex; align-items: center; margin-left: 5px;">
                         <div id="grandSummary" style="font-weight: bold;"></div>
                     </div>    

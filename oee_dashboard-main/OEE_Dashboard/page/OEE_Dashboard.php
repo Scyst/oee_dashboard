@@ -17,47 +17,7 @@
 </head>
 
 <body>
-    <div class="dropdown dropdown-menu-wrapper">
-        <button class="dropdown-toggle-btn" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="../icons/menu.png" alt="Menu" width="32" height="32">
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
-        <li>
-            <a class="dropdown-item-icon" href="OEE_Dashboard.php" title="Dashboard">
-            <img src="../icons/dashboard.png" alt="Dashboard">
-            <span>Dashboard</span>
-            </a>
-        </li>
-        <li>
-            <a class="dropdown-item-icon" href="pdTable.php" title="Parts Table">
-            <img src="../icons/db.png" alt="Parts Table">
-            <span>Parts</span>
-            </a>
-        </li>
-        <li>
-            <a class="dropdown-item-icon" href="Stop_Cause.php" title="Stop Cause">
-            <img src="../icons/clipart2496353.png" alt="Stop Cause">
-            <span>Stop Cause</span>
-            </a>
-        </li>
-        <li><hr class="dropdown-divider"></li>
-        <?php if (isset($_SESSION['user'])): ?>
-            <li>
-            <a class="dropdown-item-icon" href="../auth/logout_to_dashboard.php" title="Logout">
-                <img src="../icons/logout.png" alt="Logout">
-                <span>Logout</span>
-            </a>
-            </li>
-        <?php else: ?>
-            <li>
-            <a class="dropdown-item-icon" href="../auth/login_form.php" title="Login">
-                <img src="../icons/user.png" alt="Login">
-                <span>Login</span>
-            </a>
-            </li>
-        <?php endif; ?>
-        </ul>
-    </div>
+    <?php include('components/nav_dropdown.php'); ?>
 
     <div style="height: calc(100vh - 20px);">
         <div class="Header">

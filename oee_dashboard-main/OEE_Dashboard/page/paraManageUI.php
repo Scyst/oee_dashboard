@@ -7,19 +7,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Parameter Manager</title>
   <script src="../utils/libs/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
+  <script src="../utils/libs/bootstrap.bundle.min.js"></script>
   <style>
     input[type="text"] {
       text-transform: uppercase;
     }
   </style>
 
+  <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
+  <link rel="stylesheet" href="../style/dropdown.css">
+  <link rel="stylesheet" href="../style/style.css">
 </head>
+
 <body class="bg-dark text-white p-4">
+  <?php include('components/nav_dropdown.php'); ?>
+  
   <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="mb-0">Parameter Manager</h2>
-      <a href="OEE_Dashboard.php" class="btn btn-outline-light">Home</a>
     </div>
 
     <form id="paramForm" class="row g-3">

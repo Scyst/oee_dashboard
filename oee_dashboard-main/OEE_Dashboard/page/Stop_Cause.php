@@ -8,12 +8,17 @@
     <script src="../utils/libs/jspdf.umd.min.js"></script>
     <script src="../utils/libs/jspdf.plugin.autotable.js"></script>
     <script src="../utils/libs/xlsx.full.min.js"></script>
+    <script src="../utils/libs/bootstrap.bundle.min.js"></script>
 
+    <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
+    <link rel="stylesheet" href="../style/dropdown.css">
     <link rel="stylesheet" href="../style/style.css">
     <link rel="stylesheet" href="../style/Stop_Cause.css">
 </head>
 
-<body style="width: 100vw; height: fit-content; min-width: fit-content;">
+<bodys>
+    <?php include('components/nav_dropdown.php'); ?>
+
     <a href="paraManageUI.php">
         <button style="position: fixed; height: 20px; width: 20px; background-color: transparent; cursor: auto;">
         </button>
@@ -49,35 +54,16 @@
             <div class="assis-tool">
                 <p id="date"></p>
                 <p id="time"></p>
-                
-                <div class="tool-buttons">
-                    <a href="../auth/logout_to_dashboard.php">
-                        <button>
-                            <img src="../icons/reports-icon.png" alt="Save">
-                        </button>
-                    </a>
-                    <a href="pdTable.php">
-                        <button>
-                            <img src="../icons/db.png" alt="Database">
-                        </button>
-                    </a>
-                    <a href="Stop_Cause.php">
-                        <button>
-                            <img src="../icons/clipart2496353.png" alt="Settings">
-                        </button>
-                    </a>
-                </div>
             </div>
         </div>
         
         <div class="stop-cause">
-
             
             <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
                 
-                <div style="display: flex; height: 50px; align-items: center; max-width: calc(100vw - 40px); height: 40px;">
+                <div style="display: flex; height: 50px; align-items: center; max-width: calc(100vw - 250px);">
                     <!--h3 style="margin-left: 10px; min-width: fit-content;">Stop Cause History</h3-->
-                    <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto; margin-left: 15px;"></div>
+                    <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto;"></div>
                 </div>
                 
                 <div>
@@ -274,6 +260,6 @@
     <script src="../script/Stop_Cause/export_data.js"></script>
     <script src="../script/Stop_Cause/paginationTable.js"></script>
 
-</body>
+</bodys>
 </html>
 
