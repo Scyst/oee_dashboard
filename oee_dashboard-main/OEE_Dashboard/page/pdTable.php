@@ -17,7 +17,7 @@
 </head>
 
 <body style="width: 100vw; height: fit-content; min-width: fit-content;">
-    <?php include('../components/nav_dropdown.php'); ?>
+    <?php include('components/nav_dropdown.php'); ?>
 
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
@@ -117,119 +117,10 @@
 
         </div>
 
-            <!-- Modal background and form for Part -->
-        <div id="partModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal('partModal')">&times;</span>
-                <h2>Add Part</h2>
-                <form id="addPartForm">
-                    <input type="date" name="log_date" required value="<?= date('Y-m-d') ?>"><br>
-                    <input type="time" name="log_time" step="1" required value="<?= date('H:i:s') ?>"><br>
+        <?php include('components/pdComponents/partModal.php'); ?>
+        <?php include('components/pdComponents/editModal.php'); ?>
+        <?php include('components/pdComponents/summaryModal.php'); ?>
 
-                    <!-- Line input with datalist -->
-                    <input list="lineList" name="line" placeholder="Line" required>
-                    <datalist id="lineList">
-                        <?php include '../api/pdTable/get_lines.php'; ?>
-                    </datalist><br>
-
-                    <!-- Model input with datalist -->
-                    <input list="modelList" name="model" placeholder="Model" required>
-                    <datalist id="modelList">
-                        <?php include '../api/pdTable/get_models.php'; ?>
-                    </datalist><br>
-
-                    <!-- Part No. input with datalist -->
-                    <input list="partList" name="part_no" placeholder="Part No." required>
-                    <datalist id="partList">
-                        <?php include '../api/pdTable/get_part_nos.php'; ?>
-                    </datalist><br>
-
-                    <input list="LotList" name="lot_no" placeholder="Lot No." required>
-                    <datalist id="LotList">
-                        <?php include '../api/pdTable/get_lot_numbers.php'; ?>
-                    </datalist><br>
-
-                    <input type="number" name="count_value" placeholder="Enter value" required><br>
-                    
-                    <select name="count_type" required>
-                        <option value="FG">FG</option>
-                        <option value="NG">NG</option>
-                        <option value="HOLD">HOLD</option>
-                        <option value="REWORK">REWORK</option>
-                        <option value="SCRAP">SCRAP</option>
-                        <option value="ETC.">ETC.</option>
-                    </select><br>
-
-                    <input type="text" placeholder="Note" name="note"><br>
-
-                    <button type="submit">Submit Part</button>
-                </form>
-
-            </div>
-        </div>
-    </div>
-    
-    <!-- Edit Modal -->
-    <div id="editPartModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editPartModal')">&times;</span>
-            <h2>Edit Part</h2>
-            <form id="editPartForm">
-                <input type="hidden" name="id" id="edit_id">
-
-                <input type="date" name="log_date" id="edit_date" required><br>
-                <input type="time" name="log_time" id="edit_time" step="1" required><br>
-
-                <!-- Line -->
-                <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
-                <datalist id="editLineList">
-                    <?php include '../api/pdTable/get_lines.php'; ?>
-                </datalist><br>
-
-                <!-- Model -->
-                <input list="editModelList" name="model" id="edit_model" placeholder="Model" required>
-                <datalist id="editModelList">
-                    <?php include '../api/pdTable/get_models.php'; ?>
-                </datalist><br>
-
-                <!-- Part No -->
-                <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
-                <datalist id="editPartList">
-                    <?php include '../api/pdTable/get_part_nos.php'; ?>
-                </datalist><br>
-
-                <!-- Lot No -->
-                <input list="editLotList" name="lot_no" id="edit_lot_no" placeholder="Lot No." required>
-                <datalist id="editLotList">
-                    <?php include '../api/pdTable/get_lot_numbers.php'; ?>
-                </datalist><br>
-
-                <!-- Count Value -->
-                <input type="number" name="count_value" id="edit_value" placeholder="Quantity" required><br>
-                
-                <!-- Count Type -->
-                <select name="count_type" id="edit_type" required>
-                    <option value="">-- Select Type --</option>
-                    <option value="FG">FG</option>
-                    <option value="NG">NG</option>
-                    <option value="HOLD">HOLD</option>
-                    <option value="REWORK">REWORK</option>
-                    <option value="SCRAP">SCRAP</option>
-                    <option value="ETC.">ETC.</option>
-                </select><br>
-
-                <input type="text" placeholder="Note" name="note" id="edit_note"><br>
-
-                <button type="submit">Update Part</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="summaryModal" class="modal">
-        <div class="modal-content" style="max-height: 80vh; min-width: fit-content; max-width: 50%; overflow-y: auto;">
-            <span class="close" onclick="closeModal('summaryModal')">&times;</span>
-            <div id="summaryTableContainer"></div>
-        </div>
     </div>
 
     <script>

@@ -176,6 +176,7 @@ function openSummaryModal() {
     headerRow.style.alignItems = 'center';
     headerRow.style.marginTop = '20px';
     headerRow.style.marginBottom = '10px';
+    headerRow.style.gap = '10px';
 
     // Grand Total
     const grandRow = document.createElement('div');
@@ -186,7 +187,8 @@ function openSummaryModal() {
     // Export Button
     const buttonRow = document.createElement('div');
     const exportBtn = document.createElement('button');
-    exportBtn.textContent = 'Export Summary to Excel';
+    exportBtn.style.paddingBlock = '0'
+    exportBtn.textContent = 'Export to Excel';
     exportBtn.onclick = exportSummaryToExcel; // You must define this function separately
     buttonRow.appendChild(exportBtn);
     headerRow.appendChild(buttonRow);
@@ -230,31 +232,61 @@ function openSummaryModal() {
     summaryContainer.appendChild(table);
 }
 
-document.getElementById('editPartForm').addEventListener('submit', function (e) {
-    e.preventDefault(); // Prevent page reload
+const editForm = document.getElementById('editPartForm');
+if (editForm) {
+    editForm.addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent page reload
 
-    const formData = new FormData(this);
-    const data = new URLSearchParams(formData);
+        const formData = new FormData(this);
+        const data = new URLSearchParams(formData);
 
-    fetch('../api/pdTable/update_part.php', {
-        method: 'POST',
-        body: data
-    })
-        .then(res => res.json())
-        .then(response => {
-            if (response.success) {
-                alert("Part updated!");
-                closeModal('editPartModal');
-                fetchPaginatedParts(currentPage); // Reload the updated table
-            } else {
-                alert("Update failed: " + response.message);
-            }
+        fetch('../api/pdTable/update_part.php', {
+            method: 'POST',
+            body: data
         })
-        .catch(error => {
-            console.error("Update error:", error);
-            alert("An error occurred during update.");
-        });
-});
+            .then(res => res.json())
+            .then(response => {
+                if (response.success) {
+                    alert("Part updated!");
+                    closeModal('editPartModal');
+                    fetchPaginatedParts(currentPage); // Reload the updated table
+                } else {
+                    alert("Update failed: " + response.message);
+                }
+            })
+            .catch(error => {
+                console.error("Update error:", error);
+                alert("An error occurred during update.");
+            });
+    });
+}
+
+const addForm = document.getElementById("addPartForm");
+if (addForm) {
+    addForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        try {
+            const res = await fetch("../api/pdTable/add_part.php", {
+                method: "POST",
+                body: formData
+            });
+            const result = await res.json();
+            if (result.status === "success") {
+                alert(result.message);
+                closeModal("partModal");
+                fetchPaginatedParts(1);
+                form.reset();
+            } else {
+                alert("Add failed: " + result.message);
+            }
+        } catch (err) {
+            console.error("Add request failed", err);
+            alert("An error occurred.");
+        }
+    });
+}
 
 document.getElementById('prevPageBtn').addEventListener('click', () => {
     if (currentPage > 1) {
@@ -270,35 +302,6 @@ document.getElementById('nextPageBtn').addEventListener('click', () => {
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     fetchPaginatedParts(currentPage, startDate, endDate);
-});
-
-document.getElementById("addPartForm").addEventListener("submit", async function (e) {
-    e.preventDefault(); // prevent page reload
-
-    const form = e.target;
-    const formData = new FormData(form);
-
-    try {
-        const res = await fetch("../api/pdTable/add_part.php", {
-            method: "POST",
-            body: formData
-        });
-
-        const result = await res.json();
-        console.log(result)
-
-        if (result.status === "success") {
-            alert(result.message);
-            closeModal("partModal");         // hide the modal
-            fetchPaginatedParts(1);          // reload the table from page 1
-            form.reset();                    // optional: clear form
-        } else {
-            alert("Add failed: " + result.message);
-        }
-    } catch (err) {
-        console.error("Add request failed", err);
-        alert("An error occurred.");
-    }
 });
 
 window.onload = () => fetchPaginatedParts(currentPage);
