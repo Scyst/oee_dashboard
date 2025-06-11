@@ -2,7 +2,7 @@
 require_once("../../api/db.php");
 header('Content-Type: application/json');
 
-$sql = "SELECT DISTINCT line FROM parts WHERE line IS NOT NULL ORDER BY line";
+$sql = "SELECT DISTINCT line FROM parameter WHERE line IS NOT NULL ORDER BY line";
 $stmt = sqlsrv_query($conn, $sql);
 
 $lines = [];

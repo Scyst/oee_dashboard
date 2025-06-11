@@ -17,7 +17,7 @@
   <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="mb-0">Parameter Manager</h2>
-      <a href="OEE_Dashboard.php" class="btn btn-outline-secondary">Home</a>
+      <a href="OEE_Dashboard.php" class="btn btn-outline-light">Home</a>
     </div>
 
     <form id="paramForm" class="row g-3">
