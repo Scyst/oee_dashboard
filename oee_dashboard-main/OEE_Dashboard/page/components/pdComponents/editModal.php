@@ -27,10 +27,7 @@
             </datalist><br>
 
             <!-- Lot No -->
-            <input list="editLotList" name="lot_no" id="edit_lot_no" placeholder="Lot No." required>
-            <datalist id="editLotList">
-                <?php include '../api/pdTable/get_lot_numbers.php'; ?>
-            </datalist><br>
+            <input type="text" name="lot_no" id="edit_lot_no" placeholder="Auto-generated" readonly>
 
             <!-- Count Value -->
             <input type="number" name="count_value" id="edit_value" placeholder="Quantity" required><br>

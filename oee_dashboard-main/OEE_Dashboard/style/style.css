@@ -281,3 +281,9 @@ input, select {
         transform: rotate(360deg);
     }
 }
+
+input[readonly] {
+    background-color: #f0f0f0;
+    color: #555;
+    cursor: not-allowed;
+}

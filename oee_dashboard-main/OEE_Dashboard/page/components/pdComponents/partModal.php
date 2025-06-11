@@ -24,10 +24,7 @@
                 <?php include '../api/pdTable/get_part_nos.php'; ?>
             </datalist><br>
 
-            <input list="LotList" name="lot_no" placeholder="Lot No." required>
-            <datalist id="LotList">
-                <?php include '../api/pdTable/get_lot_numbers.php'; ?>
-            </datalist><br>
+            <input type="text" name="lot_no" id="add_lot_no" placeholder="Auto-generated" readonly>
 
             <input type="number" name="count_value" placeholder="Enter value" required><br>
             
