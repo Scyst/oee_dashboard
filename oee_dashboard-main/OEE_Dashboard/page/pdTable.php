@@ -17,7 +17,7 @@
 </head>
 
 <body style="width: 100vw; height: fit-content; min-width: fit-content;">
-    <?php include('components/nav_dropdown.php'); ?>
+    <?php include('../components/nav_dropdown.php'); ?>
 
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
@@ -79,7 +79,6 @@
                 <div>
                     <button onclick="openSummaryModal()">Show Detailed Summary</button>
                     <button onclick="exportToExcel()">Export to Excel</button>
-                    <!--button onclick="exportToPDF()">Export to PDF</!--button-->
                     <button onclick="openModal('partModal')">Add</button>
                 </div>
 
@@ -88,8 +87,6 @@
                     <div id="partSummary" style="overflow-x: auto;"></div>
                 </div>
             </div>
-
-            
 
             <div class="table-wrapper">
                 <table id="partTable" border="1">
@@ -108,17 +105,14 @@
                             <th style="width: 175px;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="partTableBody">
-                    </tbody>
+                    <tbody id="partTableBody"></tbody>
                 </table>
             </div>
 
             <div style="display: flex; gap: 20px; justify-content: center; margin: 10px auto;">
-
                 <button id="prevPageBtn" style="width: fit-content; margin: 0;">Previous</button>
                 <span id="pagination-info" style="text-align: center; align-content: center;"></span>
                 <button id="nextPageBtn" style="width: fit-content; margin: 0;">Next</button>
-
             </div>
 
         </div>
