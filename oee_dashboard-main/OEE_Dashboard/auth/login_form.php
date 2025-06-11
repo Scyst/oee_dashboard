@@ -1,10 +1,9 @@
-// ===== /auth/login_form.php =====
-?>
 <!DOCTYPE html>
 <html>
 <head>
   <title>Login</title>
   <link rel="stylesheet" href="../style/style.css">
+  <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
 </head>
 <body class="bg-dark text-white p-4">
   <div class="container">
@@ -23,4 +22,3 @@
   </div>
 </body>
 </html>
-<?php

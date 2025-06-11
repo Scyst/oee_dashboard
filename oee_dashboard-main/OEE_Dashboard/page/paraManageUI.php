@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Parameter Manager</title>
-    <script src="../utils/libs/xlsx.full.min.js"></script>
+  <script src="../utils/libs/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
+  <?php include '../auth/check_auth.php'; ?>
   <style>
     input[type="text"] {
       text-transform: uppercase;

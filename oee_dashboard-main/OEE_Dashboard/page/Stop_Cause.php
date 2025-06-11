@@ -6,6 +6,7 @@
     <script src="../utils/libs/jspdf.umd.min.js"></script>
     <script src="../utils/libs/jspdf.plugin.autotable.js"></script>
     <script src="../utils/libs/xlsx.full.min.js"></script>
+    <?php include '../auth/check_auth.php'; ?>
 
     <link rel="stylesheet" href="../style/style.css">
     <link rel="stylesheet" href="../style/Stop_Cause.css">

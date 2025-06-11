@@ -1,4 +1,4 @@
-// ===== /auth/login.php =====
+<?php
 session_start();
 require_once("../api/db.php");
 
@@ -16,3 +16,4 @@ if ($user && password_verify($password, $user['password'])) {
 } else {
   echo "<script>alert('Invalid username or password'); window.location='login_form.php';</script>";
 }
+?>
