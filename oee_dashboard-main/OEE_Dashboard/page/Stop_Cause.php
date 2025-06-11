@@ -51,7 +51,7 @@
                 <p id="time"></p>
                 
                 <div class="tool-buttons">
-                    <a href="OEE_Dashboard.php">
+                    <a href="../auth/logout_to_dashboard.php">
                         <button>
                             <img src="../icons/reports-icon.png" alt="Save">
                         </button>

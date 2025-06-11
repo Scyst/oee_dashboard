@@ -1,7 +1,4 @@
-<?php
-session_start();
-session_destroy(); // Force logout
-?>
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,21 +6,66 @@ session_destroy(); // Force logout
     <title>OEE - DASHBOARD</title>
     <script src="../utils/libs/chart.umd.js"></script>
     <script src="../utils/libs/chartjs-plugin-zoom.min.js"></script>
+    <script src="../utils/libs/bootstrap.bundle.min.js"></script>
 
+    <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
     <link rel="stylesheet" href="../style/style.css">
+    <link rel="stylesheet" href="../style/dropdown.css">
     <link rel="stylesheet" href="../style/piechart.css">
     <link rel="stylesheet" href="../style/linechart.css">
     <link rel="stylesheet" href="../style/barchart.css">
 </head>
 
 <body>
+    <div class="dropdown dropdown-menu-wrapper">
+        <button class="dropdown-toggle-btn" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="../icons/menu.png" alt="Menu" width="32" height="32">
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
+        <li>
+            <a class="dropdown-item-icon" href="OEE_Dashboard.php" title="Dashboard">
+            <img src="../icons/dashboard.png" alt="Dashboard">
+            <span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item-icon" href="pdTable.php" title="Parts Table">
+            <img src="../icons/db.png" alt="Parts Table">
+            <span>Parts</span>
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item-icon" href="Stop_Cause.php" title="Stop Cause">
+            <img src="../icons/clipart2496353.png" alt="Stop Cause">
+            <span>Stop Cause</span>
+            </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <?php if (isset($_SESSION['user'])): ?>
+            <li>
+            <a class="dropdown-item-icon" href="../auth/logout_to_dashboard.php" title="Logout">
+                <img src="../icons/logout.png" alt="Logout">
+                <span>Logout</span>
+            </a>
+            </li>
+        <?php else: ?>
+            <li>
+            <a class="dropdown-item-icon" href="../auth/login_form.php" title="Login">
+                <img src="../icons/user.png" alt="Login">
+                <span>Login</span>
+            </a>
+            </li>
+        <?php endif; ?>
+        </ul>
+    </div>
+
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
 
             <div class="OEE-head">
                 <h2>OEE DASHBOARD</h2>        
                 <!-- Filter Row -->
-                <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
+                <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin:0 auto; width: fit-content;">
                     <select id="lineFilter">
                         <option value="">All Lines</option>
                     </select>
@@ -40,24 +82,6 @@ session_destroy(); // Force logout
             <div class="assis-tool">
                 <p id="date"></p>
                 <p id="time"></p>
-
-                <div class="tool-buttons">
-                    <a href="OEE_Dashboard.php">
-                        <button>
-                            <img src="../icons/reports-icon.png" alt="Save">
-                        </button>
-                    </a>
-                    <a href="pdTable.php">
-                        <button>
-                            <img src="../icons/db.png" alt="Database">
-                        </button>
-                    </a>
-                    <a href="Stop_Cause.php">
-                        <button>
-                            <img src="../icons/clipart2496353.png" alt="Settings">
-                        </button>
-                    </a>
-                </div>
             </div>
         </div>
 
