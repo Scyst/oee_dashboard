@@ -1,3 +1,7 @@
+<?php
+session_start();
+session_destroy(); // Force logout
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

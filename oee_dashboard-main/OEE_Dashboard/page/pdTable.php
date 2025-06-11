@@ -1,3 +1,5 @@
+<?php include_once("../auth/check_auth.php"); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +8,6 @@
     <script src="../utils/libs/jspdf.umd.min.js"></script>
     <script src="../utils/libs/jspdf.plugin.autotable.js"></script>
     <script src="../utils/libs/xlsx.full.min.js"></script>
-    <?php include '../auth/check_auth.php'; ?>
 
     <link rel="stylesheet" href="../style/style.css">
     <link rel="stylesheet" href="../style/pdTable.css">
@@ -317,6 +318,7 @@
     </script>
 
     <script src="../script/datetime.js"></script>
+    <script src="../script/auto_logout.js"></script>
     <script src="../script/pdTable/export_data.js"></script>
     <script src="../script/pdTable/paginationTable.js"></script>
 

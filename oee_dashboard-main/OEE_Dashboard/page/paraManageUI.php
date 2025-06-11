@@ -1,3 +1,5 @@
+<?php include_once("../auth/check_auth.php"); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +8,6 @@
   <title>Parameter Manager</title>
   <script src="../utils/libs/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
-  <?php include '../auth/check_auth.php'; ?>
   <style>
     input[type="text"] {
       text-transform: uppercase;
@@ -271,6 +272,8 @@
       }
     }
   </script>
+  
+  <script src="../script/auto_logout.js"></script>
 
 </body>
 </html>
