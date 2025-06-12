@@ -169,9 +169,11 @@
 
             const dateInput = modal.querySelector('input[type="date"]');
             const timeInput = modal.querySelector('input[type="time"]');
+            const lotNoInput = modal.querySelector('#add_lot_no');
 
             if (dateInput) dateInput.value = dateStr;
             if (timeInput) timeInput.value = timeStr;
+            if (lotNoInput) lotNoInput.value = ''; // 🟢 Clear old lot_no
         }
 
         function closeModal(modalId) {
