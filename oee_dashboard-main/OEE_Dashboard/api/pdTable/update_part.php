@@ -25,12 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'];
     $log_date = $_POST['log_date'];
     $log_time = $_POST['log_time'];
-    $line = $_POST['line'];
-    $model = $_POST['model'];
-    $part_no = $_POST['part_no'];
-    $lot_no = $_POST['lot_no'];
+    $line = strtoupper(trim($_POST['line']));
+    $model = strtoupper(trim($_POST['model']));
+    $part_no = strtoupper(trim($_POST['part_no']));
+    $lot_no = $_POST['lot_no']; // Keep original lot_no unchanged
     $count_value = $_POST['count_value'];
-    $count_type = $_POST['count_type'];
+    $count_type = strtoupper(trim($_POST['count_type']));
     $note = $_POST['note'];
 
     if (!filter_var($id, FILTER_VALIDATE_INT)) {
@@ -38,21 +38,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
     if (!preg_match("/^\d{4}-\d{2}-\d{2}$/", $log_date)) {
-         echo json_encode(['success' => false, 'message' => 'Invalid log_date format. Expected YYYY-MM-DD.']);
+        echo json_encode(['success' => false, 'message' => 'Invalid log_date format. Expected YYYY-MM-DD.']);
         exit();
     }
-     if (!filter_var($count_value, FILTER_VALIDATE_INT)) {
+    if (!filter_var($count_value, FILTER_VALIDATE_INT)) {
         echo json_encode(['success' => false, 'message' => 'Invalid count_value format. Expected an integer.']);
         exit();
     }
 
-    $sql = "UPDATE parts SET log_date = ?, log_time = ?, line = ?, model = ?, part_no = ?, lot_no = ?, count_value = ?, count_type = ?, note = ? WHERE id = ?";
-    $params = array($log_date, $log_time, $line, $model, $part_no, $lot_no, $count_value, $count_type, $note, $id);
+    $sql = "UPDATE parts 
+            SET log_date = ?, log_time = ?, line = ?, model = ?, part_no = ?, lot_no = ?, count_value = ?, count_type = ?, note = ? 
+            WHERE id = ?";
+    $params = [$log_date, $log_time, $line, $model, $part_no, $lot_no, $count_value, $count_type, $note, $id];
 
     $stmt = sqlsrv_query($conn, $sql, $params);
 
     if ($stmt === false) {
-        echo json_encode(['success' => false, 'message' => 'Update operation failed. SQL error. Details: ' . print_r(sqlsrv_errors(), true) ]); // Include error details for debugging if needed, remove for production
+        echo json_encode([
+            'success' => false,
+            'message' => 'Update operation failed. SQL error.',
+            'details' => print_r(sqlsrv_errors(), true)
+        ]);
     } else {
         $rows_affected = sqlsrv_rows_affected($stmt);
         if ($rows_affected > 0) {
@@ -61,11 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => true, 'message' => 'No changes made or part not found.']);
         }
     }
+
     sqlsrv_free_stmt($stmt);
 
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
 }
-
-// sqlsrv_close($conn);
-?>
