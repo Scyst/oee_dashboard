@@ -7,26 +7,26 @@
             <input type="time" name="log_time" step="1" required value="<?= date('H:i:s') ?>"><br>
 
             <!-- Line input with datalist -->
-            <input list="lineList" name="line" placeholder="Line" required>
+            <input list="lineList" name="line" placeholder="Line" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
             <datalist id="lineList">
                 <?php include '../api/pdTable/get_lines.php'; ?>
             </datalist><br>
 
             <!-- Model input with datalist -->
-            <input list="modelList" name="model" placeholder="Model" required>
+            <input list="modelList" name="model" placeholder="Model" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
             <datalist id="modelList">
                 <?php include '../api/pdTable/get_models.php'; ?>
             </datalist><br>
 
             <!-- Part No. input with datalist -->
-            <input list="partList" name="part_no" placeholder="Part No." required>
+            <input list="partList" name="part_no" placeholder="Part No." style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
             <datalist id="partList">
                 <?php include '../api/pdTable/get_part_nos.php'; ?>
             </datalist><br>
 
-            <input type="text" name="lot_no" id="add_lot_no" placeholder="Auto-generated" readonly>
+            <input type="text" name="lot_no" id="add_lot_no" placeholder="Auto-generated" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" readonly>
 
-            <input type="number" name="count_value" placeholder="Enter value" required><br>
+            <input type="number" name="count_value" placeholder="Enter value"  required><br>
             
             <select name="count_type" required>
                 <option value="FG">FG</option>

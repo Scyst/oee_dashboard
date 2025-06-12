@@ -1,5 +1,3 @@
-// pdTable/paginationTable.js
-
 let currentPage = 1;
 const limit = 100;
 
@@ -23,7 +21,7 @@ async function fetchPaginatedParts(page = 1) {
             model,
             part_no: partNo,
             count_type: status,
-            lot_no: lotNo // ⬅️ add this line
+            lot_no: lotNo
         });
 
         const res = await fetch(`../api/pdTable/get_parts.php?${params.toString()}`);
@@ -31,7 +29,6 @@ async function fetchPaginatedParts(page = 1) {
 
         if (!result.success) throw new Error(result.message);
 
-        // Populate table
         const tableBody = document.getElementById('partTableBody');
         tableBody.innerHTML = '';
         result.data.forEach(row => {
@@ -235,7 +232,7 @@ function openSummaryModal() {
 const editForm = document.getElementById('editPartForm');
 if (editForm) {
     editForm.addEventListener('submit', function (e) {
-        e.preventDefault(); // Prevent page reload
+        e.preventDefault();
 
         const formData = new FormData(this);
         const data = new URLSearchParams(formData);
@@ -249,7 +246,7 @@ if (editForm) {
                 if (response.success) {
                     alert("Part updated!");
                     closeModal('editPartModal');
-                    fetchPaginatedParts(currentPage); // Reload the updated table
+                    fetchPaginatedParts(currentPage);
                 } else {
                     alert("Update failed: " + response.message);
                 }
@@ -266,6 +263,14 @@ if (addForm) {
     addForm.addEventListener("submit", async function (e) {
         e.preventDefault();
         const form = e.target;
+
+        //Capitalize relevant fields
+         ['line', 'model', 'part_no', 'count_type'].forEach(field => {
+            if (form[field]) {
+                form[field].value = form[field].value.trim().toUpperCase();
+            }
+        });
+
         const formData = new FormData(form);
         try {
             const res = await fetch("../api/pdTable/add_part.php", {

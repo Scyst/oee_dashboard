@@ -9,25 +9,25 @@
             <input type="time" name="log_time" id="edit_time" step="1" required><br>
 
             <!-- Line -->
-            <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
+            <input list="editLineList" name="line" id="edit_line" placeholder="Line" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
             <datalist id="editLineList">
                 <?php include '../api/pdTable/get_lines.php'; ?>
             </datalist><br>
 
             <!-- Model -->
-            <input list="editModelList" name="model" id="edit_model" placeholder="Model" required>
+            <input list="editModelList" name="model" id="edit_model" placeholder="Model" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
             <datalist id="editModelList">
                 <?php include '../api/pdTable/get_models.php'; ?>
             </datalist><br>
 
             <!-- Part No -->
-            <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." required>
+            <input list="editPartList" name="part_no" id="edit_part_no" placeholder="Part No." style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
             <datalist id="editPartList">
                 <?php include '../api/pdTable/get_part_nos.php'; ?>
             </datalist><br>
 
             <!-- Lot No -->
-            <input type="text" name="lot_no" id="edit_lot_no" placeholder="Lot No." readonly>
+            <input type="text" name="lot_no" id="edit_lot_no" placeholder="Lot No." style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" readonly>
 
             <!-- Count Value -->
             <input type="number" name="count_value" id="edit_value" placeholder="Quantity" required><br>

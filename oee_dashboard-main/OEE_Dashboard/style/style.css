@@ -287,7 +287,3 @@ input[readonly] {
     color: #fff;
     cursor: not-allowed;
 }
-
-input[type="text"] {
-    text-transform: uppercase;
-}

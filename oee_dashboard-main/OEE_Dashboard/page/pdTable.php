@@ -173,7 +173,7 @@
 
             if (dateInput) dateInput.value = dateStr;
             if (timeInput) timeInput.value = timeStr;
-            if (lotNoInput) lotNoInput.value = ''; // 🟢 Clear old lot_no
+            if (lotNoInput) lotNoInput.value = '';
         }
 
         function closeModal(modalId) {

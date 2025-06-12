@@ -117,13 +117,13 @@
                 <input type="time" name="stop_end" step="1" required><br>
 
                 <!-- Line input with datalist -->
-                <input list="lineList" name="line" placeholder="Line" required>
+                <input list="lineList" name="line" placeholder="Line" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                 <datalist id="lineList">
                     <?php include '../api/Stop_Cause/get_lines.php'; ?>
                 </datalist><br>
 
                 <!-- Model input with datalist -->
-                <input list="machineList" name="machine" placeholder="Machine/Station" required>
+                <input list="machineList" name="machine" placeholder="Machine/Station" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                 <datalist id="machineList">
                     <?php include '../api/Stop_Cause/get_machine.php'; ?>
                 </datalist><br>
@@ -162,13 +162,13 @@
                 <input type="time" name="stop_end" id="edit_stopEnd" step="1" required><br>
 
                 <!-- Line -->
-                <input list="editLineList" name="line" id="edit_line" placeholder="Line" required>
+                <input list="editLineList" name="line" id="edit_line" placeholder="Line" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                 <datalist id="editLineList">
                     <?php include '../api/Stop_Cause/get_lines.php'; ?>
                 </datalist><br>
 
                 <!-- Model -->
-                <input list="editMachineList" name="machine" id="edit_machine" placeholder="Machine/Station" required>
+                <input list="editMachineList" name="machine" id="edit_machine" placeholder="Machine/Station" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                 <datalist id="editMachineList">
                     <?php include '../api/Stop_Cause/get_machine.php'; ?>
                 </datalist><br>
