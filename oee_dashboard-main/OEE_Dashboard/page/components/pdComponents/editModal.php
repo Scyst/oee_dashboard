@@ -1,7 +1,7 @@
 <div id="editPartModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal('editPartModal')">&times;</span>
-        <h2>Edit Part</h2>
+        <h2 style="font-size: 2.5rem;">Edit Part</h2>
         <form id="editPartForm">
             <input type="hidden" name="id" id="edit_id">
 
@@ -27,7 +27,7 @@
             </datalist><br>
 
             <!-- Lot No -->
-            <input type="text" name="lot_no" id="edit_lot_no" placeholder="Auto-generated" readonly>
+            <input type="text" name="lot_no" id="edit_lot_no" placeholder="Lot No." readonly>
 
             <!-- Count Value -->
             <input type="number" name="count_value" id="edit_value" placeholder="Quantity" required><br>
@@ -45,7 +45,7 @@
 
             <input type="text" placeholder="Note" name="note" id="edit_note"><br>
 
-            <button type="submit">Update Part</button>
+            <button type="submit" style="padding-block: 0;">Update Part</button>
         </form>
     </div>
 </div>

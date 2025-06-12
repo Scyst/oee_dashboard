@@ -20,12 +20,13 @@ switch ($action) {
         break;
 
     case 'create':
-        $sql = "INSERT INTO parameter (line, model, part_no, planned_output)
-                VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO parameter (line, model, part_no, sap_no, planned_output, updated_at)
+                VALUES (?, ?, ?, ?, ?, GETDATE())";
         $params = [
             strtoupper($input['line']),
             strtoupper($input['model']),
             strtoupper($input['part_no']),
+            strtoupper($input['sap_no']),
             (int)$input['planned_output']
         ];
         $stmt = sqlsrv_query($conn, $sql, $params);
@@ -34,12 +35,13 @@ switch ($action) {
 
     case 'update':
         $sql = "UPDATE parameter
-                SET line = ?, model = ?, part_no = ?, planned_output = ?, updated_at = GETDATE()
+                SET line = ?, model = ?, part_no = ?, sap_no = ?, planned_output = ?, updated_at = GETDATE()
                 WHERE id = ?";
         $params = [
             strtoupper($input['line']),
             strtoupper($input['model']),
             strtoupper($input['part_no']),
+            strtoupper($input['sap_no']),
             (int)$input['planned_output'],
             (int)$input['id']
         ];
@@ -62,30 +64,30 @@ switch ($action) {
         $success = true;
         $imported = 0;
         $errors = [];
-        //file_put_contents('import_debug.txt', print_r($input, true));
 
         foreach ($input as $i => $row) {
             $line = strtoupper(trim($row['line'] ?? ''));
             $model = strtoupper(trim($row['model'] ?? ''));
             $part_no = strtoupper(trim($row['part_no'] ?? ''));
+            $sap_no = strtoupper(trim($row['sap_no'] ?? ''));
             $planned_output = (int)($row['planned_output'] ?? 0);
 
-            if (!$line || !$model || !$part_no || !$planned_output) {
-                $errors[] = "Row " . ($i + 2) . " has missing or invalid data."; // +2 because of Excel header + 1-based index
+            if (!$line || !$model || !$part_no || !$sap_no || !$planned_output) {
+                $errors[] = "Row " . ($i + 2) . " has missing or invalid data.";
                 continue;
             }
 
             $check = sqlsrv_query($conn, "SELECT id FROM parameter WHERE line = ? AND model = ? AND part_no = ?", [$line, $model, $part_no]);
             if ($check && $existing = sqlsrv_fetch_array($check, SQLSRV_FETCH_ASSOC)) {
                 $stmt = sqlsrv_query($conn, "
-                    UPDATE parameter SET planned_output = ?, updated_at = GETDATE() WHERE id = ?",
-                    [$planned_output, $existing['id']]
+                    UPDATE parameter SET sap_no = ?, planned_output = ?, updated_at = GETDATE() WHERE id = ?",
+                    [$sap_no, $planned_output, $existing['id']]
                 );
             } else {
                 $stmt = sqlsrv_query($conn, "
-                    INSERT INTO parameter (line, model, part_no, planned_output, updated_at)
-                    VALUES (?, ?, ?, ?, GETDATE())",
-                    [$line, $model, $part_no, $planned_output]
+                    INSERT INTO parameter (line, model, part_no, sap_no, planned_output, updated_at)
+                    VALUES (?, ?, ?, ?, ?, GETDATE())",
+                    [$line, $model, $part_no, $sap_no, $planned_output]
                 );
             }
 

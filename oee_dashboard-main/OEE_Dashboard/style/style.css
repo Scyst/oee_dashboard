@@ -283,7 +283,11 @@ input, select {
 }
 
 input[readonly] {
-    background-color: #f0f0f0;
-    color: #555;
+    background-color: #4d4b4b;
+    color: #fff;
     cursor: not-allowed;
+}
+
+input[type="text"] {
+    text-transform: uppercase;
 }

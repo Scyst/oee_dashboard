@@ -274,10 +274,14 @@ if (addForm) {
             });
             const result = await res.json();
             if (result.status === "success") {
-                alert(result.message);
-                closeModal("partModal");
+
+                alert(`${result.message}\nLot No: ${result.lot_no}`);
+                document.getElementById("add_lot_no").value = result.lot_no;
                 fetchPaginatedParts(1);
+                closeModal("partModal");
+                const tempLot = result.lot_no;
                 form.reset();
+                document.getElementById("add_lot_no").value = tempLot;
             } else {
                 alert("Add failed: " + result.message);
             }

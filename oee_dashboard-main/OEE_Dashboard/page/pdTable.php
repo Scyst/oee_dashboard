@@ -117,7 +117,7 @@
 
         </div>
 
-        <?php include('components/pdComponents/partModal.php'); ?>
+        <?php include('components/pdComponents/addModal.php'); ?>
         <?php include('components/pdComponents/editModal.php'); ?>
         <?php include('components/pdComponents/summaryModal.php'); ?>
 
