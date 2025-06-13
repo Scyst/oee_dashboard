@@ -22,17 +22,18 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
     if (chartInstance) chartInstance.destroy();
 
     const isMulti = Array.isArray(valuesOrDatasets) && valuesOrDatasets[0]?.data;
-    const labelString = typeof labelOrOptions === 'string' ? labelOrOptions : '';
-    const tooltipInfo = typeof labelOrOptions === 'object' ? labelOrOptions.tooltipInfo : null;
-
     const datasets = isMulti
         ? valuesOrDatasets
         : [{
-            label: labelString,
+            label: labelOrOptions,
             data: valuesOrDatasets,
             backgroundColor: color,
             borderRadius: 4
         }];
+
+    // ✅ Detect chart type by canvas ID
+    const canvasId = ctx.canvas.id;
+    const isStacked = canvasId === 'partsBarChart'; // parts chart = stacked; stop cause = grouped
 
     const chart = new Chart(ctx, {
         type: 'bar',
@@ -65,13 +66,13 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
             layout: { padding: 10 },
             scales: {
                 x: {
-                    stacked: isMulti,
+                    stacked: isStacked,
                     ticks: { color: '#ccc', autoSkip: false },
                     grid: { display: false }
                 },
                 y: {
                     beginAtZero: true,
-                    stacked: isMulti,
+                    stacked: isStacked,
                     ticks: { color: '#ccc' },
                     grid: { drawBorder: false, color: '#444' }
                 }
@@ -80,7 +81,7 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
     });
 
     if (isMulti && labelOrOptions?.tooltipInfo) {
-    chart.options.plugins.tooltip.tooltipInfo = labelOrOptions.tooltipInfo;
+        chart.options.plugins.tooltip.tooltipInfo = labelOrOptions.tooltipInfo;
     }
 
     return chart;
