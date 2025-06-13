@@ -5,8 +5,8 @@ header('Content-Type: application/json');
 // Shared date filters
 $startDate = $_GET['startDate'] ?? date('Y-m-d');
 $endDate   = $_GET['endDate'] ?? date('Y-m-d');
-$line  = $_GET['line'] ?? null;
-$model = $_GET['model'] ?? null;
+$line      = $_GET['line'] ?? null;
+$model     = $_GET['model'] ?? null;
 
 $stopConditions = ["log_date BETWEEN ? AND ?"];
 $stopParams = [$startDate, $endDate];
@@ -28,28 +28,70 @@ $stopWhere = "WHERE " . implode(" AND ", $stopConditions);
 $partWhere = "WHERE " . implode(" AND ", $partConditions);
 
 // -----------------------------
-// STOP CAUSES QUERY
+// STOP CAUSES CHART (X = line, bars = causes)
 // -----------------------------
 $stopSql = "
-    SELECT cause, SUM(DATEDIFF(SECOND, stop_begin, stop_end)) AS total_seconds
+    SELECT line, cause, SUM(DATEDIFF(SECOND, stop_begin, stop_end)) AS total_seconds
     FROM stop_causes
     $stopWhere
-    GROUP BY cause
-    ORDER BY total_seconds DESC
+    GROUP BY line, cause
 ";
 
 $stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
-$stopLabels = [];
-$stopValues = [];
+$lineMap = [];        // line => [cause => minutes]
+$lineDurations = [];  // line => total minutes
+$allCauses = [];
 
 if ($stopStmt) {
     while ($row = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
-        $stopLabels[] = $row['cause'];
-        $stopValues[] = round(($row['total_seconds'] ?? 0) / 60, 1); // in minutes
+        $line = $row['line'];
+        $cause = $row['cause'];
+        $minutes = round(($row['total_seconds'] ?? 0) / 60, 1);
+
+        $allCauses[$cause] = true;
+        $lineMap[$line][$cause] = $minutes;
+        $lineDurations[$line] = ($lineDurations[$line] ?? 0) + $minutes;
     }
 } else {
     echo json_encode(["error" => "Stop cause query failed.", "sql_error" => print_r(sqlsrv_errors(), true)]);
     exit;
+}
+
+$allCausesList = array_keys($allCauses);
+sort($allCausesList);
+
+// 🔽 Sort lines by total stop duration (descending)
+uksort($lineMap, function ($a, $b) use ($lineDurations) {
+    return ($lineDurations[$b] ?? 0) <=> ($lineDurations[$a] ?? 0);
+});
+$lineList = array_keys($lineMap); // ✅ Define lineList for use in final output
+
+
+$colorPalette = ["#42a5f5", "#66bb6a", "#ff7043", "#ab47bc", "#ffa726", "#26c6da", "#d4e157", "#8d6e63", "#78909c", "#ec407a"];
+$stopDatasets = [];
+$colorIndex = 0;
+
+foreach ($lineMap as $lineName => $causeData) {
+    $dataset = [
+        "label" => $lineName,
+        "data" => [],
+        "backgroundColor" => $colorPalette[$colorIndex % count($colorPalette)],
+        "borderRadius" => 4,
+        "tooltipInfo" => formatMinutes($lineDurations[$lineName] ?? 0) // 👈 Pass readable duration
+    ];
+
+    foreach ($allCausesList as $causeName) {
+        $dataset['data'][] = $causeData[$causeName] ?? 0;
+    }
+    $stopDatasets[] = $dataset;
+    $colorIndex++;
+}
+
+// 🔧 Format helper: convert minutes to "Xh Ym"
+function formatMinutes($minutes) {
+    $hours = floor($minutes / 60);
+    $mins = round($minutes % 60);
+    return sprintf("%dh %02dm", $hours, $mins);
 }
 
 // -----------------------------
@@ -98,8 +140,8 @@ if ($partStmt) {
 // -----------------------------
 echo json_encode([
     "stopCause" => [
-        "labels" => $stopLabels,
-        "values" => $stopValues
+        "labels" => $lineList,      // ✅ x-axis is now LINE
+        "datasets" => $stopDatasets // ✅ bars = causes
     ],
     "parts" => [
         "labels"  => $partLabels,

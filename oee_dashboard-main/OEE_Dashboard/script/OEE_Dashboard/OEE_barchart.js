@@ -40,6 +40,14 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
             plugins: {
                 legend: { display: true },
                 title: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterTitle: function (context) {
+                            const dataset = context[0].dataset;
+                            return dataset.tooltipInfo ? `Total: ${dataset.tooltipInfo}` : '';
+                        }
+                    }
+                },
                 zoom: {
                     pan: { enabled: true, mode: 'x' },
                     zoom: {
@@ -123,21 +131,30 @@ async function fetchAndRenderBarCharts() {
         );
 
         // ----- Stop Cause Bar Chart -----
-        const padded = padBarData(data.stopCause.labels, data.stopCause.values, 7);
+        const stopCauseLabels = data.stopCause.labels;
+        const stopCauseDatasets = data.stopCause.datasets.map((lineSet) => ({
+            label: lineSet.label,
+            data: lineSet.data,
+            backgroundColor: lineSet.backgroundColor || getRandomColor(),
+            borderRadius: 4,
+            tooltipInfo: lineSet.tooltipInfo || "" // 👈 total time per line
+        }));
 
         stopCauseBarChartInstance = renderBarChart(
             stopCauseBarChartInstance,
             document.getElementById("stopCauseBarChart").getContext("2d"),
-            padded.labels,
-            padded.values,
-            "Stop Causes",
-            "#42a5f5"
+            stopCauseLabels,
+            stopCauseDatasets
         );
 
     } catch (err) {
         console.error("Bar chart fetch failed:", err);
         hideErrors();
     }
+}
+
+function getRandomColor() {
+    return `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
 }
 
 function updateURLParamsFromFilters() {
