@@ -27,76 +27,69 @@ if (!empty($model)) {
 $stopWhere = "WHERE " . implode(" AND ", $stopConditions);
 $partWhere = "WHERE " . implode(" AND ", $partConditions);
 
-// -----------------------------
-// STOP CAUSES CHART (X = line, bars = causes)
-// -----------------------------
+// 🔄 STOP CAUSES CHART (X = line, bars = cause stacks)
 $stopSql = "
-    SELECT line, cause, SUM(DATEDIFF(SECOND, stop_begin, stop_end)) AS total_seconds
+    SELECT cause, line, SUM(DATEDIFF(SECOND, stop_begin, stop_end)) AS total_seconds
     FROM stop_causes
     $stopWhere
-    GROUP BY line, cause
+    GROUP BY cause, line
 ";
 
 $stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
-$lineMap = [];        // line => [cause => minutes]
-$lineDurations = [];  // line => total minutes
-$allCauses = [];
+$causeMap = [];   // cause => [line => minutes]
+$lineTotals = []; // line => total_minutes
+$lineSet = [];
 
 if ($stopStmt) {
     while ($row = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
-        $line = $row['line'];
         $cause = $row['cause'];
+        $line = $row['line'];
         $minutes = round(($row['total_seconds'] ?? 0) / 60, 1);
 
-        $allCauses[$cause] = true;
-        $lineMap[$line][$cause] = $minutes;
-        $lineDurations[$line] = ($lineDurations[$line] ?? 0) + $minutes;
+        $causeMap[$cause][$line] = $minutes;
+        $lineTotals[$line] = ($lineTotals[$line] ?? 0) + $minutes;
+        $lineSet[$line] = true;
     }
 } else {
     echo json_encode(["error" => "Stop cause query failed.", "sql_error" => print_r(sqlsrv_errors(), true)]);
     exit;
 }
 
-$allCausesList = array_keys($allCauses);
-sort($allCausesList);
-
-// 🔽 Sort lines by total stop duration (descending)
-uksort($lineMap, function ($a, $b) use ($lineDurations) {
-    return ($lineDurations[$b] ?? 0) <=> ($lineDurations[$a] ?? 0);
-});
-$lineList = array_keys($lineMap); // ✅ Define lineList for use in final output
-
+$lineList = array_keys($lineSet);
+usort($lineList, fn($a, $b) => ($lineTotals[$b] ?? 0) <=> ($lineTotals[$a] ?? 0)); // Sort by total time
 
 $colorPalette = ["#42a5f5", "#66bb6a", "#ff7043", "#ab47bc", "#ffa726", "#26c6da", "#d4e157", "#8d6e63", "#78909c", "#ec407a"];
 $stopDatasets = [];
 $colorIndex = 0;
 
-foreach ($lineMap as $lineName => $causeData) {
+foreach ($causeMap as $causeName => $lineData) {
     $dataset = [
-        "label" => $lineName,
+        "label" => $causeName, // ✅ Each stack = cause
         "data" => [],
-        "backgroundColor" => $colorPalette[$colorIndex % count($colorPalette)],
-        "borderRadius" => 4,
-        "tooltipInfo" => formatMinutes($lineDurations[$lineName] ?? 0) // 👈 Pass readable duration
+        "backgroundColor" => $colorPalette[$colorIndex++ % count($colorPalette)],
+        "borderRadius" => 4
     ];
 
-    foreach ($allCausesList as $causeName) {
-        $dataset['data'][] = $causeData[$causeName] ?? 0;
+    foreach ($lineList as $lineName) {
+        $dataset["data"][] = $lineData[$lineName] ?? 0;
     }
+
     $stopDatasets[] = $dataset;
-    $colorIndex++;
 }
 
-// 🔧 Format helper: convert minutes to "Xh Ym"
+// 🔧 Tooltip text helper (for optional UI display)
+$lineTooltipInfo = [];
+foreach ($lineList as $line) {
+    $lineTooltipInfo[$line] = formatMinutes($lineTotals[$line] ?? 0);
+}
+
 function formatMinutes($minutes) {
-    $hours = floor($minutes / 60);
-    $mins = round($minutes % 60);
-    return sprintf("%dh %02dm", $hours, $mins);
+    $h = floor($minutes / 60);
+    $m = round($minutes % 60);
+    return sprintf("%dh %02dm", $h, $m);
 }
 
-// -----------------------------
-// PARTS QUERY
-// -----------------------------
+// PARTS QUERY (unchanged)
 $partSql = "
     SELECT TOP 50 part_no,
         SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
@@ -135,13 +128,12 @@ if ($partStmt) {
     exit;
 }
 
-// -----------------------------
 // FINAL OUTPUT
-// -----------------------------
 echo json_encode([
     "stopCause" => [
-        "labels" => $lineList,      // ✅ x-axis is now LINE
-        "datasets" => $stopDatasets // ✅ bars = causes
+        "labels" => $lineList,
+        "datasets" => $stopDatasets,
+        "tooltipInfo" => $lineTooltipInfo
     ],
     "parts" => [
         "labels"  => $partLabels,

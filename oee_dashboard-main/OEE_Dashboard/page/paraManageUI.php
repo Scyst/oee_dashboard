@@ -137,7 +137,7 @@
       const rows = document.querySelectorAll('#paramTable tr');
 
       rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
+        const text = row.innerText.toUpperCase();
         row.style.display = text.includes(search) ? '' : 'none';
       });
     }

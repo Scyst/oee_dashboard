@@ -22,16 +22,19 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
     if (chartInstance) chartInstance.destroy();
 
     const isMulti = Array.isArray(valuesOrDatasets) && valuesOrDatasets[0]?.data;
+    const labelString = typeof labelOrOptions === 'string' ? labelOrOptions : '';
+    const tooltipInfo = typeof labelOrOptions === 'object' ? labelOrOptions.tooltipInfo : null;
+
     const datasets = isMulti
         ? valuesOrDatasets
         : [{
-            label: labelOrOptions,
+            label: labelString,
             data: valuesOrDatasets,
             backgroundColor: color,
             borderRadius: 4
         }];
 
-    return new Chart(ctx, {
+    const chart = new Chart(ctx, {
         type: 'bar',
         data: { labels, datasets },
         options: {
@@ -42,9 +45,11 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
                 title: { display: false },
                 tooltip: {
                     callbacks: {
-                        afterTitle: function (context) {
-                            const dataset = context[0].dataset;
-                            return dataset.tooltipInfo ? `Total: ${dataset.tooltipInfo}` : '';
+                        afterBody: function (context) {
+                            const index = context[0].dataIndex;
+                            const lineName = context[0].chart.data.labels[index];
+                            const tooltipInfo = context[0].chart.options.plugins.tooltip.tooltipInfo;
+                            return tooltipInfo?.[lineName] ? `Total: ${tooltipInfo[lineName]}` : '';
                         }
                     }
                 },
@@ -73,6 +78,12 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
             }
         }
     });
+
+    if (isMulti && labelOrOptions?.tooltipInfo) {
+    chart.options.plugins.tooltip.tooltipInfo = labelOrOptions.tooltipInfo;
+    }
+
+    return chart;
 }
 
 function padBarData(labels, values, minCount) {
@@ -98,16 +109,14 @@ async function fetchAndRenderBarCharts() {
 
         const params = new URLSearchParams({ startDate, endDate, line, model });
 
-        // ✅ Update URL so filter stays synced
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState({}, '', newUrl);
 
         const response = await fetch(`../api/OEE_Dashboard/get_oee_barchart.php?${params.toString()}`);
         const data = await response.json();
 
-        // ----- Part Bar Chart -----
+        // Part Bar Chart
         const partLabels = data.parts.labels;
-
         const countTypes = {
             FG:     { label: "Good",    color: "#00C853" },
             NG:     { label: "NG",      color: "#FF5252" },
@@ -130,21 +139,23 @@ async function fetchAndRenderBarCharts() {
             partDatasets
         );
 
-        // ----- Stop Cause Bar Chart -----
-        const stopCauseLabels = data.stopCause.labels;
-        const stopCauseDatasets = data.stopCause.datasets.map((lineSet) => ({
-            label: lineSet.label,
-            data: lineSet.data,
-            backgroundColor: lineSet.backgroundColor || getRandomColor(),
-            borderRadius: 4,
-            tooltipInfo: lineSet.tooltipInfo || "" // 👈 total time per line
+        // Stop Cause Bar Chart
+        const stopCauseLabels = data.stopCause.labels; // ← x-axis: production lines
+        const tooltipInfo = data.stopCause.tooltipInfo || {};
+
+        const stopCauseDatasets = data.stopCause.datasets.map(causeSet => ({
+            label: causeSet.label,                      // ← each dataset = cause
+            data: causeSet.data,                        // ← time (mins) for each line
+            backgroundColor: causeSet.backgroundColor || getRandomColor(),
+            borderRadius: 1
         }));
 
         stopCauseBarChartInstance = renderBarChart(
             stopCauseBarChartInstance,
             document.getElementById("stopCauseBarChart").getContext("2d"),
             stopCauseLabels,
-            stopCauseDatasets
+            stopCauseDatasets,
+            { tooltipInfo } // ✅ pass total time per line
         );
 
     } catch (err) {
