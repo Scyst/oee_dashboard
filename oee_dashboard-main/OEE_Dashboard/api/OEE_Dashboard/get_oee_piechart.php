@@ -26,6 +26,7 @@ if (!empty($model)) {
 $stopWhere = "WHERE " . implode(" AND ", $stopConditions);
 $partWhere = "WHERE " . implode(" AND ", $partConditions);
 
+// 1. GET PARTS DATA PER LINE
 $partSql = "
     SELECT model, part_no, line,
         SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
@@ -41,43 +42,29 @@ if (!$partStmt) {
     exit;
 }
 
-$totalFG = 0;
-$totalDefects = 0;
-$totalActualOutput = 0;
-$theoreticalOutput = 0;
-
 function calculateWorkingDays($startDate, $endDate) {
     $start = new DateTime($startDate);
     $end = new DateTime($endDate);
     $end->modify('+1 day');
-
-    $workingDays = 0;
+    $days = 0;
     for ($date = clone $start; $date < $end; $date->modify('+1 day')) {
-        if ($date->format('w') != 0) { // skip Sundays
-            $workingDays++;
-        }
+        if ($date->format('w') != 0) $days++; // skip Sunday
     }
-    return $workingDays;
+    return $days;
 }
 
 $workingDays = calculateWorkingDays($startDate, $endDate);
-$plannedTime = $workingDays * 480;     // 8 hours/day × 60 minutes
-$plannedStops = $workingDays * 60;     // 1 hour break/day
-$potentialTime = $plannedTime;
 
-// 🛠 Unplanned Stops
-$stopSql = "
-    SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
-    FROM stop_causes
-    $stopWhere
-";
-$stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
-$stopRow = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
-$unplannedStops = (int) $stopRow['downtime'];
+$totalFG = 0;
+$totalDefects = 0;
+$totalActualOutput = 0;
+$totalTheoreticalOutput = 0;
+$totalPotentialTime = 0;
+$totalPlannedTime = 0;
+$totalUnplanned = 0;
 
-$actualRuntime = max(0, $potentialTime - $plannedStops - $unplannedStops);
+$lines = [];
 
-// 🔄 Part Summary & Ideal Cycle Time
 while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     $fg = (int)$row['FG'];
     $defects = (int)$row['Defects'];
@@ -94,15 +81,50 @@ while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
         $plannedPerHour = (int)$planRow['planned_output'];
         if ($plannedPerHour > 0) {
-            $idealCycleTime = 60 / $plannedPerHour; // in minutes
-            $theoreticalOutput += ($actualRuntime / $idealCycleTime);
+            $idealCycleTime = 60 / $plannedPerHour; // minutes per part
+            $lines[$lineVal]['theoreticalOutput'] += ($fg + $defects) / $plannedPerHour * 60;
         }
+    }
+
+    $lines[$lineVal]['fg'] += $fg;
+    $lines[$lineVal]['defects'] += $defects;
+    $lines[$lineVal]['actual'] += $fg + $defects;
+    $lines[$lineVal]['potentialTime'] = $workingDays * 480;
+    $lines[$lineVal]['plannedStops'] = $workingDays * 60;
+}
+
+// 2. GET DOWNTIME BY LINE
+$stopSql = "
+    SELECT line, SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
+    FROM stop_causes
+    $stopWhere
+    GROUP BY line
+";
+
+$stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
+if ($stopStmt) {
+    while ($row = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC)) {
+        $lines[$row['line']]['unplannedStops'] = (int)$row['downtime'];
     }
 }
 
+// 3. Calculate availability per line
+foreach ($lines as $lineData) {
+    $pt = $lineData['potentialTime'] ?? 0;
+    $planned = $lineData['plannedStops'] ?? 0;
+    $unplanned = $lineData['unplannedStops'] ?? 0;
+    $runtime = max(0, $pt - $planned - $unplanned);
+    $availability = $pt > 0 ? ($runtime / $pt) * 100 : 0;
+
+    $totalPotentialTime += $pt;
+    $totalUnplanned += $unplanned;
+    $totalPlannedTime += $pt + $planned;
+    $totalTheoreticalOutput += $lineData['theoreticalOutput'] ?? 0;
+}
+
 $qualityPercent = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
-$availabilityPercent = $potentialTime > 0 ? ($actualRuntime / $potentialTime) * 100 : 0;
-$performancePercent = $theoreticalOutput > 0 ? ($totalActualOutput / $theoreticalOutput) * 100 : 0;
+$availabilityPercent = $totalPotentialTime > 0 ? (($totalPotentialTime - $totalUnplanned) / $totalPotentialTime) * 100 : 0;
+$performancePercent = $totalTheoreticalOutput > 0 ? ($totalActualOutput / ($totalTheoreticalOutput / 60)) * 100 : 0;
 
 $oee = ($availabilityPercent / 100) * ($performancePercent / 100) * ($qualityPercent / 100) * 100;
 
@@ -114,9 +136,9 @@ echo json_encode([
     "oee" => round($oee, 1),
     "fg" => $totalFG,
     "defects" => $totalDefects,
-    "runtime" => $actualRuntime,
-    "planned_time" => $plannedTime,
-    "downtime" => $unplannedStops,
-    "planned_output" => round($theoreticalOutput, 2),
+    "runtime" => round($totalPotentialTime - $totalUnplanned),
+    "planned_time" => round($totalPlannedTime),
+    "downtime" => round($totalUnplanned),
+    "planned_output" => round($totalTheoreticalOutput / 60, 2),
     "actual_output" => $totalActualOutput
 ]);
