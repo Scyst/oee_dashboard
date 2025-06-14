@@ -45,6 +45,9 @@ $totalFG = 0;
 $totalDefects = 0;
 $totalActualOutput = 0;
 $totalPlannedOutput = 0;
+$totalRuntime = 0;
+$totalPlannedTime = 0;
+$effectiveMinutes = 0;
 
 function calculatePlannedTimeRange($startDate, $endDate) {
     $start = new DateTime($startDate);
@@ -60,6 +63,8 @@ function calculatePlannedTimeRange($startDate, $endDate) {
     ];
 
     for ($date = clone $start; $date < $end; $date->modify('+1 day')) {
+        $dayOfWeek = $date->format('w');
+
         $workStart = new DateTime($date->format('Y-m-d') . ' 08:00:00');
         $workEnd = new DateTime($date->format('Y-m-d') . ' 17:00:00');
         $minutes = ($workEnd->getTimestamp() - $workStart->getTimestamp()) / 60;
@@ -83,16 +88,7 @@ function calculatePlannedTimeRange($startDate, $endDate) {
 }
 
 $plannedTime = calculatePlannedTimeRange($startDate, $endDate);
-
-$stopSql = "
-    SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
-    FROM stop_causes
-    $stopWhere
-";
-$stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
-$stopRow = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
-$downtime = (int) $stopRow['downtime'];
-$runtime = max(0, $plannedTime - $downtime);
+$totalPlannedTime = $plannedTime;
 
 while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     $fg = (int)$row['FG'];
@@ -108,34 +104,30 @@ while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     $planSql = "SELECT planned_output FROM parameter WHERE model = ? AND part_no = ? AND line = ?";
     $planStmt = sqlsrv_query($conn, $planSql, [$modelVal, $partNo, $lineVal]);
     if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
-        $hourlyOutput = (int)$planRow['planned_output'];
-        $totalPlannedOutput += $hourlyOutput * ($plannedTime / 60);
+        $plannedPerHour = (int)$planRow['planned_output'];
+        if ($plannedPerHour > 0) {
+            $effectiveMinutes += (($fg + $defects) / $plannedPerHour) * 60;
+        }
     }
 }
 
-$qualityPercent = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
+$stopSql = "
+    SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
+    FROM stop_causes
+    $stopWhere
+";
+$stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
+$stopRow = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
+$downtime = (int) $stopRow['downtime'];
+
+$runtime = max(0, $plannedTime - $downtime);
 $availabilityPercent = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
+$qualityPercent = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
 
-if ($totalPlannedOutput === 0 && $plannedTime > 0) {
-    $distinctPartSql = "
-        SELECT COUNT(DISTINCT model + '|' + part_no + '|' + line) AS type_count
-        FROM parts
-        WHERE log_date BETWEEN ? AND ?"
-        . (!empty($line) ? " AND line = ?" : "")
-        . (!empty($model) ? " AND model = ?" : "");
+$performancePercent = $plannedTime > 0
+    ? (100 - ((($plannedTime - $effectiveMinutes) / $plannedTime) * 100))
+    : 0;
 
-    $distinctParams = [$startDate, $endDate];
-    if (!empty($line))  $distinctParams[] = $line;
-    if (!empty($model)) $distinctParams[] = $model;
-
-    $distinctStmt = sqlsrv_query($conn, $distinctPartSql, $distinctParams);
-    $distinctRow = sqlsrv_fetch_array($distinctStmt, SQLSRV_FETCH_ASSOC);
-    $typeCount = (int) $distinctRow['type_count'];
-
-    $totalPlannedOutput = $typeCount * 100 * ($plannedTime / 60);
-}
-
-$performancePercent = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
 $oee = ($availabilityPercent / 100) * ($performancePercent / 100) * ($qualityPercent / 100) * 100;
 
 echo json_encode([
@@ -148,7 +140,7 @@ echo json_encode([
     "defects" => $totalDefects,
     "runtime" => $runtime,
     "planned_time" => $plannedTime,
-    "downtime" => $downtime,
-    "planned_output" => $totalPlannedOutput,
+    "downtime" => $plannedTime - $runtime,
+    "planned_output" => round($effectiveMinutes / 60, 2),
     "actual_output" => $totalActualOutput
 ]);
