@@ -44,52 +44,40 @@ if (!$partStmt) {
 $totalFG = 0;
 $totalDefects = 0;
 $totalActualOutput = 0;
-$totalPlannedOutput = 0;
-$totalRuntime = 0;
-$totalPlannedTime = 0;
-$effectiveMinutes = 0;
+$theoreticalOutput = 0;
 
-function calculatePlannedTimeRange($startDate, $endDate) {
+function calculateWorkingDays($startDate, $endDate) {
     $start = new DateTime($startDate);
     $end = new DateTime($endDate);
     $end->modify('+1 day');
 
-    $plannedMinutes = 0;
-    $breaks = [
-        ['11:30', '12:30'],
-        ['17:00', '17:30'],
-        ['23:30', '00:30'],
-        ['05:00', '05:30']
-    ];
-
+    $workingDays = 0;
     for ($date = clone $start; $date < $end; $date->modify('+1 day')) {
-        $dayOfWeek = $date->format('w');
-
-        $workStart = new DateTime($date->format('Y-m-d') . ' 08:00:00');
-        $workEnd = new DateTime($date->format('Y-m-d') . ' 17:00:00');
-        $minutes = ($workEnd->getTimestamp() - $workStart->getTimestamp()) / 60;
-
-        foreach ($breaks as [$bStart, $bEnd]) {
-            $breakStart = new DateTime($date->format('Y-m-d') . ' ' . $bStart);
-            $breakEnd = new DateTime($date->format('Y-m-d') . ' ' . $bEnd);
-            if ($breakEnd < $breakStart) $breakEnd->modify('+1 day');
-
-            $overlapStart = max($workStart, $breakStart);
-            $overlapEnd = min($workEnd, $breakEnd);
-            if ($overlapEnd > $overlapStart) {
-                $minutes -= ($overlapEnd->getTimestamp() - $overlapStart->getTimestamp()) / 60;
-            }
+        if ($date->format('w') != 0) { // skip Sundays
+            $workingDays++;
         }
-
-        $plannedMinutes += max(0, $minutes);
     }
-
-    return round($plannedMinutes);
+    return $workingDays;
 }
 
-$plannedTime = calculatePlannedTimeRange($startDate, $endDate);
-$totalPlannedTime = $plannedTime;
+$workingDays = calculateWorkingDays($startDate, $endDate);
+$plannedTime = $workingDays * 480;     // 8 hours/day × 60 minutes
+$plannedStops = $workingDays * 60;     // 1 hour break/day
+$potentialTime = $plannedTime;
 
+// 🛠 Unplanned Stops
+$stopSql = "
+    SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
+    FROM stop_causes
+    $stopWhere
+";
+$stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
+$stopRow = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
+$unplannedStops = (int) $stopRow['downtime'];
+
+$actualRuntime = max(0, $potentialTime - $plannedStops - $unplannedStops);
+
+// 🔄 Part Summary & Ideal Cycle Time
 while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     $fg = (int)$row['FG'];
     $defects = (int)$row['Defects'];
@@ -106,27 +94,15 @@ while ($row = sqlsrv_fetch_array($partStmt, SQLSRV_FETCH_ASSOC)) {
     if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
         $plannedPerHour = (int)$planRow['planned_output'];
         if ($plannedPerHour > 0) {
-            $effectiveMinutes += (($fg + $defects) / $plannedPerHour) * 60;
+            $idealCycleTime = 60 / $plannedPerHour; // in minutes
+            $theoreticalOutput += ($actualRuntime / $idealCycleTime);
         }
     }
 }
 
-$stopSql = "
-    SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime
-    FROM stop_causes
-    $stopWhere
-";
-$stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
-$stopRow = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
-$downtime = (int) $stopRow['downtime'];
-
-$runtime = max(0, $plannedTime - $downtime);
-$availabilityPercent = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
 $qualityPercent = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
-
-$performancePercent = $plannedTime > 0
-    ? (100 - ((($plannedTime - $effectiveMinutes) / $plannedTime) * 100))
-    : 0;
+$availabilityPercent = $potentialTime > 0 ? ($actualRuntime / $potentialTime) * 100 : 0;
+$performancePercent = $theoreticalOutput > 0 ? ($totalActualOutput / $theoreticalOutput) * 100 : 0;
 
 $oee = ($availabilityPercent / 100) * ($performancePercent / 100) * ($qualityPercent / 100) * 100;
 
@@ -138,9 +114,9 @@ echo json_encode([
     "oee" => round($oee, 1),
     "fg" => $totalFG,
     "defects" => $totalDefects,
-    "runtime" => $runtime,
+    "runtime" => $actualRuntime,
     "planned_time" => $plannedTime,
-    "downtime" => $plannedTime - $runtime,
-    "planned_output" => round($effectiveMinutes / 60, 2),
+    "downtime" => $unplannedStops,
+    "planned_output" => round($theoreticalOutput, 2),
     "actual_output" => $totalActualOutput
 ]);
