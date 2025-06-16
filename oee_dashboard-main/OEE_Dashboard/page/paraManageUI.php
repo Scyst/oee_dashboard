@@ -88,12 +88,12 @@
       const pageData = data.slice(start, end);
       pageData.forEach(row => {
         tbody.innerHTML += `
-          <tr>
-            <td>${row.line}</td>
-            <td>${row.model}</td>
-            <td>${row.part_no}</td>
-            <td>${row.sap_no || ''}</td>
-            <td>${Number(row.planned_output).toLocaleString()}</td>
+          <tr data-id="${row.id}">
+            <td contenteditable="true" onblur="inlineEdit(this, 'line')">${row.line}</td>
+            <td contenteditable="true" onblur="inlineEdit(this, 'model')">${row.model}</td>
+            <td contenteditable="true" onblur="inlineEdit(this, 'part_no')">${row.part_no}</td>
+            <td contenteditable="true" onblur="inlineEdit(this, 'sap_no')">${row.sap_no || ''}</td>
+            <td contenteditable="true" onblur="inlineEdit(this, 'planned_output')">${row.planned_output}</td>
             <td>${new Date(row.updated_at).toLocaleString()}</td>
             <td>
               <button class="btn btn-sm btn-warning" onclick='editParam(${JSON.stringify(row)})'>Edit</button>
@@ -139,6 +139,31 @@
         `${row.line} ${row.model} ${row.part_no} ${row.sap_no}`.toUpperCase().includes(search)
       );
       renderTablePage(filtered, currentPage);
+    }
+
+    async function inlineEdit(cell, field) {
+      const row = cell.closest('tr');
+      const id = row.getAttribute('data-id');
+      const value = field === 'planned_output' ? parseInt(cell.innerText.trim(), 10) : cell.innerText.trim().toUpperCase();
+
+      if (!id || value === '') return;
+
+      const payload = { id };
+      payload[field] = value;
+
+      const res = await fetch(`../api/paraManage/paraManage.php?action=update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        showToast(`Updated ${field} successfully!`);
+        loadParameters();
+      } else {
+        showToast(`Failed to update ${field}.`, '#dc3545');
+      }
     }
 
     async function loadParameters() {

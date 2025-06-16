@@ -109,6 +109,28 @@ switch ($action) {
         ]);
         break;
 
+    case 'inline_update':
+        $id = (int)($input['id'] ?? 0);
+        $field = $input['field'] ?? '';
+        $value = $input['value'] ?? '';
+
+        $allowedFields = ['line', 'model', 'part_no', 'sap_no', 'planned_output'];
+        if (!in_array($field, $allowedFields) || !$id) {
+            echo json_encode(["success" => false, "message" => "Invalid update request"]);
+            break;
+        }
+
+        $value = strtoupper(trim($value));
+        if ($field === 'planned_output') {
+            $value = (int)$value;
+        }
+
+        $sql = "UPDATE parameter SET $field = ?, updated_at = GETDATE() WHERE id = ?";
+        $stmt = sqlsrv_query($conn, $sql, [$value, $id]);
+
+        echo json_encode(["success" => $stmt ? true : false]);
+        break;
+
     default:
         echo json_encode(["success" => false, "message" => "Invalid action"]);
         break;
