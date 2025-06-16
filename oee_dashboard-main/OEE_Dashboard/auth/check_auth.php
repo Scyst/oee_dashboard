@@ -15,4 +15,14 @@ if (isset($_SESSION['last_activity']) && time() - $_SESSION['last_activity'] > $
   exit;
 }
 $_SESSION['last_activity'] = time(); // update last activity timestamp
+
+function hasRole($requiredRole) {
+  return isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === $requiredRole;
+}
+
+// ✅ Check if the user has any of the roles in the allowed list
+function allowRoles(array $allowedRoles) {
+  return isset($_SESSION['user']['role']) && in_array($_SESSION['user']['role'], $allowedRoles);
+}
+
 ?>

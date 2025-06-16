@@ -1,4 +1,6 @@
 <?php include_once("../auth/check_auth.php"); ?>
+<?php $isAdmin = ($_SESSION['user']['role'] ?? 'operator') === 'admin'; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,8 +41,10 @@
       <div class="col-md-2"><input type="text" class="form-control" id="sapNo" placeholder="SAP No." required /></div>
       <div class="col-md-2"><input type="number" class="form-control" id="plannedOutput" placeholder="Planned Output" required /></div>
       <div class="col-md-2 d-flex gap-1">
-        <button type="button" id="addBtn" class="btn btn-success w-100">Add</button>
-        <button type="button" id="updateBtn" class="btn btn-warning w-100 d-none">Update</button>
+        <?php if ($isAdmin): ?>
+          <button type="button" id="addBtn" class="btn btn-success w-100">Add</button>
+          <button type="button" id="updateBtn" class="btn btn-warning w-100 d-none">Update</button>
+        <?php endif; ?>
       </div>
     </form>
 
@@ -77,6 +81,14 @@
   </div>
 
   <script>
+    const isAdmin = <?php echo json_encode($isAdmin); ?>;
+
+    function isAdminAttr(field) {
+      return isAdmin
+        ? `contenteditable="true" data-field="${field}" onfocus="startEdit(this)" onblur="inlineEdit(this, '${field}')"`
+        : '';
+    }
+
     let allData = [], currentPage = 1;
     const rowsPerPage = 50;
 
@@ -89,15 +101,17 @@
       pageData.forEach(row => {
         tbody.innerHTML += `
           <tr data-id="${row.id}">
-            <td contenteditable="true" data-field="line" onfocus="startEdit(this)" onblur="inlineEdit(this, 'line')">${row.line}</td>
-            <td contenteditable="true" data-field="model" onfocus="startEdit(this)" onblur="inlineEdit(this, 'model')">${row.model}</td>
-            <td contenteditable="true" data-field="part_no" onfocus="startEdit(this)" onblur="inlineEdit(this, 'part_no')">${row.part_no}</td>
-            <td contenteditable="true" data-field="sap_no" onfocus="startEdit(this)" onblur="inlineEdit(this, 'sap_no')">${row.sap_no || ''}</td>
-            <td contenteditable="true" data-field="planned_output" onfocus="startEdit(this)" onblur="inlineEdit(this, 'planned_output')">${row.planned_output}</td>
+            <td ${isAdminAttr('line')}>${row.line}</td>
+            <td ${isAdminAttr('model')}>${row.model}</td>
+            <td ${isAdminAttr('part_no')}>${row.part_no}</td>
+            <td ${isAdminAttr('sap_no')}>${row.sap_no || ''}</td>
+            <td ${isAdminAttr('planned_output')}>${row.planned_output}</td>
             <td>${new Date(row.updated_at).toLocaleString()}</td>
             <td>
-              <button class="btn btn-sm btn-warning" onclick='editParam(${JSON.stringify(row)})'>Edit</button>
-              <button class="btn btn-sm btn-danger" onclick='deleteParam(${row.id})'>Delete</button>
+              ${isAdmin ? `
+                <button class="btn btn-sm btn-warning" onclick='editParam(${JSON.stringify(row)})'>Edit</button>
+                <button class="btn btn-sm btn-danger" onclick='deleteParam(${row.id})'>Delete</button>
+              ` : ''}
             </td>
           </tr>`;
       });
