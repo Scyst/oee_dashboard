@@ -89,11 +89,11 @@
       pageData.forEach(row => {
         tbody.innerHTML += `
           <tr data-id="${row.id}">
-            <td contenteditable="true" onblur="inlineEdit(this, 'line')">${row.line}</td>
-            <td contenteditable="true" onblur="inlineEdit(this, 'model')">${row.model}</td>
-            <td contenteditable="true" onblur="inlineEdit(this, 'part_no')">${row.part_no}</td>
-            <td contenteditable="true" onblur="inlineEdit(this, 'sap_no')">${row.sap_no || ''}</td>
-            <td contenteditable="true" onblur="inlineEdit(this, 'planned_output')">${row.planned_output}</td>
+            <td contenteditable="true" data-field="line" onfocus="startEdit(this)" onblur="inlineEdit(this, 'line')">${row.line}</td>
+            <td contenteditable="true" data-field="model" onfocus="startEdit(this)" onblur="inlineEdit(this, 'model')">${row.model}</td>
+            <td contenteditable="true" data-field="part_no" onfocus="startEdit(this)" onblur="inlineEdit(this, 'part_no')">${row.part_no}</td>
+            <td contenteditable="true" data-field="sap_no" onfocus="startEdit(this)" onblur="inlineEdit(this, 'sap_no')">${row.sap_no || ''}</td>
+            <td contenteditable="true" data-field="planned_output" onfocus="startEdit(this)" onblur="inlineEdit(this, 'planned_output')">${row.planned_output}</td>
             <td>${new Date(row.updated_at).toLocaleString()}</td>
             <td>
               <button class="btn btn-sm btn-warning" onclick='editParam(${JSON.stringify(row)})'>Edit</button>
@@ -141,24 +141,39 @@
       renderTablePage(filtered, currentPage);
     }
 
+    let editingCell = null;
+
+    function startEdit(cell) {
+      editingCell = {
+        cell,
+        field: cell.dataset.field,
+        original: cell.innerText.trim()
+      };
+    }
+
     async function inlineEdit(cell, field) {
       const row = cell.closest('tr');
       const id = row.getAttribute('data-id');
-      const value = field === 'planned_output' 
-        ? parseInt(cell.innerText.trim(), 10) 
+      const newValue = field === 'planned_output'
+        ? parseInt(cell.innerText.trim(), 10)
         : cell.innerText.trim().toUpperCase();
 
-      if (!id || value === '') return;
+      if (!editingCell || !editingCell.original || !id) return;
 
-      const confirmEdit = confirm(`Are you sure you want to update "${field}" to "${value}"?`);
+      const oldValue = editingCell.original;
+      editingCell = null; // reset to avoid loop
+
+      // No change = no update
+      if (String(newValue) === String(oldValue)) return;
+
+      const confirmEdit = confirm(`Update "${field}" from "${oldValue}" to "${newValue}"?`);
       if (!confirmEdit) {
-        // Reload the table to discard unconfirmed changes visually
-        loadParameters(); 
+        cell.innerText = oldValue;
         return;
       }
 
-      const payload = { id };
-      payload[field] = value;
+      const payload = { id, line: null, model: null, part_no: null, sap_no: null, planned_output: null };
+      payload[field] = newValue;
 
       const res = await fetch(`../api/paraManage/paraManage.php?action=update`, {
         method: 'POST',
@@ -172,6 +187,7 @@
         loadParameters();
       } else {
         showToast(`Failed to update ${field}.`, '#dc3545');
+        cell.innerText = oldValue;
       }
     }
 
