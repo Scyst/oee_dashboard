@@ -1,16 +1,18 @@
 <?php
-$serverName = "LAPTOP-E0M0G0I9";  // or use "localhost\SQLEXPRESS" if using SQLEXPRESS
+$serverName = getenv('DB_SERVER') ?: "LAPTOP-E0M0G0I9";
 $connectionOptions = array(
-    "Database" => "oee_db",   // database name
-    "Uid" => "verymaron01",   // SQL Server username
-    "PWD" => "numthong01",    // SQL Server password
+    "Database" => getenv('DB_NAME') ?: "oee_db",
+    "Uid" => getenv('DB_USER') ?: "verymaron01",
+    "PWD" => getenv('DB_PASS') ?: "numthong01",
     "CharacterSet" => "UTF-8"
 );
 
-// Establish connectiongit
+// Establish connection
 $conn = sqlsrv_connect($serverName, $connectionOptions);
 
 if (!$conn) {
-    die(print_r(sqlsrv_errors(), true));
+    // Log error to a file (do not display sensitive info to users)
+    error_log(print_r(sqlsrv_errors(), true));
+    die("Database connection failed.");
 }
 ?>
