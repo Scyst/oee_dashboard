@@ -1,5 +1,4 @@
 <?php include_once("../auth/check_auth.php"); ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,12 +7,18 @@
   <title>Parameter Manager</title>
   <script src="../utils/libs/xlsx.full.min.js"></script>
   <script src="../utils/libs/bootstrap.bundle.min.js"></script>
-
   <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
   <link rel="stylesheet" href="../style/dropdown.css">
   <style>
     input[type="text"] {
         text-transform: uppercase;
+    }
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      background-color: #212529;
+      z-index: 999;
+      padding: 10px 0;
     }
   </style>
 </head>
@@ -28,43 +33,28 @@
 
     <form id="paramForm" class="row g-3 align-items-center">
       <input type="hidden" id="paramId" />
-      <div class="col-md-2">
-        <input type="text" class="form-control" id="line" placeholder="Line" required />
-      </div>
-      <div class="col-md-2">
-        <input type="text" class="form-control" id="model" placeholder="Model" required />
-      </div>
-      <div class="col-md-2">
-        <input type="text" class="form-control" id="partNo" placeholder="Part No." required />
-      </div>
-      <div class="col-md-2">
-        <input type="text" class="form-control" id="sapNo" placeholder="SAP No." required />
-      </div>
-      <div class="col-md-2">
-        <input type="number" class="form-control" id="plannedOutput" placeholder="Planned Output" required />
-      </div>
-      <div class="col-md-1"></div>
-      <div class="col-md-1 d-flex gap-1">
+      <div class="col-md-2"><input type="text" class="form-control" id="line" placeholder="Line" required /></div>
+      <div class="col-md-2"><input type="text" class="form-control" id="model" placeholder="Model" required /></div>
+      <div class="col-md-2"><input type="text" class="form-control" id="partNo" placeholder="Part No." required /></div>
+      <div class="col-md-2"><input type="text" class="form-control" id="sapNo" placeholder="SAP No." required /></div>
+      <div class="col-md-2"><input type="number" class="form-control" id="plannedOutput" placeholder="Planned Output" required /></div>
+      <div class="col-md-2 d-flex gap-1">
         <button type="button" id="addBtn" class="btn btn-success w-100">Add</button>
         <button type="button" id="updateBtn" class="btn btn-warning w-100 d-none">Update</button>
       </div>
     </form>
 
-    <hr>    
-    
-    <div class="row mb-2 align-items-center">
+    <hr>
 
-      <div class="col-md-3">
+    <div class="row mb-2 align-items-center sticky-bar">
+      <div class="col-md-4">
         <input type="text" class="form-control" id="searchInput" placeholder="Search parameters...">
       </div>
-
-      <div class="col-md-6 text-end"></div>
-
+      <div class="col-md-5"></div>
       <div class="col-md-3 text-end">
-        <button class="btn btn-sm btn-primary me-2" style="padding: 6px 12px;" onclick="triggerImport()">Import</button>
-        <button class="btn btn-sm btn-info" style="padding: 6px 12px;" onclick="exportToExcel()">Export</button>
+        <button class="btn btn-sm btn-primary me-2" onclick="triggerImport()">Import</button>
+        <button class="btn btn-sm btn-info" onclick="exportToExcel()">Export</button>
       </div>
-
       <input type="file" id="importFile" accept=".csv, .xlsx, .xls" class="form-control mt-2 d-none" onchange="handleImport(event)">
     </div>
 
@@ -72,47 +62,31 @@
       <table class="table table-dark table-striped">
         <thead>
           <tr>
-            <th>Line</th>
-            <th>Model</th>
-            <th>Part No.</th>
-            <th>SAP No.</th>
-            <th>Planned Output</th>
-            <th>Updated At</th>
-            <th>Actions</th>
+            <th>Line</th><th>Model</th><th>Part No.</th><th>SAP No.</th><th>Planned Output</th><th>Updated At</th><th>Actions</th>
           </tr>
         </thead>
         <tbody id="paramTable"></tbody>
       </table>
     </div>
-    <div id="toast" style="
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: #333;
-      color: white;
-      padding: 10px 16px;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.3);
-      opacity: 0;
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      z-index: 9999;
-      transform: translateY(20px);
-    "></div>
 
+    <nav class="sticky-bottom">
+      <ul class="pagination justify-content-center" id="paginationControls"></ul>
+    </nav>
+
+    <div id="toast" style="position: fixed; top: 20px; right: 20px; background-color: #333; color: white; padding: 10px 16px; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease; z-index: 9999; transform: translateY(20px);"></div>
   </div>
 
   <script>
-    let allData = [];
+    let allData = [], currentPage = 1;
+    const rowsPerPage = 50;
 
-    async function loadParameters() {
-      const res = await fetch('../api/paraManage/paraManage.php?action=read');
-      const data = await res.json();
-      allData = data;
-
+    function renderTablePage(data, page) {
       const tbody = document.getElementById('paramTable');
       tbody.innerHTML = '';
-
-      data.forEach(row => {
+      const start = (page - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const pageData = data.slice(start, end);
+      pageData.forEach(row => {
         tbody.innerHTML += `
           <tr>
             <td>${row.line}</td>
@@ -127,24 +101,55 @@
             </td>
           </tr>`;
       });
+      renderPaginationControls(data.length);
+    }
 
+    function renderPaginationControls(totalItems) {
+      const totalPages = Math.ceil(totalItems / rowsPerPage);
+      const pagination = document.getElementById('paginationControls');
+      pagination.innerHTML = '';
+
+      const start = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPages, currentPage + 2);
+
+      if (currentPage > 1) {
+        pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${currentPage - 1})">Prev</a></li>`;
+      }
+
+      for (let i = start; i <= end; i++) {
+        pagination.innerHTML += `
+          <li class="page-item ${i === currentPage ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>
+          </li>`;
+      }
+
+      if (currentPage < totalPages) {
+        pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${currentPage + 1})">Next</a></li>`;
+      }
+    }
+
+    function goToPage(page) {
+      currentPage = page;
       filterTable();
     }
 
-    // Filter table rows based on search input
     function filterTable() {
       const search = document.getElementById('searchInput').value.toUpperCase();
-      const rows = document.querySelectorAll('#paramTable tr');
+      const filtered = allData.filter(row =>
+        `${row.line} ${row.model} ${row.part_no} ${row.sap_no}`.toUpperCase().includes(search)
+      );
+      renderTablePage(filtered, currentPage);
+    }
 
-      rows.forEach(row => {
-        const text = row.innerText.toUpperCase();
-        row.style.display = text.includes(search) ? '' : 'none';
-      });
+    async function loadParameters() {
+      const res = await fetch('../api/paraManage/paraManage.php?action=read');
+      allData = await res.json();
+      currentPage = 1;
+      filterTable();
     }
 
     function resetForm() {
-      const form = document.getElementById('paramForm');
-      form.reset();
+      document.getElementById('paramForm').reset();
       document.getElementById('paramId').value = '';
       document.getElementById('addBtn').classList.remove('d-none');
       document.getElementById('updateBtn').classList.add('d-none');
@@ -157,8 +162,6 @@
       document.getElementById('partNo').value = data.part_no;
       document.getElementById('sapNo').value = data.sap_no || '';
       document.getElementById('plannedOutput').value = data.planned_output;
-
-      // Toggle buttons
       document.getElementById('addBtn').classList.add('d-none');
       document.getElementById('updateBtn').classList.remove('d-none');
     }
@@ -169,7 +172,6 @@
       toast.style.backgroundColor = color;
       toast.style.opacity = 1;
       toast.style.transform = 'translateY(0)';
-      
       setTimeout(() => {
         toast.style.opacity = 0;
         toast.style.transform = 'translateY(20px)';
@@ -177,16 +179,15 @@
     }
 
     async function deleteParam(id) {
-    if (!confirm("Delete this parameter?")) return;
+      if (!confirm("Delete this parameter?")) return;
       await fetch(`../api/paraManage/paraManage.php?action=delete&id=${id}`);
       loadParameters();
       resetForm();
       showToast("Parameter deleted successfully!");
     }
-    
+
     document.getElementById('addBtn').addEventListener('click', async () => {
       const form = document.getElementById('paramForm');
-
       const payload = {
         line: form.line.value.trim().toUpperCase(),
         model: form.model.value.trim().toUpperCase(),
@@ -194,13 +195,11 @@
         sap_no: form.sapNo.value.trim().toUpperCase(),
         planned_output: parseInt(form.plannedOutput.value, 10)
       };
-
       const res = await fetch(`../api/paraManage/paraManage.php?action=create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
       const result = await res.json();
       if (result.success) {
         loadParameters();
@@ -213,7 +212,6 @@
     document.getElementById('updateBtn').addEventListener('click', async () => {
       const form = document.getElementById('paramForm');
       const id = document.getElementById('paramId').value;
-
       const payload = {
         id,
         line: form.line.value.trim().toUpperCase(),
@@ -222,13 +220,11 @@
         sap_no: form.sapNo.value.trim().toUpperCase(),
         planned_output: parseInt(form.plannedOutput.value, 10)
       };
-
       const res = await fetch(`../api/paraManage/paraManage.php?action=update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
       const result = await res.json();
       if (result.success) {
         loadParameters();
@@ -239,12 +235,15 @@
       }
     });
 
-    document.getElementById('searchInput').addEventListener('input', filterTable);
+    document.getElementById('searchInput').addEventListener('input', () => {
+      currentPage = 1;
+      filterTable();
+    });
+
     loadParameters();
   </script>
 
   <script src="../script/auto_logout.js"></script>
   <script src="../script/paraManageUI/export_data.js"></script>
-
 </body>
 </html>
