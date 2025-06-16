@@ -144,9 +144,18 @@
     async function inlineEdit(cell, field) {
       const row = cell.closest('tr');
       const id = row.getAttribute('data-id');
-      const value = field === 'planned_output' ? parseInt(cell.innerText.trim(), 10) : cell.innerText.trim().toUpperCase();
+      const value = field === 'planned_output' 
+        ? parseInt(cell.innerText.trim(), 10) 
+        : cell.innerText.trim().toUpperCase();
 
       if (!id || value === '') return;
+
+      const confirmEdit = confirm(`Are you sure you want to update "${field}" to "${value}"?`);
+      if (!confirmEdit) {
+        // Reload the table to discard unconfirmed changes visually
+        loadParameters(); 
+        return;
+      }
 
       const payload = { id };
       payload[field] = value;

@@ -34,19 +34,33 @@ switch ($action) {
         break;
 
     case 'update':
-        $sql = "UPDATE parameter
-                SET line = ?, model = ?, part_no = ?, sap_no = ?, planned_output = ?, updated_at = GETDATE()
-                WHERE id = ?";
-        $params = [
-            strtoupper($input['line']),
-            strtoupper($input['model']),
-            strtoupper($input['part_no']),
-            strtoupper($input['sap_no']),
-            (int)$input['planned_output'],
-            (int)$input['id']
-        ];
-        $stmt = sqlsrv_query($conn, $sql, $params);
-        echo json_encode(["success" => $stmt ? true : false]);
+        $id = $input['id'] ?? null;
+        if (!$id) {
+            echo json_encode(["success" => false, "message" => "Missing ID"]);
+            exit;
+        }
+
+        // Fetch current row data
+        $stmt = sqlsrv_query($conn, "SELECT * FROM parameter WHERE id = ?", [$id]);
+        if (!$stmt || !$row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+            echo json_encode(["success" => false, "message" => "Parameter not found"]);
+            exit;
+        }
+
+        // Merge current values with incoming updates
+        $line = strtoupper($input['line'] ?? $row['line']);
+        $model = strtoupper($input['model'] ?? $row['model']);
+        $part_no = strtoupper($input['part_no'] ?? $row['part_no']);
+        $sap_no = strtoupper($input['sap_no'] ?? $row['sap_no']);
+        $planned_output = isset($input['planned_output']) ? (int)$input['planned_output'] : (int)$row['planned_output'];
+
+        $updateSql = "UPDATE parameter
+                      SET line = ?, model = ?, part_no = ?, sap_no = ?, planned_output = ?, updated_at = GETDATE()
+                      WHERE id = ?";
+        $params = [$line, $model, $part_no, $sap_no, $planned_output, $id];
+        $result = sqlsrv_query($conn, $updateSql, $params);
+
+        echo json_encode(["success" => $result ? true : false]);
         break;
 
     case 'delete':
@@ -107,28 +121,6 @@ switch ($action) {
                 : "Import completed with some errors.",
             "errors" => $errors
         ]);
-        break;
-
-    case 'inline_update':
-        $id = (int)($input['id'] ?? 0);
-        $field = $input['field'] ?? '';
-        $value = $input['value'] ?? '';
-
-        $allowedFields = ['line', 'model', 'part_no', 'sap_no', 'planned_output'];
-        if (!in_array($field, $allowedFields) || !$id) {
-            echo json_encode(["success" => false, "message" => "Invalid update request"]);
-            break;
-        }
-
-        $value = strtoupper(trim($value));
-        if ($field === 'planned_output') {
-            $value = (int)$value;
-        }
-
-        $sql = "UPDATE parameter SET $field = ?, updated_at = GETDATE() WHERE id = ?";
-        $stmt = sqlsrv_query($conn, $sql, [$value, $id]);
-
-        echo json_encode(["success" => $stmt ? true : false]);
         break;
 
     default:
