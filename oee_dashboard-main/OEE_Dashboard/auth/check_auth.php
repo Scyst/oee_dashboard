@@ -7,7 +7,7 @@ if (!isset($_SESSION['user'])) {
   exit;
 }
 
-$timeout = 9999; 
+$timeout = 300; 
 if (isset($_SESSION['last_activity']) && time() - $_SESSION['last_activity'] > $timeout) {
   session_unset();
   session_destroy();
