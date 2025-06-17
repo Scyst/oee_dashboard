@@ -56,7 +56,9 @@
       </div>
       <div class="col-md-5"></div>
       <div class="col-md-3 text-end">
-        <button class="btn btn-sm btn-primary me-2" onclick="triggerImport()">Import</button>
+        <?php if ($isAdmin): ?>
+          <button class="btn btn-sm btn-primary me-2" onclick="triggerImport()">Import</button>
+        <?php endif; ?>
         <button class="btn btn-sm btn-info" onclick="exportToExcel()">Export</button>
       </div>
       <input type="file" id="importFile" accept=".csv, .xlsx, .xls" class="form-control mt-2 d-none" onchange="handleImport(event)">
@@ -90,7 +92,7 @@
     }
 
     let allData = [], currentPage = 1;
-    const rowsPerPage = 50;
+    const rowsPerPage = 25;
 
     function renderTablePage(data, page) {
       const tbody = document.getElementById('paramTable');
@@ -123,8 +125,8 @@
       const pagination = document.getElementById('paginationControls');
       pagination.innerHTML = '';
 
-      const start = Math.max(1, currentPage - 2);
-      const end = Math.min(totalPages, currentPage + 2);
+      const start = Math.max(1, currentPage - 3);
+      const end = Math.min(totalPages, currentPage + 3);
 
       if (currentPage > 1) {
         pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${currentPage - 1})">Prev</a></li>`;
@@ -177,7 +179,6 @@
       const oldValue = editingCell.original;
       editingCell = null; // reset to avoid loop
 
-      // No change = no update
       if (String(newValue) === String(oldValue)) return;
 
       const confirmEdit = confirm(`Update "${field}" from "${oldValue}" to "${newValue}"?`);
@@ -186,8 +187,7 @@
         return;
       }
 
-      const payload = { id, line: null, model: null, part_no: null, sap_no: null, planned_output: null };
-      payload[field] = newValue;
+      const payload = { id, [field]: newValue }; // ✅ only update one field
 
       const res = await fetch(`../api/paraManage/paraManage.php?action=update`, {
         method: 'POST',
@@ -250,54 +250,65 @@
       showToast("Parameter deleted successfully!");
     }
 
-    document.getElementById('addBtn').addEventListener('click', async () => {
-      const form = document.getElementById('paramForm');
-      const payload = {
-        line: form.line.value.trim().toUpperCase(),
-        model: form.model.value.trim().toUpperCase(),
-        part_no: form.partNo.value.trim().toUpperCase(),
-        sap_no: form.sapNo.value.trim().toUpperCase(),
-        planned_output: parseInt(form.plannedOutput.value, 10)
-      };
-      const res = await fetch(`../api/paraManage/paraManage.php?action=create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      if (result.success) {
-        loadParameters();
-        showToast("Parameter added successfully!");
-      } else {
-        showToast("Failed to create parameter.", "#dc3545");
-      }
-    });
+    if (!isAdmin) {
+      // Disable inline editing functions
+      window.inlineEdit = () => {};
+      window.startEdit = () => {};
+      window.editParam = () => {};
+      window.deleteParam = () => {};
+      document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => btn.remove());
+    }
 
-    document.getElementById('updateBtn').addEventListener('click', async () => {
-      const form = document.getElementById('paramForm');
-      const id = document.getElementById('paramId').value;
-      const payload = {
-        id,
-        line: form.line.value.trim().toUpperCase(),
-        model: form.model.value.trim().toUpperCase(),
-        part_no: form.partNo.value.trim().toUpperCase(),
-        sap_no: form.sapNo.value.trim().toUpperCase(),
-        planned_output: parseInt(form.plannedOutput.value, 10)
-      };
-      const res = await fetch(`../api/paraManage/paraManage.php?action=update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+    if (isAdmin) {
+      document.getElementById('addBtn').addEventListener('click', async () => {
+        const form = document.getElementById('paramForm');
+        const payload = {
+          line: form.line.value.trim().toUpperCase(),
+          model: form.model.value.trim().toUpperCase(),
+          part_no: form.partNo.value.trim().toUpperCase(),
+          sap_no: form.sapNo.value.trim().toUpperCase(),
+          planned_output: parseInt(form.plannedOutput.value, 10)
+        };
+        const res = await fetch(`../api/paraManage/paraManage.php?action=create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) {
+          loadParameters();
+          showToast("Parameter added successfully!");
+        } else {
+          showToast("Failed to create parameter.", "#dc3545");
+        }
       });
-      const result = await res.json();
-      if (result.success) {
-        loadParameters();
-        resetForm();
-        showToast("Parameter updated successfully!");
-      } else {
-        showToast("Failed to update parameter.", "#dc3545");
-      }
-    });
+
+      document.getElementById('updateBtn').addEventListener('click', async () => {
+        const form = document.getElementById('paramForm');
+        const id = document.getElementById('paramId').value;
+        const payload = {
+          id,
+          line: form.line.value.trim().toUpperCase(),
+          model: form.model.value.trim().toUpperCase(),
+          part_no: form.partNo.value.trim().toUpperCase(),
+          sap_no: form.sapNo.value.trim().toUpperCase(),
+          planned_output: parseInt(form.plannedOutput.value, 10)
+        };
+        const res = await fetch(`../api/paraManage/paraManage.php?action=update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) {
+          loadParameters();
+          resetForm();
+          showToast("Parameter updated successfully!");
+        } else {
+          showToast("Failed to update parameter.", "#dc3545");
+        }
+      });
+    }
 
     document.getElementById('searchInput').addEventListener('input', () => {
       currentPage = 1;

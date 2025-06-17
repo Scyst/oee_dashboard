@@ -40,14 +40,14 @@ switch ($action) {
             exit;
         }
 
-        // Fetch current row data
+        // Get current data
         $stmt = sqlsrv_query($conn, "SELECT * FROM parameter WHERE id = ?", [$id]);
         if (!$stmt || !$row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             echo json_encode(["success" => false, "message" => "Parameter not found"]);
             exit;
         }
 
-        // Merge current values with incoming updates
+        // Merge fields only if provided
         $line = strtoupper($input['line'] ?? $row['line']);
         $model = strtoupper($input['model'] ?? $row['model']);
         $part_no = strtoupper($input['part_no'] ?? $row['part_no']);
