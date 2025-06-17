@@ -1,0 +1,28 @@
+USE [oee_db]
+GO
+
+/****** Object:  Table [dbo].[IOT_TOOLBOX_USER_LOGS]    Script Date: 17/06/2025 16:54:08 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[IOT_TOOLBOX_USER_LOGS](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[action_by] [varchar](100) NULL,
+	[action_type] [varchar](20) NULL,
+	[target_user] [varchar](100) NULL,
+	[detail] [nvarchar](255) NULL,
+	[created_at] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[IOT_TOOLBOX_USER_LOGS] ADD  DEFAULT (getdate()) FOR [created_at]
+GO
+
+

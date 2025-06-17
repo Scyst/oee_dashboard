@@ -1,0 +1,36 @@
+USE [oee_db]
+GO
+
+/****** Object:  Table [dbo].[IOT_TOOLBOX_PARAMETER]    Script Date: 17/06/2025 16:51:54 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[IOT_TOOLBOX_PARAMETER](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[line] [varchar](50) NOT NULL,
+	[model] [varchar](100) NOT NULL,
+	[part_no] [varchar](100) NOT NULL,
+	[planned_output] [int] NOT NULL,
+	[updated_at] [datetime] NULL,
+	[sap_no] [varchar](100) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [uc_line_model_part_sap] UNIQUE NONCLUSTERED 
+(
+	[line] ASC,
+	[model] ASC,
+	[part_no] ASC,
+	[sap_no] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[IOT_TOOLBOX_PARAMETER] ADD  DEFAULT (getdate()) FOR [updated_at]
+GO
+
+
