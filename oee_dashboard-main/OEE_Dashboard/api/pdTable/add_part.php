@@ -29,7 +29,7 @@ if (!$lot_no) {
     $datePrefix = date('Ymd', strtotime($log_date)); // e.g. "20250610"
 
     // Get SAP No.
-    $sapQuery = "SELECT sap_no FROM parameter WHERE line = ? AND model = ? AND part_no = ?";
+    $sapQuery = "SELECT sap_no FROM IOT_TOOLBOX_PARAMETER WHERE line = ? AND model = ? AND part_no = ?";
     $sapStmt = sqlsrv_query($conn, $sapQuery, [$line, $model, $part_no]);
 
     if (!$sapStmt || !($sapRow = sqlsrv_fetch_array($sapStmt, SQLSRV_FETCH_ASSOC))) {
@@ -39,20 +39,20 @@ if (!$lot_no) {
 
     $sap_no = $sapRow['sap_no'];
 
-    $lotCountQuery = "SELECT COUNT(*) AS lot_count FROM parts WHERE part_no = ? AND log_date = ? AND lot_no LIKE ?";
+    $lotCountQuery = "SELECT COUNT(*) AS lot_count FROM IOT_TOOLBOX_PARTS WHERE part_no = ? AND log_date = ? AND lot_no LIKE ?";
     $likePattern = $sap_no . '-' . $datePrefix . '%';
     $countStmt = sqlsrv_query($conn, $lotCountQuery, [$part_no, $log_date, $likePattern]);
 
     if ($countStmt && ($countRow = sqlsrv_fetch_array($countStmt, SQLSRV_FETCH_ASSOC))) {
         $count = $countRow['lot_count'] + 1;
-        $lot_no = $sap_no . '-' . $datePrefix . '-' . str_pad($count, 2, '0', STR_PAD_LEFT); // e.g., "P002345-20250610-01"
+        $lot_no = $sap_no . '-' . $datePrefix . '-' . str_pad($count, 3, '0', STR_PAD_LEFT); // e.g., "P002345-20250610-01"
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to count existing lots"]);
         exit;
     }
 }
 
-$sql = "INSERT INTO parts (log_date, log_time, model, line, part_no, lot_no, count_type, count_value, note)
+$sql = "INSERT INTO IOT_TOOLBOX_PARTS (log_date, log_time, model, line, part_no, lot_no, count_type, count_value, note)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $params = [$log_date, $log_time, $model, $line, $part_no, $lot_no, $count_type, $count_value, $note];
 

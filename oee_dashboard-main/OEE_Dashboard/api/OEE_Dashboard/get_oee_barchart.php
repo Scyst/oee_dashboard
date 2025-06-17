@@ -30,7 +30,7 @@ $partWhere = "WHERE " . implode(" AND ", $partConditions);
 // 🔄 STOP CAUSES CHART (X = line, bars = cause stacks)
 $stopSql = "
     SELECT cause, line, SUM(DATEDIFF(SECOND, stop_begin, stop_end)) AS total_seconds
-    FROM stop_causes
+    FROM IOT_TOOLBOX_STOP_CAUSES
     $stopWhere
     GROUP BY cause, line
 ";
@@ -92,13 +92,13 @@ function formatMinutes($minutes) {
 // PARTS QUERY (unchanged)
 $partSql = "
     SELECT TOP 50 part_no,
-        SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
-        SUM(CASE WHEN count_type = 'NG' THEN count_value ELSE 0 END) AS NG,
-        SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
-        SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
-        SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
-        SUM(CASE WHEN count_type = 'ETC.' THEN count_value ELSE 0 END) AS ETC
-    FROM parts
+        SUM(CASE WHEN count_type = 'FG' THEN ISNULL(count_value, 0) ELSE 0 END) AS FG,
+        SUM(CASE WHEN count_type = 'NG' THEN ISNULL(count_value, 0) ELSE 0 END) AS NG,
+        SUM(CASE WHEN count_type = 'HOLD' THEN ISNULL(count_value, 0) ELSE 0 END) AS HOLD,
+        SUM(CASE WHEN count_type = 'REWORK' THEN ISNULL(count_value, 0) ELSE 0 END) AS REWORK,
+        SUM(CASE WHEN count_type = 'SCRAP' THEN ISNULL(count_value, 0) ELSE 0 END) AS SCRAP,
+        SUM(CASE WHEN count_type = 'ETC.' THEN ISNULL(count_value, 0) ELSE 0 END) AS ETC
+    FROM IOT_TOOLBOX_PARTS
     $partWhere
     GROUP BY part_no
     ORDER BY SUM(count_value) DESC

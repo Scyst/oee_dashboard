@@ -1,23 +1,22 @@
 <?php
 require_once '../../api/db.php';
-
 header('Content-Type: application/json');
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+// Validate the ID
+$id = isset($_GET['id']) && is_numeric($_GET['id']) ? (int)$_GET['id'] : null;
+
+if (!$id) {
     echo json_encode(['success' => false, 'message' => 'Invalid or missing ID']);
     exit;
 }
 
-$id = intval($_GET['id']);
+// Fetch the part by ID
+$sql = "SELECT id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note
+        FROM IOT_TOOLBOX_PARTS WHERE id = ?";
+$stmt = sqlsrv_query($conn, $sql, [$id]);
 
-// Query to fetch the part by ID
-$sql = "SELECT id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note FROM parts WHERE id = ?";
-$params = array($id);
-
-$stmt = sqlsrv_query($conn, $sql, $params);
-
-if ($stmt === false) {
-    echo json_encode(['success' => false, 'message' => 'Database query failed']);
+if (!$stmt) {
+    echo json_encode(['success' => false, 'message' => 'Database query failed', 'errors' => sqlsrv_errors()]);
     exit;
 }
 
@@ -28,11 +27,11 @@ if (!$row) {
     exit;
 }
 
-// Format date and time for frontend
-if ($row['log_date'] instanceof DateTime) {
+// Format datetime fields for frontend compatibility
+if (!empty($row['log_date']) && $row['log_date'] instanceof DateTime) {
     $row['log_date'] = $row['log_date']->format('Y-m-d');
 }
-if ($row['log_time'] instanceof DateTime) {
+if (!empty($row['log_time']) && $row['log_time'] instanceof DateTime) {
     $row['log_time'] = $row['log_time']->format('H:i:s');
 }
 

@@ -19,7 +19,7 @@ foreach ($users as $user) {
     // Assign role
     $role = in_array($username, ['verymaron01', 'SncToolbox']) ? 'admin' : 'supervisor';
 
-    $sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+    $sql = "INSERT INTO IOT_TOOLBOX_USERS (username, password, role) VALUES (?, ?, ?)";
     $stmt = sqlsrv_query($conn, $sql, [$username, $password, $role]);
 
     if ($stmt) {

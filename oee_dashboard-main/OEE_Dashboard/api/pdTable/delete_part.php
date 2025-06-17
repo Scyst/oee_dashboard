@@ -30,7 +30,7 @@ if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
     exit();
 }
 
-$sql = "DELETE FROM parts WHERE id = ?";
+$sql = "DELETE FROM IOT_TOOLBOX_PARTS WHERE id = ?";
 $params = [$id];
 
 $stmt = sqlsrv_query($conn, $sql, $params);

@@ -5,7 +5,7 @@ require_once("../api/db.php");
 $username = $_POST['username'] ?? '';
 $password = $_POST['password'] ?? '';
 
-$sql = "SELECT id, username, password, role FROM users WHERE username = ?";
+$sql = "SELECT id, username, password, role FROM IOT_TOOLBOX_USERS WHERE username = ?";
 $stmt = sqlsrv_query($conn, $sql, [$username]);
 
 if ($stmt && $user = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {

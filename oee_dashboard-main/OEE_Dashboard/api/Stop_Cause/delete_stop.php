@@ -33,7 +33,7 @@ if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
     exit();
 }
 
-$sql = "DELETE FROM stop_causes WHERE id = ?";
+$sql = "DELETE FROM IOT_TOOLBOX_STOP_CAUSES WHERE id = ?";
 $params = [$id];
 
 $stmt = sqlsrv_query($conn, $sql, $params);

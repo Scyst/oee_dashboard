@@ -12,77 +12,73 @@ $conditions = [];
 $params = [];
 
 $startDate = $_GET['startDate'] ?? null;
-$endDate = $_GET['endDate'] ?? null;
-$line = $_GET['line'] ?? null;
-$model = $_GET['model'] ?? null;
-$partNo = $_GET['part_no'] ?? null;
+$endDate   = $_GET['endDate'] ?? null;
+$line      = $_GET['line'] ?? null;
+$model     = $_GET['model'] ?? null;
+$partNo    = $_GET['part_no'] ?? null;
 $countType = $_GET['count_type'] ?? null;
-$lotNo = $_GET['lot_no'] ?? null;
+$lotNo     = $_GET['lot_no'] ?? null;
 
+// Filter building
 if ($startDate && $endDate) {
     $conditions[] = "log_date BETWEEN ? AND ?";
     $params[] = $startDate;
     $params[] = $endDate;
 }
-if (!empty($line)) {
+if ($line) {
     $conditions[] = "LOWER(line) = LOWER(?)";
     $params[] = $line;
 }
-if (!empty($model)) {
+if ($model) {
     $conditions[] = "LOWER(model) = LOWER(?)";
     $params[] = $model;
 }
-if (!empty($partNo)) {
+if ($partNo) {
     $conditions[] = "LOWER(part_no) = LOWER(?)";
     $params[] = $partNo;
 }
-if (!empty($countType)) {
+if ($countType) {
     $conditions[] = "LOWER(count_type) = LOWER(?)";
     $params[] = $countType;
 }
-if (!empty($lotNo)) {
+if ($lotNo) {
     $conditions[] = "LOWER(lot_no) = LOWER(?)";
     $params[] = $lotNo;
 }
 
-$whereClause = count($conditions) > 0 ? "WHERE " . implode(" AND ", $conditions) : "";
+$whereClause = $conditions ? "WHERE " . implode(" AND ", $conditions) : "";
 
-// Get total for pagination
-$totalSql = "SELECT COUNT(*) AS total FROM parts $whereClause";
+// --- Total Count ---
+$totalSql = "SELECT COUNT(*) AS total FROM IOT_TOOLBOX_PARTS $whereClause";
 $totalStmt = sqlsrv_query($conn, $totalSql, $params);
-$totalRow = sqlsrv_fetch_array($totalStmt, SQLSRV_FETCH_ASSOC);
-$total = $totalRow ? intval($totalRow['total']) : 0;
+$totalRow = $totalStmt ? sqlsrv_fetch_array($totalStmt, SQLSRV_FETCH_ASSOC) : null;
+$total = $totalRow ? (int)$totalRow['total'] : 0;
 
-// Add pagination params to query
-$paramsWithPagination = $params;
-$paramsWithPagination[] = $offset;
-$paramsWithPagination[] = $limit;
-
-// Main data query
-$sql = "
+// --- Main Data Query ---
+$paramsWithPagination = [...$params, $offset, $limit];
+$dataSql = "
     SELECT id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note
-    FROM parts
+    FROM IOT_TOOLBOX_PARTS
     $whereClause
     ORDER BY log_date DESC, log_time DESC, id DESC
     OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 ";
-
-$stmt = sqlsrv_query($conn, $sql, $paramsWithPagination);
-
-if ($stmt === false) {
-    echo json_encode(['success' => false, 'message' => 'SQL query failed.']);
-    exit();
-}
+$dataStmt = sqlsrv_query($conn, $dataSql, $paramsWithPagination);
 
 $data = [];
-while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-    if ($row['log_date'] instanceof DateTime) {
-        $row['log_date'] = $row['log_date']->format('Y-m-d');
+if ($dataStmt) {
+    while ($row = sqlsrv_fetch_array($dataStmt, SQLSRV_FETCH_ASSOC)) {
+        if ($row['log_date'] instanceof DateTime) {
+            $row['log_date'] = $row['log_date']->format('Y-m-d');
+        }
+        if ($row['log_time'] instanceof DateTime) {
+            $row['log_time'] = $row['log_time']->format('H:i:s');
+        }
+        $data[] = $row;
     }
-    if ($row['log_time'] instanceof DateTime) {
-        $row['log_time'] = $row['log_time']->format('H:i:s');
-    }
-    $data[] = $row;
+} else {
+    echo json_encode(['success' => false, 'message' => 'Data query failed.', 'error' => sqlsrv_errors()]);
+    exit;
 }
 
 // --- Summary Query ---
@@ -97,19 +93,20 @@ $summarySql = "
         SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
         SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
         SUM(CASE WHEN count_type = 'ETC.' THEN count_value ELSE 0 END) AS ETC
-    FROM parts
+    FROM IOT_TOOLBOX_PARTS
     $whereClause
     GROUP BY model, part_no, lot_no
     ORDER BY model, part_no, lot_no
 ";
-
 $summaryStmt = sqlsrv_query($conn, $summarySql, $params);
 $summary = [];
-while ($row = sqlsrv_fetch_array($summaryStmt, SQLSRV_FETCH_ASSOC)) {
-    $summary[] = $row;
+if ($summaryStmt) {
+    while ($row = sqlsrv_fetch_array($summaryStmt, SQLSRV_FETCH_ASSOC)) {
+        $summary[] = $row;
+    }
 }
 
-// --- Grand Total Summary ---
+// --- Grand Total Query ---
 $grandSql = "
     SELECT
         SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
@@ -118,23 +115,25 @@ $grandSql = "
         SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
         SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
         SUM(CASE WHEN count_type = 'ETC.' THEN count_value ELSE 0 END) AS ETC
-    FROM parts
+    FROM IOT_TOOLBOX_PARTS
     $whereClause
 ";
-
 $grandStmt = sqlsrv_query($conn, $grandSql, $params);
-$grandTotal = sqlsrv_fetch_array($grandStmt, SQLSRV_FETCH_ASSOC);
+$grandTotal = $grandStmt ? sqlsrv_fetch_array($grandStmt, SQLSRV_FETCH_ASSOC) : [];
 
-// Return JSON
+// --- Final Output ---
 echo json_encode([
-    'success' => true,
-    'page' => $page,
-    'limit' => $limit,
-    'total' => $total,
-    'data' => $data,
-    'summary' => $summary,
+    'success'     => true,
+    'page'        => $page,
+    'limit'       => $limit,
+    'total'       => $total,
+    'data'        => $data,
+    'summary'     => $summary,
     'grand_total' => $grandTotal
 ]);
 
-sqlsrv_free_stmt($stmt);
+// Optional: clean-up
+sqlsrv_free_stmt($dataStmt ?? null);
+sqlsrv_free_stmt($summaryStmt ?? null);
+sqlsrv_free_stmt($grandStmt ?? null);
 ?>

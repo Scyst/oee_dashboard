@@ -46,7 +46,7 @@ if (!empty($line)) {
     $stopParams[] = $line;
 }
 $stopWhere = "WHERE " . implode(" AND ", $stopConditions);
-$stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM stop_causes $stopWhere";
+$stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM IOT_TOOLBOX_STOP_CAUSES $stopWhere";
 $stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
 $stopRow = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
 $downtime = (int) ($stopRow['downtime'] ?? 0);
@@ -65,15 +65,15 @@ if (!empty($model)) {
 }
 $partWhere = "WHERE " . implode(" AND ", $partConditions);
 
-// **MODIFIED SQL**: Joined 'parts' and 'parameter' tables
+// **MODIFIED SQL**: Joined 'IOT_TOOLBOX_PARTS' and 'IOT_TOOLBOX_PARAMETER' tables
 $partSql = "
     SELECT
         p.model, p.part_no, p.line,
         SUM(CASE WHEN p.count_type = 'FG' THEN p.count_value ELSE 0 END) AS FG,
         SUM(CASE WHEN p.count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN p.count_value ELSE 0 END) AS Defects,
         MAX(param.planned_output) AS hourly_output
-    FROM parts p
-    LEFT JOIN parameter param ON p.model = param.model AND p.part_no = param.part_no AND p.line = param.line
+    FROM IOT_TOOLBOX_PARTS p
+    LEFT JOIN IOT_TOOLBOX_PARAMETER param ON p.model = param.model AND p.part_no = param.part_no AND p.line = param.line
     $partWhere
     GROUP BY p.model, p.part_no, p.line
 ";

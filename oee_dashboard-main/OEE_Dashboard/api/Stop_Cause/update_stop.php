@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    $sql = "UPDATE stop_causes SET log_date = ?, stop_begin = ?, stop_end = ?, line = ?, machine = ?, cause = ?, recovered_by = ?, note = ? WHERE id = ?";
+    $sql = "UPDATE IOT_TOOLBOX_STOP_CAUSES SET log_date = ?, stop_begin = ?, stop_end = ?, line = ?, machine = ?, cause = ?, recovered_by = ?, note = ? WHERE id = ?";
     $params = array($log_date, $stop_begin, $stop_end, $line, $machine, $cause, $recovered_by, $note, $id);
 
     $stmt = sqlsrv_query($conn, $sql, $params);

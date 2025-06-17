@@ -71,9 +71,9 @@ foreach ($period as $dateObj) {
     // ---------- Check latest log time ----------
     $logTimeSql = "
         SELECT MAX(latest_time) AS max_time FROM (
-            SELECT MAX(log_time) AS latest_time FROM parts WHERE log_date = ?
+            SELECT MAX(log_time) AS latest_time FROM IOT_TOOLBOX_PARTS WHERE log_date = ?
             UNION ALL
-            SELECT MAX(stop_end) FROM stop_causes WHERE log_date = ?
+            SELECT MAX(stop_end) FROM IOT_TOOLBOX_STOP_CAUSES WHERE log_date = ?
         ) AS all_times";
 
     $logStmt = sqlsrv_query($conn, $logTimeSql, [$dateStr, $dateStr]);
@@ -96,9 +96,9 @@ foreach ($period as $dateObj) {
     // ---------- Part Data ----------
     $partSql = "
         SELECT model, part_no, line,
-            SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
-            SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN count_value ELSE 0 END) AS Defects
-        FROM parts
+            SUM(CASE WHEN count_type = 'FG' THEN ISNULL(count_value, 0) ELSE 0 END) AS FG,
+            SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN ISNULL(count_value, 0) ELSE 0 END) AS Defects
+        FROM IOT_TOOLBOX_PARTS
         WHERE log_date = ?" .
         (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
         (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "") .
@@ -128,7 +128,7 @@ foreach ($period as $dateObj) {
 
         $planStmt = sqlsrv_query(
             $conn,
-            "SELECT planned_output FROM parameter WHERE model = ? AND part_no = ? AND line = ?",
+            "SELECT planned_output FROM IOT_TOOLBOX_PARAMETER WHERE model = ? AND part_no = ? AND line = ?",
             [$modelVal, $partNo, $lineVal]
         );
         if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
@@ -138,7 +138,7 @@ foreach ($period as $dateObj) {
     }
 
     // ---------- Downtime ----------
-    $stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM stop_causes WHERE log_date = ?" .
+    $stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM IOT_TOOLBOX_STOP_CAUSES WHERE log_date = ?" .
         (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "");
     $stopParams = [$dateStr];
     if (!empty($line)) $stopParams[] = $line;
@@ -152,7 +152,7 @@ foreach ($period as $dateObj) {
     $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
 
     if ($totalPlannedOutput === 0 && $plannedTime > 0) {
-        $countSql = "SELECT COUNT(DISTINCT model + '|' + part_no + '|' + line) AS count FROM parts WHERE log_date = ?" .
+        $countSql = "SELECT COUNT(DISTINCT ISNULL(model, '') + '|' + ISNULL(part_no, '') + '|' + ISNULL(line, '')) AS count FROM IOT_TOOLBOX_PARTS WHERE log_date = ?" .
             (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
             (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "");
         $countParams = [$dateStr];

@@ -14,14 +14,14 @@ $currentUser = $_SESSION['user']['username'];
 $currentRole = $_SESSION['user']['role'];
 
 function logAction($conn, $actor, $action, $target, $detail = null) {
-    $sql = "INSERT INTO user_logs (action_by, action_type, target_user, detail, created_at)
+    $sql = "INSERT INTO IOT_TOOLBOX_USER_LOGS (action_by, action_type, target_user, detail, created_at)
             VALUES (?, ?, ?, ?, GETDATE())";
     sqlsrv_query($conn, $sql, [$actor, $action, $target, $detail]);
 }
 
 switch ($action) {
     case 'read':
-        $stmt = sqlsrv_query($conn, "SELECT id, username, role, created_at FROM users ORDER BY created_at DESC");
+        $stmt = sqlsrv_query($conn, "SELECT id, username, role, created_at FROM IOT_TOOLBOX_USERS ORDER BY created_at DESC");
         $users = [];
         while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             $row['created_at'] = $row['created_at']->format('Y-m-d H:i:s');
@@ -42,7 +42,7 @@ switch ($action) {
 
         $hashed = password_hash($password, PASSWORD_DEFAULT);
         $stmt = sqlsrv_query($conn,
-            "INSERT INTO users (username, password, role, created_at) VALUES (?, ?, ?, GETDATE())",
+            "INSERT INTO IOT_TOOLBOX_USERS (username, password, role, created_at) VALUES (?, ?, ?, GETDATE())",
             [$username, $hashed, $role]
         );
 
@@ -64,7 +64,7 @@ switch ($action) {
             break;
         }
 
-        $stmt = sqlsrv_query($conn, "SELECT * FROM users WHERE id = ?", [$id]);
+        $stmt = sqlsrv_query($conn, "SELECT * FROM IOT_TOOLBOX_USERS WHERE id = ?", [$id]);
         $targetUser = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
         if (!$targetUser) {
             echo json_encode(["success" => false, "message" => "User not found"]);
@@ -86,12 +86,12 @@ switch ($action) {
         if ($password) {
             $hashed = password_hash($password, PASSWORD_DEFAULT);
             $stmt = sqlsrv_query($conn,
-                "UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?",
+                "UPDATE IOT_TOOLBOX_USERS SET username = ?, password = ?, role = ? WHERE id = ?",
                 [$username, $hashed, $role, $id]
             );
         } else {
             $stmt = sqlsrv_query($conn,
-                "UPDATE users SET username = ?, role = ? WHERE id = ?",
+                "UPDATE IOT_TOOLBOX_USERS SET username = ?, role = ? WHERE id = ?",
                 [$username, $role, $id]
             );
         }
@@ -107,7 +107,7 @@ switch ($action) {
     case 'delete':
         $id = (int)($_GET['id'] ?? 0);
 
-        $stmt = sqlsrv_query($conn, "SELECT * FROM users WHERE id = ?", [$id]);
+        $stmt = sqlsrv_query($conn, "SELECT * FROM IOT_TOOLBOX_USERS WHERE id = ?", [$id]);
         $targetUser = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
         if (!$targetUser) {
             echo json_encode(["success" => false, "message" => "User not found"]);
@@ -119,7 +119,7 @@ switch ($action) {
             break;
         }
 
-        $stmt = sqlsrv_query($conn, "DELETE FROM users WHERE id = ?", [$id]);
+        $stmt = sqlsrv_query($conn, "DELETE FROM IOT_TOOLBOX_USERS WHERE id = ?", [$id]);
         if ($stmt) {
             logAction($conn, $currentUser, 'delete', $targetUser['username']);
         }
@@ -128,7 +128,7 @@ switch ($action) {
         break;
     
     case 'logs':
-        $stmt = sqlsrv_query($conn, "SELECT * FROM user_logs ORDER BY created_at DESC");
+        $stmt = sqlsrv_query($conn, "SELECT * FROM IOT_TOOLBOX_USER_LOGS ORDER BY created_at DESC");
         $logs = [];
 
         while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {

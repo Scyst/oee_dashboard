@@ -22,8 +22,8 @@ if (!$log_date || !$stop_begin || !$stop_end || !$line || !$machine || !$cause |
 $start = DateTime::createFromFormat('H:i:s', $stop_begin);
 $end = DateTime::createFromFormat('H:i:s', $stop_end);
 
-if (!$start || !$end) {
-    echo json_encode(["status" => "error", "message" => "Invalid time format"]);
+if (!$start || !$end || $end <= $start) {
+    echo json_encode(["status" => "error", "message" => "Invalid or reversed stop time range"]);
     exit;
 }
 
@@ -36,7 +36,7 @@ if ($duration < 0) {
 }
 
 // Insert query
-$sql = "INSERT INTO stop_causes (
+$sql = "INSERT INTO IOT_TOOLBOX_STOP_CAUSES (
             log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 $params = [$log_date, $stop_begin, $stop_end, $line, $machine, $cause, $recovered_by, $note];

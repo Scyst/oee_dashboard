@@ -7,7 +7,7 @@ $input = json_decode(file_get_contents("php://input"), true);
 
 switch ($action) {
     case 'read':
-        $sql = "SELECT * FROM parameter ORDER BY updated_at DESC";
+        $sql = "SELECT * FROM IOT_TOOLBOX_PARAMETER ORDER BY updated_at DESC";
         $stmt = sqlsrv_query($conn, $sql);
         $rows = [];
 
@@ -20,7 +20,7 @@ switch ($action) {
         break;
 
     case 'create':
-        $sql = "INSERT INTO parameter (line, model, part_no, sap_no, planned_output, updated_at)
+        $sql = "INSERT INTO IOT_TOOLBOX_PARAMETER (line, model, part_no, sap_no, planned_output, updated_at)
                 VALUES (?, ?, ?, ?, ?, GETDATE())";
         $params = [
             strtoupper($input['line']),
@@ -41,7 +41,7 @@ switch ($action) {
         }
 
         // Get current data
-        $stmt = sqlsrv_query($conn, "SELECT * FROM parameter WHERE id = ?", [$id]);
+        $stmt = sqlsrv_query($conn, "SELECT * FROM IOT_TOOLBOX_PARAMETER WHERE id = ?", [$id]);
         if (!$stmt || !$row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             echo json_encode(["success" => false, "message" => "Parameter not found"]);
             exit;
@@ -54,7 +54,7 @@ switch ($action) {
         $sap_no = strtoupper($input['sap_no'] ?? $row['sap_no']);
         $planned_output = isset($input['planned_output']) ? (int)$input['planned_output'] : (int)$row['planned_output'];
 
-        $updateSql = "UPDATE parameter
+        $updateSql = "UPDATE IOT_TOOLBOX_PARAMETER
                       SET line = ?, model = ?, part_no = ?, sap_no = ?, planned_output = ?, updated_at = GETDATE()
                       WHERE id = ?";
         $params = [$line, $model, $part_no, $sap_no, $planned_output, $id];
@@ -65,7 +65,7 @@ switch ($action) {
 
     case 'delete':
         $id = $_GET['id'] ?? 0;
-        $stmt = sqlsrv_query($conn, "DELETE FROM parameter WHERE id = ?", [(int)$id]);
+        $stmt = sqlsrv_query($conn, "DELETE FROM IOT_TOOLBOX_PARAMETER WHERE id = ?", [(int)$id]);
         echo json_encode(["success" => $stmt ? true : false]);
         break;
 
@@ -91,15 +91,15 @@ switch ($action) {
                 continue;
             }
 
-            $check = sqlsrv_query($conn, "SELECT id FROM parameter WHERE line = ? AND model = ? AND part_no = ?", [$line, $model, $part_no]);
+            $check = sqlsrv_query($conn, "SELECT id FROM IOT_TOOLBOX_PARAMETER WHERE line = ? AND model = ? AND part_no = ?", [$line, $model, $part_no]);
             if ($check && $existing = sqlsrv_fetch_array($check, SQLSRV_FETCH_ASSOC)) {
                 $stmt = sqlsrv_query($conn, "
-                    UPDATE parameter SET sap_no = ?, planned_output = ?, updated_at = GETDATE() WHERE id = ?",
+                    UPDATE IOT_TOOLBOX_PARAMETER SET sap_no = ?, planned_output = ?, updated_at = GETDATE() WHERE id = ?",
                     [$sap_no, $planned_output, $existing['id']]
                 );
             } else {
                 $stmt = sqlsrv_query($conn, "
-                    INSERT INTO parameter (line, model, part_no, sap_no, planned_output, updated_at)
+                    INSERT INTO IOT_TOOLBOX_PARAMETER (line, model, part_no, sap_no, planned_output, updated_at)
                     VALUES (?, ?, ?, ?, ?, GETDATE())",
                     [$line, $model, $part_no, $sap_no, $planned_output]
                 );

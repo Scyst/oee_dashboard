@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    $sql = "UPDATE parts 
+    $sql = "UPDATE IOT_TOOLBOX_PARTS 
             SET log_date = ?, log_time = ?, line = ?, model = ?, part_no = ?, lot_no = ?, count_value = ?, count_type = ?, note = ? 
             WHERE id = ?";
     $params = [$log_date, $log_time, $line, $model, $part_no, $lot_no, $count_value, $count_type, $note, $id];

@@ -2,7 +2,7 @@
 require_once("../../api/db.php");
 header('Content-Type: application/json');
 
-$sql = "SELECT DISTINCT model FROM parameter WHERE model IS NOT NULL ORDER BY model";
+$sql = "SELECT DISTINCT model FROM IOT_TOOLBOX_PARAMETER WHERE model IS NOT NULL ORDER BY model";
 $stmt = sqlsrv_query($conn, $sql);
 
 $models = [];

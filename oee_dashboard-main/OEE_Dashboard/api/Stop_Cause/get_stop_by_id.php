@@ -13,7 +13,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $id = intval($_GET['id']);
 
 // Query to fetch the part by ID
-$sql = "SELECT id, log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note FROM stop_causes WHERE id = ?";
+$sql = "SELECT id, log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note FROM IOT_TOOLBOX_STOP_CAUSES WHERE id = ?";
 $params = array($id);
 
 $stmt = sqlsrv_query($conn, $sql, $params);
