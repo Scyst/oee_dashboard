@@ -8,15 +8,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>User Manager</title>
   <script src="../utils/libs/bootstrap.bundle.min.js"></script>
-  <script src="../utils/libs/xlsx.full.min.js"></script>
-  
   <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
   <link rel="stylesheet" href="../style/dropdown.css">
+  <style>
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #333;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      z-index: 9999;
+      transform: translateY(20px);
+    }
+  </style>
 </head>
 <body class="bg-dark text-white p-4">
   <?php include('components/nav_dropdown.php'); ?>
   <div class="container">
-    <h2>User Manager</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>User Manager</h2>
+      <button class="btn btn-secondary btn-sm" onclick="openLogs()">View Logs</button>
+    </div>
 
     <form id="userForm" class="row g-3 mb-4">
       <input type="hidden" id="userId">
@@ -50,8 +67,17 @@
     </table>
   </div>
 
+  <div id="toast"></div>
+
   <script>
     let users = [];
+    function openLogs() {
+      const w = 1000;
+      const h = 600;
+      const left = (screen.width - w) / 2;
+      const top = (screen.height - h) / 2;
+      window.open('userLogs.php', 'UserLogs', `width=${w},height=${h},top=${top},left=${left},scrollbars=yes`);
+    }
 
     async function loadUsers() {
       const res = await fetch('../api/userManage/userManage.php?action=read');
@@ -87,9 +113,27 @@
     }
 
     async function deleteUser(id) {
-      if (!confirm('Delete this user?')) return;
-      await fetch(`../api/userManage/userManage.php?action=delete&id=${id}`);
-      loadUsers();
+      if (!confirm('Are you sure you want to delete this user?')) return;
+      const res = await fetch(`../api/userManage/userManage.php?action=delete&id=${id}`);
+      const result = await res.json();
+      if (result.success) {
+        showToast("User deleted successfully");
+        loadUsers();
+      } else {
+        showToast("Delete failed", '#dc3545');
+      }
+    }
+
+    function showToast(message, bg = '#28a745') {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.style.backgroundColor = bg;
+      toast.style.opacity = 1;
+      toast.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        toast.style.opacity = 0;
+        toast.style.transform = 'translateY(20px)';
+      }, 3000);
     }
 
     document.getElementById('addBtn').addEventListener('click', async () => {
@@ -97,7 +141,12 @@
       const password = document.getElementById('password').value;
       const role = document.getElementById('role').value;
 
-      if (!username || !password || !role) return alert('All fields are required.');
+      if (!username || !password || !role) {
+        showToast("All fields are required", "#dc3545");
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to create user "${username}" with role "${role}"?`)) return;
 
       const res = await fetch('../api/userManage/userManage.php?action=create', {
         method: 'POST',
@@ -107,10 +156,11 @@
 
       const result = await res.json();
       if (result.success) {
-        loadUsers();
+        showToast("User created successfully");
         document.getElementById('userForm').reset();
+        loadUsers();
       } else {
-        alert('Failed to create user.');
+        showToast(result.message || "Failed to create user", "#dc3545");
       }
     });
 
@@ -120,7 +170,10 @@
       const password = document.getElementById('password').value;
       const role = document.getElementById('role').value;
 
-      if (!id || !username || !role) return alert('Username and role are required.');
+      if (!id || !username || !role) {
+        showToast("Username and role are required", "#dc3545");
+        return;
+      }
 
       const payload = { id, username, role };
       if (password) payload.password = password;
@@ -133,12 +186,13 @@
 
       const result = await res.json();
       if (result.success) {
-        loadUsers();
+        showToast("User updated successfully");
         document.getElementById('userForm').reset();
         document.getElementById('addBtn').classList.remove('d-none');
         document.getElementById('updateBtn').classList.add('d-none');
+        loadUsers();
       } else {
-        alert('Failed to update user.');
+        showToast(result.message || "Failed to update user", "#dc3545");
       }
     });
 
