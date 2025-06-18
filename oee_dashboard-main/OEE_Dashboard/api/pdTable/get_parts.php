@@ -2,12 +2,11 @@
 header('Content-Type: application/json');
 require_once("../../api/db.php");
 
-// Pagination params
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 50;
-$offset = ($page - 1) * $limit;
+$startRow = ($page - 1) * $limit + 1;
+$endRow = $page * $limit;
 
-// Filters
 $conditions = [];
 $params = [];
 
@@ -19,7 +18,6 @@ $partNo    = $_GET['part_no'] ?? null;
 $countType = $_GET['count_type'] ?? null;
 $lotNo     = $_GET['lot_no'] ?? null;
 
-// Filter building
 if ($startDate && $endDate) {
     $conditions[] = "log_date BETWEEN ? AND ?";
     $params[] = $startDate;
@@ -54,17 +52,20 @@ $totalStmt = sqlsrv_query($conn, $totalSql, $params);
 $totalRow = $totalStmt ? sqlsrv_fetch_array($totalStmt, SQLSRV_FETCH_ASSOC) : null;
 $total = $totalRow ? (int)$totalRow['total'] : 0;
 
-// --- Main Data Query ---
-$paramsWithPagination = [...$params, $offset, $limit];
+// --- Data with ROW_NUMBER for SQL Server 2012 ---
 $dataSql = "
-    SELECT id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note
-    FROM IOT_TOOLBOX_PARTS
-    $whereClause
-    ORDER BY log_date DESC, log_time DESC, id DESC
-    OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    WITH OrderedData AS (
+        SELECT 
+            id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note,
+            ROW_NUMBER() OVER (ORDER BY log_date DESC, log_time DESC, id DESC) AS RowNum
+        FROM IOT_TOOLBOX_PARTS
+        $whereClause
+    )
+    SELECT *
+    FROM OrderedData
+    WHERE RowNum BETWEEN ? AND ?
 ";
-$dataStmt = sqlsrv_query($conn, $dataSql, $paramsWithPagination);
-
+$dataStmt = sqlsrv_query($conn, $dataSql, [...$params, $startRow, $endRow]);
 $data = [];
 if ($dataStmt) {
     while ($row = sqlsrv_fetch_array($dataStmt, SQLSRV_FETCH_ASSOC)) {
@@ -81,7 +82,7 @@ if ($dataStmt) {
     exit;
 }
 
-// --- Summary Query ---
+// --- Summary ---
 $summarySql = "
     SELECT
         model,
@@ -106,7 +107,7 @@ if ($summaryStmt) {
     }
 }
 
-// --- Grand Total Query ---
+// --- Grand Totals ---
 $grandSql = "
     SELECT
         SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
@@ -132,8 +133,8 @@ echo json_encode([
     'grand_total' => $grandTotal
 ]);
 
-// Optional: clean-up
 sqlsrv_free_stmt($dataStmt ?? null);
 sqlsrv_free_stmt($summaryStmt ?? null);
 sqlsrv_free_stmt($grandStmt ?? null);
+sqlsrv_close($conn);
 ?>
