@@ -277,7 +277,9 @@ if (addForm) {
                 method: "POST",
                 body: formData
             });
+            console.log(res);
             const result = await res.json();
+            console.log(result);
             if (result.status === "success") {
                 alert(`${result.message}\nLot No: ${result.lot_no}`);
                 fetchPaginatedParts(1);
