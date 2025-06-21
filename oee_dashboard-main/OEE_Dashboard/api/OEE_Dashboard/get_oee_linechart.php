@@ -1,53 +1,25 @@
 <?php
-require_once("../../api/db.php");
-header('Content-Type: application/json');
-
-$startDate = $_GET['startDate'] ?? date('Y-m-d');
-$endDate   = $_GET['endDate'] ?? date('Y-m-d');
-$line      = $_GET['line'] ?? null;
-$model     = $_GET['model'] ?? null;
-
-$start = new DateTime($startDate);
-$end = new DateTime($endDate);
-$diffDays = (int)$start->diff($end)->format('%a') + 1;
-
-if ($diffDays < 15) {
-    $start = (clone $end)->modify('-14 days');
-}
-
-$period = new DatePeriod(
-    $start,
-    new DateInterval('P1D'),
-    (clone $end)->modify('+1 day')
-);
-
-$records = [];
+require_once __DIR__ . '/../db.php';
 
 function calculatePlannedTime($dateStr, $latestTimeStr) {
+    if (!$latestTimeStr) return 0;
+    
     $startWork = new DateTime("$dateStr 08:00:00");
     $latest = new DateTime("$dateStr $latestTimeStr");
     
     if ($latest <= $startWork) return 0;
 
-    // Round up to next hour
     $latest->modify('+59 minutes');
     $latest->setTime($latest->format('H'), 0);
 
     $plannedMinutes = ($latest->getTimestamp() - $startWork->getTimestamp()) / 60;
 
-    // Subtract break durations
-    $breaks = [
-        ['11:30', '12:30'],
-        ['17:00', '17:30'],
-        ['23:30', '00:30'],
-        ['05:00', '05:30']
-    ];
+    $breaks = [['11:30', '12:30'], ['17:00', '17:30'], ['23:30', '00:30'], ['05:00', '05:30']];
 
     foreach ($breaks as [$bStart, $bEnd]) {
         $breakStart = new DateTime("$dateStr $bStart");
         $breakEnd = new DateTime("$dateStr $bEnd");
 
-        // handle overnight breaks (e.g. 23:30 - 00:30)
         if ($breakEnd < $breakStart) {
             $breakEnd->modify('+1 day');
         }
@@ -60,122 +32,129 @@ function calculatePlannedTime($dateStr, $latestTimeStr) {
             }
         }
     }
-
     return max(0, round($plannedMinutes));
 }
 
-foreach ($period as $dateObj) {
-    $dateStr = $dateObj->format('Y-m-d');
-    $dateLabel = $dateObj->format('d-m-y');
+try {
+    $startDate = $_GET['startDate'] ?? date('Y-m-d');
+    $endDate = $_GET['endDate'] ?? date('Y-m-d');
+    $line = $_GET['line'] ?? null;
+    $model = $_GET['model'] ?? null;
 
-    // ---------- Check latest log time ----------
-    $logTimeSql = "
-        SELECT MAX(latest_time) AS max_time FROM (
-            SELECT MAX(log_time) AS latest_time FROM IOT_TOOLBOX_PARTS WHERE log_date = ?
-            UNION ALL
-            SELECT MAX(stop_end) FROM IOT_TOOLBOX_STOP_CAUSES WHERE log_date = ?
-        ) AS all_times";
+    $start = new DateTime($startDate);
+    $end = new DateTime($endDate);
+    if (($start->diff($end)->days + 1) < 15) {
+        $start = (clone $end)->modify('-14 days');
+    }
 
-    $logStmt = sqlsrv_query($conn, $logTimeSql, [$dateStr, $dateStr]);
-    $logRow = sqlsrv_fetch_array($logStmt, SQLSRV_FETCH_ASSOC);
-    $latestTimeStr = $logRow['max_time'] ? $logRow['max_time']->format('H:i:s') : null;
+    $period = new DatePeriod($start, new DateInterval('P1D'), (clone $end)->modify('+1 day'));
+    $records = [];
 
-    if (!$latestTimeStr) {
+    $paramSql = "SELECT line, model, part_no, planned_output FROM IOT_TOOLBOX_PARAMETER";
+    $paramStmt = $pdo->query($paramSql);
+    $allPlannedOutputs = [];
+    foreach ($paramStmt->fetchAll() as $row) {
+        $allPlannedOutputs[$row['line']][$row['model']][$row['part_no']] = (int)$row['planned_output'];
+    }
+
+    foreach ($period as $dateObj) {
+        $dateStr = $dateObj->format('Y-m-d');
+        $dateLabel = $dateObj->format('d-m-y');
+
+        $logTimeSql = "
+            SELECT MAX(latest_time) AS max_time FROM (
+                SELECT MAX(log_time) AS latest_time FROM IOT_TOOLBOX_PARTS WHERE log_date = ?
+                UNION ALL
+                SELECT MAX(stop_end) FROM IOT_TOOLBOX_STOP_CAUSES WHERE log_date = ?
+            ) AS all_times";
+        $logStmt = $pdo->prepare($logTimeSql);
+        $logStmt->execute([$dateStr, $dateStr]);
+        $logRow = $logStmt->fetch();
+        $rawLatestTime = $logRow['max_time'] ?? null;
+
+        // ตรวจสอบและดึงเฉพาะส่วนเวลาออกมา
+        if ($rawLatestTime) {
+            // สร้าง DateTime object จากค่าที่ได้มา
+            $dateTimeObj = new DateTime($rawLatestTime);
+            // จัดรูปแบบให้เหลือเฉพาะส่วนเวลา (H:i:s)
+            $latestTimeStr = $dateTimeObj->format('H:i:s');
+        } else {
+            $latestTimeStr = null;
+        }
+        
+        $plannedTime = calculatePlannedTime($dateStr, $latestTimeStr);
+
+        if ($plannedTime <= 0) {
+            $records[] = ["date" => $dateLabel, "availability" => 0, "performance" => 0, "quality" => 0, "oee" => 0];
+            continue;
+        }
+
+        $partConditions = "WHERE log_date = ?";
+        $partParams = [$dateStr];
+        if (!empty($line)) { $partConditions .= " AND LOWER(line) = LOWER(?)"; $partParams[] = $line; }
+        if (!empty($model)) { $partConditions .= " AND LOWER(model) = LOWER(?)"; $partParams[] = $model; }
+
+        $partSql = "
+            SELECT model, part_no, line,
+                SUM(CASE WHEN count_type = 'FG' THEN ISNULL(count_value, 0) ELSE 0 END) AS FG,
+                SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN ISNULL(count_value, 0) ELSE 0 END) AS Defects
+            FROM IOT_TOOLBOX_PARTS
+            $partConditions
+            GROUP BY model, part_no, line";
+        $partStmt = $pdo->prepare($partSql);
+        $partStmt->execute($partParams);
+        $partResults = $partStmt->fetchAll();
+
+        $totalFG = 0;
+        $totalDefects = 0;
+        $totalPlannedOutput = 0;
+        
+        foreach ($partResults as $row) {
+            $fg = (int)$row['FG'];
+            $defects = (int)$row['Defects'];
+            $totalFG += $fg;
+            $totalDefects += $defects;
+
+            $lineVal = $row['line'];
+            $modelVal = $row['model'];
+            $partNo = $row['part_no'];
+            
+            if (isset($allPlannedOutputs[$lineVal][$modelVal][$partNo])) {
+                $hourlyOutput = $allPlannedOutputs[$lineVal][$modelVal][$partNo];
+                $totalPlannedOutput += $hourlyOutput * ($plannedTime / 60);
+            }
+        }
+        $totalActualOutput = $totalFG + $totalDefects;
+
+        $stopConditions = "WHERE log_date = ?";
+        $stopParams = [$dateStr];
+        if (!empty($line)) { $stopConditions .= " AND LOWER(line) = LOWER(?)"; $stopParams[] = $line; }
+
+        $stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM IOT_TOOLBOX_STOP_CAUSES $stopConditions";
+        $stopStmt = $pdo->prepare($stopSql);
+        $stopStmt->execute($stopParams);
+        $downtime = (int)($stopStmt->fetch()['downtime'] ?? 0);
+        
+        $runtime = max(0, $plannedTime - $downtime);
+        $quality = $totalActualOutput > 0 ? ($totalFG / $totalActualOutput) * 100 : 0;
+        $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
+        $performance = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
+        $oee = ($availability / 100) * ($performance / 100) * ($quality / 100) * 100;
+
         $records[] = [
             "date" => $dateLabel,
-            "availability" => 0,
-            "performance" => 0,
-            "quality" => 0,
-            "oee" => 0
+            "availability" => round($availability, 1),
+            "performance" => round($performance, 1),
+            "quality" => round($quality, 1),
+            "oee" => round($oee, 1)
         ];
-        continue;
     }
 
-    $plannedTime = calculatePlannedTime($dateStr, $latestTimeStr);
+    echo json_encode(["success" => true, "records" => $records]);
 
-    // ---------- Part Data ----------
-    $partSql = "
-        SELECT model, part_no, line,
-            SUM(CASE WHEN count_type = 'FG' THEN ISNULL(count_value, 0) ELSE 0 END) AS FG,
-            SUM(CASE WHEN count_type IN ('NG', 'REWORK', 'HOLD', 'SCRAP', 'ETC.') THEN ISNULL(count_value, 0) ELSE 0 END) AS Defects
-        FROM IOT_TOOLBOX_PARTS
-        WHERE log_date = ?" .
-        (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
-        (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "") .
-        " GROUP BY model, part_no, line";
-
-    $params = [$dateStr];
-    if (!empty($line)) $params[] = $line;
-    if (!empty($model)) $params[] = $model;
-
-    $stmt = sqlsrv_query($conn, $partSql, $params);
-
-    $totalFG = 0;
-    $totalDefects = 0;
-    $totalActualOutput = 0;
-    $totalPlannedOutput = 0;
-
-    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-        $fg = (int)$row['FG'];
-        $defects = (int)$row['Defects'];
-        $modelVal = $row['model'];
-        $partNo = $row['part_no'];
-        $lineVal = $row['line'];
-
-        $totalFG += $fg;
-        $totalDefects += $defects;
-        $totalActualOutput += ($fg + $defects);
-
-        $planStmt = sqlsrv_query(
-            $conn,
-            "SELECT planned_output FROM IOT_TOOLBOX_PARAMETER WHERE model = ? AND part_no = ? AND line = ?",
-            [$modelVal, $partNo, $lineVal]
-        );
-        if ($planStmt && $planRow = sqlsrv_fetch_array($planStmt, SQLSRV_FETCH_ASSOC)) {
-            $hourlyOutput = (int)$planRow['planned_output'];
-            $totalPlannedOutput += $hourlyOutput * ($plannedTime / 60); // planned per active hour
-        }
-    }
-
-    // ---------- Downtime ----------
-    $stopSql = "SELECT SUM(DATEDIFF(MINUTE, stop_begin, stop_end)) AS downtime FROM IOT_TOOLBOX_STOP_CAUSES WHERE log_date = ?" .
-        (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "");
-    $stopParams = [$dateStr];
-    if (!empty($line)) $stopParams[] = $line;
-
-    $stopStmt = sqlsrv_query($conn, $stopSql, $stopParams);
-    $stopData = sqlsrv_fetch_array($stopStmt, SQLSRV_FETCH_ASSOC);
-    $downtime = (int) $stopData['downtime'];
-    $runtime = max(0, $plannedTime - $downtime);
-
-    $quality = ($totalFG + $totalDefects) > 0 ? ($totalFG / ($totalFG + $totalDefects)) * 100 : 0;
-    $availability = $plannedTime > 0 ? ($runtime / $plannedTime) * 100 : 0;
-
-    if ($totalPlannedOutput === 0 && $plannedTime > 0) {
-        $countSql = "SELECT COUNT(DISTINCT ISNULL(model, '') + '|' + ISNULL(part_no, '') + '|' + ISNULL(line, '')) AS count FROM IOT_TOOLBOX_PARTS WHERE log_date = ?" .
-            (!empty($line) ? " AND LOWER(line) = LOWER(?)" : "") .
-            (!empty($model) ? " AND LOWER(model) = LOWER(?)" : "");
-        $countParams = [$dateStr];
-        if (!empty($line)) $countParams[] = $line;
-        if (!empty($model)) $countParams[] = $model;
-
-        $countStmt = sqlsrv_query($conn, $countSql, $countParams);
-        $countRow = sqlsrv_fetch_array($countStmt, SQLSRV_FETCH_ASSOC);
-        $typeCount = (int) $countRow['count'];
-
-        $totalPlannedOutput = $typeCount * 100 * ($plannedTime / 60);
-    }
-
-    $performance = $totalPlannedOutput > 0 ? ($totalActualOutput / $totalPlannedOutput) * 100 : 0;
-    $oee = ($availability / 100) * ($performance / 100) * ($quality / 100) * 100;
-
-    $records[] = [
-        "date" => $dateLabel,
-        "availability" => round($availability, 1),
-        "performance" => round($performance, 1),
-        "quality" => round($quality, 1),
-        "oee" => round($oee, 1)
-    ];
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Query failed: ' . $e->getMessage()]);
+    error_log("Error in get_oee_linechart.php: " . $e->getMessage());
 }
-
-echo json_encode(["success" => true, "records" => $records]);
+?>

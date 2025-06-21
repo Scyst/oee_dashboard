@@ -74,7 +74,7 @@ async function fetchAndRenderLineCharts() {
             model: document.getElementById("modelFilter")?.value || ''
         });
 
-        const response = await fetch(`../api/OEE_Dashboard/get_oee_linechart.php?${params.toString()}`);
+        const response = await fetch(`../../api/OEE_Dashboard/get_oee_linechart.php?${params.toString()}`);
         const data = await response.json();
         if (!data.success) throw new Error("Data error");
 
@@ -127,4 +127,4 @@ async function fetchAndRenderLineCharts() {
         console.error("Line chart fetch failed:", err);
         showError("oeeLineChart", "oeeLineError");
     }
-}
+} 

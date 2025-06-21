@@ -1,18 +1,31 @@
 <?php
-$serverName = getenv('DB_SERVER') ?: "LAPTOP-E0M0G0I9";
-$connectionOptions = array(
-    "Database" => getenv('DB_NAME') ?: "oee_db",
-    "Uid" => getenv('DB_USER') ?: "verymaron01",
-    "PWD" => getenv('DB_PASS') ?: "numthong01",
-    "CharacterSet" => "UTF-8"
-);
+header('Content-Type: application/json; charset=utf-8');
 
-// Establish connection
-$conn = sqlsrv_connect($serverName, $connectionOptions);
+$serverName = getenv('DB_SERVER') ?: "LAPTOP-E0M0G0I9"; // Or your local server name
+$database   = getenv('DB_NAME')   ?: "oee_db";
+$username   = getenv('DB_USER')   ?: "verymaron01"; // Your local username
+$password   = getenv('DB_PASS')   ?: "numthong01";  // Your local password
 
-if (!$conn) {
-    // Log error to a file (do not display sensitive info to users)
-    error_log(print_r(sqlsrv_errors(), true));
-    die("Database connection failed.");
+try {
+
+    $dsn = "sqlsrv:server=$serverName;database=$database;TrustServerCertificate=true";
+    
+    // PDO connection options for robust error handling and encoding
+    $options = [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Set error mode to throw exceptions
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // Set default fetch mode to associative array
+    ];
+
+    // Create a new PDO instance
+    $pdo = new PDO($dsn, $username, $password, $options);
+
+} catch (PDOException $e) {
+    http_response_code(500); // Internal Server Error
+    echo json_encode(['success' => false, 'message' => 'Database connection failed.']);
+    
+    error_log("Database Connection Error: " . $e->getMessage());
+    
+    exit;
 }
+
 ?>

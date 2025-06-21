@@ -1,0 +1,43 @@
+-- Create parts table
+CREATE TABLE parts (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    log_date DATE NOT NULL,
+    log_time TIME NOT NULL,
+    line VARCHAR(50) NOT NULL,
+    model VARCHAR(50) NOT NULL,
+    part_no VARCHAR(50) NOT NULL,
+    lot_no VARCHAR(50) NOT NULL,
+    count_value INT NOT NULL,
+    count_type VARCHAR(50) NOT NULL,
+    note NVARCHAR(MAX) COLLATE Thai_100_CI_AI_SC_UTF8
+);
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE stop_causes (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    log_date DATE NOT NULL,
+    stop_begin DATETIME NOT NULL,
+    stop_end DATETIME NOT NULL,
+    line NVARCHAR(50) NOT NULL,
+    machine NVARCHAR(50) NOT NULL,
+    cause NVARCHAR(255) COLLATE Thai_100_CI_AI_SC_UTF8 NOT NULL,
+    note NVARCHAR(255) COLLATE Thai_100_CI_AI_SC_UTF8,
+    recovered_by NVARCHAR(100) COLLATE Thai_100_CI_AI_SC_UTF8 NOT NULL,
+    duration AS DATEDIFF(MINUTE, stop_begin, stop_end) PERSISTED
+);
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE parameter (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    line VARCHAR(50) NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    part_no VARCHAR(100) NOT NULL,
+    planned_output INT NOT NULL,
+    updated_at DATETIME DEFAULT GETDATE(),
+
+    CONSTRAINT uc_line_model_part UNIQUE (line, model, part_no)
+);
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

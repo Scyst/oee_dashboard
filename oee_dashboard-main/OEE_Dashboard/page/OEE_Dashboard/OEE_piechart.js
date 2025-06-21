@@ -1,6 +1,3 @@
-// OEE_piechart.js (Improved Version)
-
-// เก็บ reference ของ chart เพื่อการอัปเดต
 const charts = {
     oee: null,
     quality: null,
@@ -8,9 +5,7 @@ const charts = {
     availability: null
 };
 
-/**
- * ซ่อนข้อความ Error ทั้งหมดและทำให้ chart แสดงผล
- */
+
 function hideErrors() {
     ['oee', 'quality', 'performance', 'availability'].forEach(type => {
         document.getElementById(`${type}Error`).style.display = 'none';
@@ -18,27 +13,21 @@ function hideErrors() {
     });
 }
 
-/**
- * แสดงข้อความ Error สำหรับ chart ที่ระบุ
- */
 function showError(type) {
     document.getElementById(`${type}Error`).style.display = 'block';
     document.getElementById(`${type}PieChart`).style.opacity = '0.2';
 }
 
 /**
- * อัปเดตกล่องข้อมูลด้วยเนื้อหาที่กำหนด
- * @param {string} elementId - ID ของ element ที่จะอัปเดต
- * @param {string[]} lines - Array ของข้อความที่จะแสดงผล
+ * 
+ * @param {string} elementId    
+ * @param {string[]} lines
  */
 function updateInfoBox(elementId, lines) {
     const content = lines.map(line => `<span>${line}</span>`).join('<br>');
     document.getElementById(elementId).innerHTML = `<small>${content}</small>`;
 }
 
-/**
- * ฟังก์ชันสำหรับ Render หรือ Update Pie Chart
- */
 function renderSimplePieChart(chartName, ctx, label, rawValue, mainColor) {
     if (charts[chartName]) {
         charts[chartName].destroy();
@@ -109,7 +98,7 @@ async function fetchAndRenderCharts() {
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState({}, '', newUrl);
 
-        const response = await fetch(`../api/OEE_Dashboard/get_oee_piechart.php?${params.toString()}`);
+        const response = await fetch(`../../api/OEE_Dashboard/get_oee_piechart.php?${params.toString()}`);
         if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
 
         const data = await response.json();
@@ -132,27 +121,19 @@ async function fetchAndRenderCharts() {
 
         const { oee, quality, performance, availability } = data; // Destructure after the initial info box update for consistency
 
-        // ป้องกันการหารด้วยศูนย์ หากไม่มี loss เลย
         if ((oee || 0) < 100) { // Added (oee || 0) to handle null/undefined oee
             const totalLoss = 100 - (oee || 0);
 
-            // คำนวณ Loss ของแต่ละตัวแปร (A, P, Q)
-            // นี่เป็นหนึ่งในวิธีการคำนวณเพื่อแจกแจงสัดส่วน Loss ซึ่งเป็นวิธีที่เข้าใจง่าย
             const qualityLossRatio = 1 - ((quality || 0) / 100);
             const performanceLossRatio = 1 - ((performance || 0) / 100);
             const availabilityLossRatio = 1 - ((availability || 0) / 100);
 
             const totalRatio = qualityLossRatio + performanceLossRatio + availabilityLossRatio;
 
-            // ป้องกันการหารด้วยศูนย์อีกชั้น
             const qualityLoss = totalRatio > 0 ? totalLoss * (qualityLossRatio / totalRatio) : 0;
             const performanceLoss = totalRatio > 0 ? totalLoss * (performanceLossRatio / totalRatio) : 0;
             const availabilityLoss = totalRatio > 0 ? totalLoss * (availabilityLossRatio / totalRatio) : 0;
 
-            // This block updates the 'oeeInfo' box with loss details if OEE is not 100.
-            // If you want to show *both* the main OEE stats and the loss breakdown simultaneously,
-            // you might need a separate div for the loss breakdown, or a more dynamic update of 'oeeInfo'.
-            // For now, it will overwrite the previous content of 'oeeInfo'.
             updateInfoBox("oeeInfo", [
                 `Total OEE Loss: <b>${totalLoss.toFixed(1)}%</b>`, // Added total OEE loss for clarity
                 `Q Loss: <b>${qualityLoss.toFixed(1)}%</b>`,
@@ -161,7 +142,6 @@ async function fetchAndRenderCharts() {
             ]);
 
         } else {
-            // กรณีที่ OEE 100% หรือมากกว่า
             updateInfoBox("oeeInfo", [
                 `Total OEE Loss: <b>0.0%</b>`
             ]);

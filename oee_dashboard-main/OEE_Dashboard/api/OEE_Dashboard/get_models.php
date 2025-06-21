@@ -1,13 +1,17 @@
 <?php
-require_once("../../api/db.php");
-header('Content-Type: application/json');
+require_once __DIR__ . '/../db.php';
 
-$sql = "SELECT DISTINCT model FROM IOT_TOOLBOX_PARAMETER WHERE model IS NOT NULL ORDER BY model";
-$stmt = sqlsrv_query($conn, $sql);
+try {
+    $sql = "SELECT DISTINCT model FROM IOT_TOOLBOX_PARAMETER WHERE model IS NOT NULL ORDER BY model";
+    $stmt = $pdo->query($sql);
+    $models = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-$models = [];
-while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-    $models[] = $row['model'];
+    echo json_encode(['success' => true, 'data' => $models]);
+
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Failed to fetch models.']);
+    
+    error_log("Error in get_models.php: " . $e->getMessage());
 }
-echo json_encode($models);
 ?>

@@ -31,9 +31,8 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
             borderRadius: 4
         }];
 
-    // ✅ Detect chart type by canvas ID
     const canvasId = ctx.canvas.id;
-    const isStacked = canvasId === 'partsBarChart'; // parts chart = stacked; stop cause = grouped
+    const isStacked = canvasId === 'partsBarChart';
 
     const chart = new Chart(ctx, {
         type: 'bar',
@@ -109,22 +108,24 @@ async function fetchAndRenderBarCharts() {
         const model = document.getElementById("modelFilter")?.value || '';
 
         const params = new URLSearchParams({ startDate, endDate, line, model });
+        
+        const response = await fetch(`../../api/OEE_Dashboard/get_oee_barchart.php?${params.toString()}`);
+        const responseData = await response.json();
 
-        const newUrl = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState({}, '', newUrl);
+        if (!responseData.success) {
+            throw new Error(responseData.message || "Failed to fetch bar chart data.");
+        }
+        
+        const data = responseData.data;
 
-        const response = await fetch(`../api/OEE_Dashboard/get_oee_barchart.php?${params.toString()}`);
-        const data = await response.json();
-
-        // Part Bar Chart
         const partLabels = data.parts.labels;
         const countTypes = {
-            FG:     { label: "Good",    color: "#00C853" },
-            NG:     { label: "NG",      color: "#FF5252" },
-            HOLD:   { label: "Hold",    color: "#FFD600" },
-            REWORK: { label: "Rework",  color: "#2979FF" },
-            SCRAP:  { label: "Scrap",   color: "#9E9E9E" },
-            ETC:    { label: "ETC",     color: "#AA00FF" }
+            FG:     { label: "Good",   color: "#00C853" },
+            NG:     { label: "NG",     color: "#FF5252" },
+            HOLD:   { label: "Hold",   color: "#FFD600" },
+            REWORK: { label: "Rework", color: "#2979FF" },
+            SCRAP:  { label: "Scrap",  color: "#9E9E9E" },
+            ETC:    { label: "ETC",    color: "#AA00FF" }
         };
 
         const partDatasets = Object.entries(countTypes).map(([type, { label, color }]) => {
@@ -140,13 +141,12 @@ async function fetchAndRenderBarCharts() {
             partDatasets
         );
 
-        // Stop Cause Bar Chart
-        const stopCauseLabels = data.stopCause.labels; // ← x-axis: production lines
+        const stopCauseLabels = data.stopCause.labels;
         const tooltipInfo = data.stopCause.tooltipInfo || {};
 
         const stopCauseDatasets = data.stopCause.datasets.map(causeSet => ({
-            label: causeSet.label,                      // ← each dataset = cause
-            data: causeSet.data,                        // ← time (mins) for each line
+            label: causeSet.label,
+            data: causeSet.data,
             backgroundColor: causeSet.backgroundColor || getRandomColor(),
             borderRadius: 1
         }));
@@ -156,12 +156,13 @@ async function fetchAndRenderBarCharts() {
             document.getElementById("stopCauseBarChart").getContext("2d"),
             stopCauseLabels,
             stopCauseDatasets,
-            { tooltipInfo } // ✅ pass total time per line
+            { tooltipInfo }
         );
 
     } catch (err) {
         console.error("Bar chart fetch failed:", err);
-        hideErrors();
+        BarshowError('partsBarChart', 'partsBarError');
+        BarshowError('stopCauseBarChart', 'stopCauseBarError');
     }
 }
 

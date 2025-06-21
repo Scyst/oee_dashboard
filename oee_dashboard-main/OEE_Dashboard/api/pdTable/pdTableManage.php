@@ -1,0 +1,289 @@
+<?php
+require_once __DIR__ . '/../db.php';
+
+$action = $_REQUEST['action'] ?? 'get_parts';
+
+$input = json_decode(file_get_contents("php://input"), true);
+if (empty($input) && !empty($_POST)) {
+    $input = $_POST;
+}
+
+try {
+    switch ($action) {
+        case 'get_parts':
+            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+            $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 50;
+            $startRow = ($page - 1) * $limit;
+
+            $conditions = [];
+            $params = [];
+            $filters = ['startDate', 'endDate', 'line', 'model', 'part_no', 'count_type', 'lot_no'];
+
+            foreach ($filters as $filter) {
+                if (!empty($_GET[$filter])) {
+                    $value = $_GET[$filter];
+                    if ($filter === 'startDate') {
+                        $conditions[] = "log_date >= ?";
+                    } elseif ($filter === 'endDate') {
+                        $conditions[] = "log_date <= ?";
+                    } else {
+                        $conditions[] = "LOWER({$filter}) = LOWER(?)";
+                    }
+                    $params[] = $value;
+                }
+            }
+            $whereClause = $conditions ? "WHERE " . implode(" AND ", $conditions) : "";
+
+            // --- Query for Total Count ---
+            $totalSql = "SELECT COUNT(*) AS total FROM IOT_TOOLBOX_PARTS $whereClause";
+            $totalStmt = $pdo->prepare($totalSql);
+            $totalStmt->execute($params);
+            $total = (int)$totalStmt->fetch()['total'];
+
+            // --- Query for Paginated Data ---
+            $dataSql = "
+                SELECT id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note
+                FROM IOT_TOOLBOX_PARTS
+                $whereClause
+                ORDER BY log_date DESC, log_time DESC, id DESC
+                OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+            ";
+            
+            $dataStmt = $pdo->prepare($dataSql);
+            $paramIndex = 1;
+            foreach ($params as $paramValue) {
+                $dataStmt->bindValue($paramIndex++, $paramValue);
+            }
+            $dataStmt->bindValue($paramIndex++, $startRow, PDO::PARAM_INT);
+            $dataStmt->bindValue($paramIndex++, $limit, PDO::PARAM_INT);
+            $dataStmt->execute();
+            $data = $dataStmt->fetchAll();
+
+            // --- START: SQL Syntax Correction ---
+            // --- Query for Summary ---
+            $summarySql = "
+                SELECT model, part_no, lot_no,
+                    SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
+                    SUM(CASE WHEN count_type = 'NG' THEN count_value ELSE 0 END) AS NG,
+                    SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
+                    SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
+                    SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
+                    SUM(CASE WHEN count_type = 'ETC.' THEN count_value ELSE 0 END) AS ETC
+                FROM IOT_TOOLBOX_PARTS $whereClause 
+                GROUP BY model, part_no, lot_no 
+                ORDER BY model, part_no, lot_no";
+            $summaryStmt = $pdo->prepare($summarySql);
+            $summaryStmt->execute($params);
+            $summary = $summaryStmt->fetchAll();
+            
+            // --- Query for Grand Total ---
+            $grandSql = "
+                SELECT
+                    SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
+                    SUM(CASE WHEN count_type = 'NG' THEN count_value ELSE 0 END) AS NG,
+                    SUM(CASE WHEN count_type = 'HOLD' THEN count_value ELSE 0 END) AS HOLD,
+                    SUM(CASE WHEN count_type = 'REWORK' THEN count_value ELSE 0 END) AS REWORK,
+                    SUM(CASE WHEN count_type = 'SCRAP' THEN count_value ELSE 0 END) AS SCRAP,
+                    SUM(CASE WHEN count_type = 'ETC.' THEN count_value ELSE 0 END) AS ETC
+                FROM IOT_TOOLBOX_PARTS $whereClause";
+            $grandStmt = $pdo->prepare($grandSql);
+            $grandStmt->execute($params);
+            $grandTotal = $grandStmt->fetch();
+            // --- END: SQL Syntax Correction ---
+
+            echo json_encode([
+                'success'     => true, 'page' => $page, 'limit' => $limit, 'total' => $total,
+                'data' => $data, 'summary' => $summary, 'grand_total' => $grandTotal
+            ]);
+            break;
+
+        case 'add_part':
+            $required_fields = ['log_date', 'log_time', 'part_no', 'model', 'line', 'count_type', 'count_value'];
+            foreach ($required_fields as $field) {
+                if (empty($input[$field])) {
+                    throw new Exception("Missing required field: " . $field);
+                }
+            }
+            
+            $valid_types = ['FG', 'NG', 'HOLD', 'REWORK', 'SCRAP', 'ETC.'];
+            $count_type = strtoupper(trim($input['count_type']));
+            if (!in_array($count_type, $valid_types)) {
+                throw new Exception("Invalid count type");
+            }
+
+            $line = strtoupper(trim($input['line']));
+            $model = strtoupper(trim($input['model']));
+            $part_no = strtoupper(trim($input['part_no']));
+            $log_date = $input['log_date'];
+            $lot_no = $input['lot_no'] ?? '';
+            
+            if (empty($lot_no)) {
+                $sapQuery = "SELECT sap_no FROM IOT_TOOLBOX_PARAMETER WHERE line = ? AND model = ? AND part_no = ?";
+                $sapStmt = $pdo->prepare($sapQuery);
+                $sapStmt->execute([$line, $model, $part_no]);
+                $sapRow = $sapStmt->fetch();
+
+                if (!$sapRow || empty($sapRow['sap_no'])) {
+                    throw new Exception("SAP No. not found for the given line/model/part combination.");
+                }
+                $sap_no = $sapRow['sap_no'];
+                $datePrefix = date('Ymd', strtotime($log_date));
+
+                $lotCountQuery = "SELECT COUNT(*) AS lot_count FROM IOT_TOOLBOX_PARTS WHERE part_no = ? AND log_date = ? AND lot_no LIKE ?";
+                $likePattern = $sap_no . '-' . $datePrefix . '%';
+                $countStmt = $pdo->prepare($lotCountQuery);
+                $countStmt->execute([$part_no, $log_date, $likePattern]);
+                $countRow = $countStmt->fetch();
+                
+                $count = ($countRow['lot_count'] ?? 0) + 1;
+                $lot_no = $sap_no . '-' . $datePrefix . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+            }
+
+            $insertSql = "INSERT INTO IOT_TOOLBOX_PARTS (log_date, log_time, model, line, part_no, lot_no, count_type, count_value, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $insertStmt = $pdo->prepare($insertSql);
+            $insertStmt->execute([
+                $log_date,
+                $input['log_time'],
+                $model,
+                $line,
+                $part_no,
+                $lot_no,
+                $count_type,
+                (int)$input['count_value'],
+                isset($input['note']) ? strtoupper(trim($input['note'])) : null
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Part inserted successfully.', 'lot_no' => $lot_no]);
+            break;
+
+        case 'delete_part':
+            $id = $_GET['id'] ?? null;
+
+            if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
+                http_response_code(400);
+                throw new Exception('Invalid or missing Part ID.');
+            }
+
+            $sql = "DELETE FROM IOT_TOOLBOX_PARTS WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$id]);
+
+            $rowCount = $stmt->rowCount();
+
+            if ($rowCount > 0) {
+                echo json_encode(['success' => true, 'message' => 'Part deleted successfully.']);
+            } else {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Part not found or already deleted.']);
+            }
+            break;
+
+        case 'update_part':
+            $required_fields = ['id', 'log_date', 'log_time', 'line', 'model', 'part_no', 'count_value', 'count_type'];
+            foreach ($required_fields as $field) {
+                if (!isset($input[$field])) {
+                    throw new Exception('Missing required field: ' . $field);
+                }
+            }
+        
+            $id = $input['id'];
+            $log_date = $input['log_date'];
+        
+            if (!filter_var($id, FILTER_VALIDATE_INT)) {
+                throw new Exception('Invalid ID format.');
+            }
+            if (!preg_match("/^\d{4}-\d{2}-\d{2}$/", $log_date)) {
+                throw new Exception('Invalid log_date format. Expected YYYY-MM-DD.');
+            }
+        
+            $sql = "UPDATE IOT_TOOLBOX_PARTS 
+                    SET log_date = ?, log_time = ?, line = ?, model = ?, part_no = ?, lot_no = ?, count_value = ?, count_type = ?, note = ? 
+                    WHERE id = ?";
+            
+            $params = [
+                $log_date,
+                $input['log_time'],
+                strtoupper(trim($input['line'])),
+                strtoupper(trim($input['model'])),
+                strtoupper(trim($input['part_no'])),
+                $input['lot_no'],
+                (int)$input['count_value'],
+                strtoupper(trim($input['count_type'])),
+                $input['note'],
+                $id
+            ];
+        
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+        
+            $rowCount = $stmt->rowCount();
+        
+            if ($rowCount > 0) {
+                echo json_encode(['success' => true, 'message' => 'Part updated successfully.']);
+            } else {
+                echo json_encode(['success' => true, 'message' => 'No changes made or part not found.']);
+            }
+            break;
+
+        case 'get_lines':
+            $stmt = $pdo->query("SELECT DISTINCT line FROM IOT_TOOLBOX_PARAMETER WHERE line IS NOT NULL AND line != '' ORDER BY line");
+            $lines = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            echo json_encode(['success' => true, 'data' => $lines]);
+            break;
+
+        case 'get_lot_numbers':
+            $stmt = $pdo->query("SELECT DISTINCT lot_no FROM IOT_TOOLBOX_PARTS WHERE lot_no IS NOT NULL AND lot_no != '' ORDER BY lot_no");
+            $lots = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            echo json_encode(['success' => true, 'data' => $lots]);
+            break;
+
+        case 'get_models':
+            $stmt = $pdo->query("SELECT DISTINCT model FROM IOT_TOOLBOX_PARAMETER WHERE model IS NOT NULL AND model != '' ORDER BY model");
+            $data = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            echo json_encode(['success' => true, 'data' => $data]);
+            break;
+
+        case 'get_part_nos':
+            $stmt = $pdo->query("SELECT DISTINCT part_no FROM IOT_TOOLBOX_PARAMETER WHERE part_no IS NOT NULL AND part_no != '' ORDER BY part_no");
+            $data = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            echo json_encode(['success' => true, 'data' => $data]);
+            break;
+
+        case 'get_part_by_id':
+            $id = $_GET['id'] ?? null;
+            if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
+                http_response_code(400);
+                throw new Exception('Invalid or missing ID');
+            }
+            
+            $sql = "SELECT * FROM IOT_TOOLBOX_PARTS WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([(int)$id]);
+            $part = $stmt->fetch();
+            
+            if (!$part) {
+                http_response_code(404);
+                throw new Exception('Part not found');
+            }
+            
+            if (!empty($part['log_date'])) {
+                $part['log_date'] = (new DateTime($part['log_date']))->format('Y-m-d');
+            }
+            if (!empty($part['log_time'])) {
+                $part['log_time'] = (new DateTime($part['log_time']))->format('H:i:s');
+            }
+
+            echo json_encode(['success' => true, 'data' => $part]);
+            break;
+
+        default:
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid action specified.']);
+            break;
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    error_log("Error in pdTableManage.php: " . $e->getMessage());
+}
+?>

@@ -1,11 +1,17 @@
-// ---- Utility: Populate dropdown from API ----
 async function populateDropdown(id, url, selectedValue = "") {
     const select = document.getElementById(id);
     if (!select) return;
 
     try {
         const res = await fetch(url);
-        const data = await res.json();
+        const responseData = await res.json();
+
+        if (!responseData.success) {
+            console.error(`API call for ${id} failed:`, responseData.message);
+            return;
+        }
+        
+        const data = responseData.data;
 
         const label = id === "lineFilter" ? "Lines" : "Models";
         select.innerHTML = `<option value="">All ${label}</option>`;
@@ -22,7 +28,6 @@ async function populateDropdown(id, url, selectedValue = "") {
     }
 }
 
-// ---- Sync filters from URL → UI, and trigger chart rendering ----
 async function applyFiltersAndInitCharts() {
     const params = new URLSearchParams(window.location.search);
     const startDate = params.get("startDate");
@@ -30,35 +35,24 @@ async function applyFiltersAndInitCharts() {
     const line = params.get("line");
     const model = params.get("model");
 
-    // Populate dropdowns first
     await Promise.all([
-        populateDropdown("lineFilter", "../api/OEE_Dashboard/get_lines.php", line),
-        populateDropdown("modelFilter", "../api/OEE_Dashboard/get_models.php", model)
+        populateDropdown("lineFilter", "../../api/OEE_Dashboard/get_lines.php", line),
+        populateDropdown("modelFilter", "../../api/OEE_Dashboard/get_models.php", model)
     ]);
 
-    // Set date inputs
     if (startDate) document.getElementById("startDate").value = startDate;
-    if (endDate)   document.getElementById("endDate").value   = endDate;
+    if (endDate) document.getElementById("endDate").value = endDate;
 
-    // Initial chart rendering
     fetchAndRenderCharts?.();
     fetchAndRenderLineCharts?.();
     fetchAndRenderBarCharts?.();
-
-    // Optional auto-refresh every 60 seconds
-    // setInterval(() => {
-    //     fetchAndRenderCharts?.();
-    //     fetchAndRenderLineCharts?.();
-    //     fetchAndRenderBarCharts?.();
-    // }, 60000);
 }
 
-// ---- On filter change: update URL and refresh charts ----
 function handleFilterChange() {
     const startDate = document.getElementById("startDate")?.value || '';
-    const endDate   = document.getElementById("endDate")?.value || '';
-    const line      = document.getElementById("lineFilter")?.value || '';
-    const model     = document.getElementById("modelFilter")?.value || '';
+    const endDate = document.getElementById("endDate")?.value || '';
+    const line = document.getElementById("lineFilter")?.value || '';
+    const model = document.getElementById("modelFilter")?.value || '';
 
     const params = new URLSearchParams({ startDate, endDate, line, model });
     const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -69,7 +63,6 @@ function handleFilterChange() {
     fetchAndRenderBarCharts?.();
 }
 
-// ---- Fallback to today’s date if empty ----
 function ensureDefaultDateInputs() {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
@@ -90,14 +83,12 @@ function formatMinutes(minutes) {
     return `${hrs.toLocaleString()}h ${mins.toLocaleString()}m`;
 }
 
-// ---- Entry point ----
 window.addEventListener("load", () => {
     ensureDefaultDateInputs();
 
-    // Add event listeners AFTER page is loaded
     ["startDate", "endDate", "lineFilter", "modelFilter"].forEach(id => {
         document.getElementById(id)?.addEventListener("change", handleFilterChange);
     });
 
-    applyFiltersAndInitCharts(); // initial load
+    applyFiltersAndInitCharts();
 });

@@ -4,20 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <title>OEE - DASHBOARD</title>
-    <script src="../utils/libs/chart.umd.js"></script>
-    <script src="../utils/libs/chartjs-plugin-zoom.min.js"></script>
-    <script src="../utils/libs/bootstrap.bundle.min.js"></script>
+    <script src="../../utils/libs/chart.umd.js"></script>
+    <script src="../../utils/libs/chartjs-plugin-zoom.min.js"></script>
+    <script src="../../utils/libs/bootstrap.bundle.min.js"></script>
 
-    <link rel="stylesheet" href="../utils/libs/bootstrap.min.css">
-    <link rel="stylesheet" href="../style/style.css">
-    <link rel="stylesheet" href="../style/dropdown.css">
-    <link rel="stylesheet" href="../style/piechart.css">
-    <link rel="stylesheet" href="../style/linechart.css">
-    <link rel="stylesheet" href="../style/barchart.css">
+    <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
+    <link rel="stylesheet" href="../../style/style.css">
+    <link rel="stylesheet" href="../../style/dropdown.css">
+    <link rel="stylesheet" href="../../style/piechart.css">
+    <link rel="stylesheet" href="../../style/linechart.css">
+    <link rel="stylesheet" href="../../style/barchart.css">
 </head>
 
 <body>
-    <?php include('components/nav_dropdown.php'); ?>
+    <?php include('../components/nav_dropdown.php'); ?>
 
     <div style="height: calc(100vh - 20px);">
         <div class="Header">
@@ -133,10 +133,10 @@
         </div>
     </div>
 
-    <script src="../script/datetime.js"></script>
-    <script src="../script/OEE_Dashboard/OEE_piechart.js"></script>
-    <script src="../script/OEE_Dashboard/OEE_linechart.js"></script>
-    <script src="../script/OEE_Dashboard/OEE_barchart.js"></script>
-    <script src="../script/OEE_Dashboard/filterManager.js"></script>
+    <script src="../datetime.js"></script>
+    <script src="OEE_piechart.js"></script>
+    <script src="OEE_linechart.js"></script>
+    <script src="OEE_barchart.js"></script>
+    <script src="filterManager.js"></script>
 </body>
 </html>
