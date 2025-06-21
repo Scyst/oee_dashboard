@@ -3,7 +3,7 @@ let currentPage = 1;
 let totalPages = 1;
 let currentFilters = {};
 
-const API_URL = '../api/pdTable/pdTableManage.php'; 
+const API_URL = '../../api/pdTable/pdTableManage.php'; 
 
 async function fetchPartsData(page = 1) {
     currentPage = page;
