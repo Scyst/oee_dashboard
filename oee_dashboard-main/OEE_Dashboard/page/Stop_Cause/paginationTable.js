@@ -1,238 +1,210 @@
-// Stap_Cause/paginationTable.js
-
+// --- Global State & Constants ---
 let currentPage = 1;
-const limit = 100;
+let totalPages = 1;
+const API_URL = '../../api/Stop_Cause/stopCauseManage.php';
 
-async function fetchPaginatedParts(page = 1) {
+// --- Main Data Fetching Function ---
+async function fetchStopData(page = 1) {
+    currentPage = page;
+    const filters = {
+        cause: document.getElementById('filterCause')?.value,
+        line: document.getElementById('filterLine')?.value,
+        machine: document.getElementById('filterMachine')?.value,
+        startDate: document.getElementById('filterStartDate')?.value,
+        endDate: document.getElementById('filterEndDate')?.value,
+    };
+
+    const params = new URLSearchParams({
+        action: 'get_stop',
+        page: currentPage,
+        limit: 50,
+        ...filters
+    });
+
     try {
-        // Get filter values
-        const startDate = document.getElementById("startDate").value;
-        const endDate = document.getElementById("endDate").value;
-        const line = document.getElementById("lineInput")?.value.trim() || '';
-        const machine = document.getElementById("machineInput")?.value.trim() || '';
-        const cause = document.getElementById("searchInput")?.value.trim() || '';
+        const response = await fetch(`${API_URL}?${params.toString()}`);
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message);
 
-        const params = new URLSearchParams({
-            page,
-            limit,
-            startDate,
-            endDate,
-            line,
-            machine,
-            cause: cause
-        });
+        renderTable(result.data);
+        renderPagination(result.page, result.total, result.limit);
+        renderSummary(result.summary, result.grand_total_minutes);
 
-        const res = await fetch(`../api/Stop_Cause/get_stop.php?${params.toString()}`);
-        const result = await res.json();
-        //console.log(res);
-
-        if (!result.success) throw new Error(result.message);   
-
-        const tableBody = document.getElementById('stopTableBody');
-        tableBody.innerHTML = '';
-
-        result.data.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${row.id}</td>
-                <td>${row.log_date}</td>
-                <td>${row.stop_begin}</td>
-                <td>${row.stop_end}</td>
-                <td>${row.line}</td>
-                <td>${row.machine}</td>
-                <td>${row.cause}</td>
-                <td>${row.recovered_by}</td>
-                <td>${row.note || ''}</td>
-                <td>
-                    <button onclick="editStop(${row.id})">Edit</button>
-                    <button onclick="deleteStop(${row.id})">Delete</button>
-                </td>
-            `;
-            tableBody.appendChild(tr);
-        });
-        updatePaginationControls(result.page, result.total);
-        renderCauseSummary(result.summary || [], result.grand_total_seconds || 0);
     } catch (error) {
-        console.error("Failed to fetch paginated data:", error);
-        alert("Error loading stop data.");
+        console.error('Failed to fetch stop data:', error);
+        document.getElementById('stopTableBody').innerHTML = `<tr><td colspan="11" class="text-center text-danger">Error loading data.</td></tr>`;
     }
 }
 
-function editStop(id) {
-    fetch(`../api/Stop_Cause/get_stop_by_id.php?id=${id}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const stop = data.data;
-                document.getElementById('edit_id').value = stop.id;
-                document.getElementById('edit_date').value = stop.log_date;
-                document.getElementById('edit_stopBegin').value = stop.stop_begin;
-                document.getElementById('edit_stopEnd').value = stop.stop_end;
-                document.getElementById('edit_line').value = stop.line;
-                document.getElementById('edit_machine').value = stop.machine;
-                document.getElementById('edit_cause').value = stop.cause;
-                document.getElementById('edit_recovered_by').value = stop.recovered_by;
-                document.getElementById('edit_note').value = stop.note;
-
-                document.getElementById('editStopModal').style.display = 'block';
-            } else {
-                alert("Failed to load data for editing: " + data.message);
-            }
-        })
-        .catch(error => {
-            console.error("Error loading part:", error);
-            alert("Failed to fetch stop cause data.");
-        });
-}
-
-function deleteStop(id) {
-    if (!confirm("Are you sure you want to delete this data?")) return;
-
-    fetch("../api/Stop_Cause/delete_stop.php", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `id=${encodeURIComponent(id)}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert("Deleted successfully!");
-            fetchPaginatedParts(currentPage); 
-        } else {
-            alert("Delete failed: " + data.message);
-        }
-    })
-    .catch(err => {
-        console.error("Delete error:", err);
-        alert("An error occurred while deleting.");
-    });
-}
-
-function updatePaginationControls(current, totalItems) {
-    const totalPages = Math.ceil(totalItems / limit);
-
-    document.getElementById('pagination-info').textContent = `Page ${current} of ${totalPages}`;
-    document.getElementById('prevPageBtn').disabled = current <= 1;
-    document.getElementById('nextPageBtn').disabled = current >= totalPages;
-}
-
-function applyDateRangeFilter() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-
-    currentPage = 1; // Always reset to first page when filtering
-    fetchPaginatedParts(currentPage, startDate, endDate);
-}
-
-function formatDuration(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const hrs = Math.floor(mins / 60);
-    const minsLeft = mins % 60;
-    return `${hrs}h ${minsLeft}m`;
-}
-
-function renderCauseSummary(summary, totalSeconds = 0) { 
-    const container = document.getElementById('causeSummary');
-    container.innerHTML = ''; // Clear previous
-
-    const wrapper = document.createElement('div');
-    wrapper.style.display = 'inline-block';
-
-    // Grand total first
-    const totalSpan = document.createElement('span');
-    totalSpan.style.marginRight = '20px';
-    totalSpan.style.color = 'red';
-    totalSpan.textContent = `Total Stop Duration: ${formatDuration(totalSeconds)}`;
-    wrapper.appendChild(totalSpan);
-
-    // Individual line summaries
-    summary.forEach(item => {
-        const span = document.createElement('span');
-        span.style.marginRight = '20px';
-        span.style.color = 'darkorange';
-        span.textContent = `${item.line} – ${item.count} times (${formatDuration(item.total_seconds)})`;
-        wrapper.appendChild(span);
-    });
-
-    container.appendChild(wrapper);
-}
-
-document.getElementById('editStopForm').addEventListener('submit', function (e) {
-    e.preventDefault(); // Prevent page reload
-
-    const formData = new FormData(this);
-    const data = new URLSearchParams(formData);
-
-    fetch('../api/Stop_Cause/update_stop.php', {
-        method: 'POST',
-        body: data
-    })
-        .then(res => res.json())
-        .then(response => {
-            if (response.success) {
-                alert("Data updated!");
-                closeModal('editStopModal');
-                fetchPaginatedParts(currentPage); // Reload the updated table
-            } else {
-                alert("Update failed: " + response.message);
-            }
-        })
-        .catch(error => {
-            console.error("Update error:", error);
-            alert("An error occurred during update.");
-        });
-});
-
-document.getElementById('prevPageBtn').addEventListener('click', () => {
-    if (currentPage > 1) {
-        currentPage--;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        fetchPaginatedParts(currentPage, startDate, endDate);
+// --- Rendering Functions ---
+function renderTable(data) {
+    const tbody = document.getElementById('stopTableBody');
+    tbody.innerHTML = '';
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center">No records found.</td></tr>`;
+        return;
     }
-});
+    tbody.innerHTML = data.map(row => `
+        <tr data-id="${row.id}">
+            <td class="text-center">${row.id}</td>
+            <td>${row.log_date}</td>
+            <td>${row.stop_begin}</td>
+            <td>${row.stop_end}</td>
+            <td class="text-center">${row.duration}</td>
+            <td>${row.line}</td>
+            <td>${row.machine}</td>
+            <td>${row.cause}</td>
+            <td>${row.recovered_by}</td>
+            <td><div class="note-truncate" title="${row.note || ''}">${row.note || ''}</div></td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-warning" onclick='openEditModal(${row.id})'>Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteStop(${row.id})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
 
-document.getElementById('nextPageBtn').addEventListener('click', () => {
-    currentPage++;
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    fetchPaginatedParts(currentPage, startDate, endDate);
-});
+function renderPagination(page, totalItems, limit) {
+    totalPages = totalItems > 0 ? Math.ceil(totalItems / limit) : 1;
+    currentPage = parseInt(page);
+    document.getElementById('pagination-info').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+    document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+}
 
-document.getElementById("addStopForm").addEventListener("submit", async function (e) {
-    e.preventDefault(); // prevent page reload
+function renderSummary(summaryData, grandTotalMinutes) {
+    const summaryContainer = document.getElementById('causeSummary');
+    if (!summaryContainer) return;
+    const formatMins = (mins) => `${Math.floor(mins / 60)}h ${mins % 60}m`;
+    let summaryHTML = `<strong>Total Downtime: ${formatMins(grandTotalMinutes)}</strong> | `;
+    summaryHTML += summaryData.map(item => `${item.line}: ${item.count} stops (${formatMins(item.total_minutes)})`).join(' | ');
+    summaryContainer.innerHTML = summaryHTML;
+}
 
-    const form = e.target;
-    const formData = new FormData(form);
-
+// --- Datalist & Action Handlers ---
+async function populateDatalist(datalistId, action) {
     try {
-        const res = await fetch("../api/Stop_Cause/add_stop.php", {
-            method: "POST",
-            body: formData
-        });
-
-        const result = await res.json();
-        console.log(result)
-
-        if (result.status === "success") {
-            alert(result.message);
-            closeModal("stopModal");         // hide the modal
-            fetchPaginatedParts(1);          // reload the table from page 1
-            form.reset();                    // optional: clear form
-            form.querySelector('[name="log_date"]').value = new Date().toISOString().split('T')[0];
-        } else {
-            alert("Add failed: " + result.message);
+        const response = await fetch(`${API_URL}?action=${action}`);
+        const result = await response.json();
+        if (result.success) {
+            const datalist = document.getElementById(datalistId);
+            if (datalist) datalist.innerHTML = result.data.map(item => `<option value="${item}"></option>`).join('');
         }
-    } catch (err) {
-        console.error("Add request failed", err);
-        alert("An error occurred.");
+    } catch (error) {
+        console.error(`Failed to populate ${datalistId}:`, error);
+    }
+}
+
+async function deleteStop(id) {
+    if (!confirm(`Are you sure you want to delete Stop Cause ID ${id}?`)) return;
+    try {
+        const response = await fetch(`${API_URL}?action=delete_stop&id=${id}`);
+        const result = await response.json();
+        alert(result.message);
+        if (result.success) fetchStopData(currentPage);
+    } catch (error) {
+        alert('An error occurred while deleting.');
+    }
+}
+
+async function openEditModal(id) {
+    try {
+        const response = await fetch(`${API_URL}?action=get_stop_by_id&id=${id}`);
+        const result = await response.json();
+        if (result.success) {
+            const data = result.data;
+            const modal = document.getElementById('editStopModal');
+            for (const key in data) {
+                const input = modal.querySelector(`#edit_${key}`);
+                if (input) input.value = data[key];
+            }
+            modal.style.display = 'block';
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        alert('Failed to fetch details for editing.');
+    }
+}
+
+function handleFilterChange() {
+    fetchStopData(1);
+}
+
+// --- Initial Setup ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Attach event listeners to filter inputs
+    const filterInputs = ['filterCause', 'filterLine', 'filterMachine', 'filterStartDate', 'filterEndDate'];
+    filterInputs.forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () => {
+            clearTimeout(window.filterDebounceTimer);
+            window.filterDebounceTimer = setTimeout(handleFilterChange, 500);
+        });
+    });
+
+    // Pagination buttons
+    document.getElementById('prevPageBtn')?.addEventListener('click', () => {
+        if (currentPage > 1) fetchStopData(currentPage - 1);
+    });
+    document.getElementById('nextPageBtn')?.addEventListener('click', () => {
+        if (currentPage < totalPages) fetchStopData(currentPage + 1);
+    });
+
+    // Populate datalists on page load
+    populateDatalist('causeListFilter', 'get_causes');
+    populateDatalist('lineListFilter', 'get_lines');
+    populateDatalist('machineListFilter', 'get_machines');
+    
+    // Initial data load
+    fetchStopData(1);
+    
+    // Add/Edit form submission handlers
+    const addForm = document.getElementById('addStopForm');
+    if(addForm) {
+        addForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(addForm);
+            const payload = Object.fromEntries(formData.entries());
+            try {
+                const response = await fetch(`${API_URL}?action=add_stop`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                alert(result.message);
+                if(result.success) {
+                    closeModal('stopModal');
+                    addForm.reset();
+                    fetchStopData(1);
+                }
+            } catch(error) {
+                alert('An error occurred while adding data.');
+            }
+        });
+    }
+
+    const editForm = document.getElementById('editStopForm');
+    if(editForm) {
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(editForm);
+            const payload = Object.fromEntries(formData.entries());
+            try {
+                const response = await fetch(`${API_URL}?action=update_stop`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                alert(result.message);
+                if(result.success) {
+                    closeModal('editStopModal');
+                    fetchStopData(currentPage);
+                }
+            } catch(error) {
+                alert('An error occurred while updating data.');
+            }
+        });
     }
 });
-
-window.onload = () => fetchPaginatedParts(currentPage);
-
-setInterval(() => {
-    fetchPaginatedParts(currentPage);
-}, 60000); // 60000ms = 1 minute

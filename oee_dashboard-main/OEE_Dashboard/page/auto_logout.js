@@ -4,7 +4,7 @@ function resetLogoutTimer() {
 clearTimeout(logoutTimer);
 logoutTimer = setTimeout(() => {
     alert("You were inactive for 5 minutes. Logging out...");
-    window.location.href = "../auth/logout.php?redirect=1";
+    window.location.href = "../../auth/logout.php?redirect=1";
 }, 5 * 60 * 1000); // 5 minutes
 }
 
