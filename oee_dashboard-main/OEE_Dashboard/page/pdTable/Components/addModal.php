@@ -1,6 +1,6 @@
-<div id="partModal" class="modal">
+<div id="addPartModal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal('partModal')">&times;</span>
+        <span class="close" onclick="closeModal('addPartModal')">&times;</span>
         <h2 style="font-size: 2.5rem;">Add Part</h2>
         <form id="addPartForm">
             <input type="date" name="log_date" required value="<?= date('Y-m-d') ?>"><br>
@@ -39,7 +39,7 @@
 
             <input type="text" placeholder="Note" name="note"><br>
 
-            <button type="submit" style="padding-block: 0;">Submit Part</button>
+            <button type="submit" style="padding-block: 0;">Submit</button>
         </form>
 
     </div>

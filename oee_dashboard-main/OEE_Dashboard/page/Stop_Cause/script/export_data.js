@@ -1,6 +1,3 @@
-// --- Constants ---
-const API_URL = '../../api/Stop_Cause/stopCauseManage.php';
-
 // --- Helper Functions ---
 function getFilterParams() {
     return new URLSearchParams({

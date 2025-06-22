@@ -21,7 +21,7 @@ async function exportToPDF() {
     });
 
     // --- การเปลี่ยนแปลง ---
-    const response = await fetch(`../api/pdTableManage.php?${params.toString()}`);
+    const response = await fetch(`../../api/pdTable/pdTableManage.php?${params.toString()}`);
     const result = await response.json();
 
     if (!result.success || result.data.length === 0) {
@@ -74,7 +74,7 @@ async function exportToExcel() {
 
     try {
         // --- การเปลี่ยนแปลง ---
-        const response = await fetch(`../api/pdTableManage.php?${params.toString()}`);
+        const response = await fetch(`../../api/pdTable/pdTableManage.php?${params.toString()}`);
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {
@@ -133,4 +133,34 @@ async function exportToExcel() {
         console.error('Export to Excel failed:', error);
         alert('Failed to export data. Please check the console for errors.');
     }
+}
+
+function exportSummaryToExcel() {
+    const summaryData = window.cachedSummary || [];
+    const grandTotalData = window.cachedGrand || {};
+
+    if (summaryData.length === 0) {
+        alert("No summary data to export.");
+        return;
+    }
+
+    const headers = ["Model", "Part No", "Lot No", "FG", "NG", "HOLD", "REWORK", "SCRAP", "ETC"];
+    
+    const dataRows = summaryData.map(row => [
+        row.model, row.part_no, row.lot_no || '',
+        row.FG || 0, row.NG || 0, row.HOLD || 0,
+        row.REWORK || 0, row.SCRAP || 0, row.ETC || 0
+    ]);
+
+    const totalRow = [
+        "Grand Total", "", "",
+        grandTotalData.FG || 0, grandTotalData.NG || 0, grandTotalData.HOLD || 0,
+        grandTotalData.REWORK || 0, grandTotalData.SCRAP || 0, grandTotalData.ETC || 0
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataRows, totalRow]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Production Summary");
+
+    XLSX.writeFile(workbook, `Production_Summary_${new Date().toISOString().split('T')[0]}.xlsx`);
 }

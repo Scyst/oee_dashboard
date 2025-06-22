@@ -55,16 +55,24 @@
                 <table id="stopTable" border="1">
                     <thead>
                         <tr>
-                            <th>ID</th><th>Date</th><th>Start</th><th>End</th>
-                            <th>Duration (m)</th><th>Line</th><th>Machine</th>
-                            <th>Cause</th><th>Recovered By</th><th>Note</th><th>Actions</th>
+                            <th style="width: 100px; text-align: center;">ID</th>
+                            <th>Date</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Duration (m)</th>
+                            <th>Line</th>
+                            <th>Machine</th>
+                            <th>Cause</th>
+                            <th>Recovered By</th>
+                            <th style="width: 250px;">Note</th>
+                            <th style="width: 175px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="stopTableBody"></tbody>
                 </table>
             </div>
 
-            <div style="display: flex; gap: 20px; justify-content: center; margin: 10px auto;">
+            <div class="pagination-container" style="display: flex; gap: 20px; justify-content: center; margin: 10px auto;">
                 <button id="prevPageBtn">Previous</button>
                 <span id="pagination-info"></span>
                 <button id="nextPageBtn">Next</button>
@@ -72,12 +80,34 @@
         </div>
     </div>
 
-    <?php // include('components/stopCauseComponents/addModal.php'); ?>
-    <?php // include('components/stopCauseComponents/editModal.php'); ?>
+    <?php include('components/addModal.php'); ?>
+    <?php include('components/editModal.php'); ?>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const savedStart = localStorage.getItem('oee_startDate');
+            const savedEnd = localStorage.getItem('oee_endDate');
+            const startInput = document.getElementById("filterStartDate");
+            const endInput = document.getElementById("filterEndDate");
+            if (startInput) startInput.value = savedStart || dateStr;
+            if (endInput) endInput.value = savedEnd || dateStr;
 
-    <script src="../../page/auto_logout.js"></script>
-    <script src="../../page/datetime.js"></script>
-    <script src="export_data.js"></script>
-    <script src="paginationTable.js"></script>
+            const filterInputs = ['filterPartNo', 'filterLotNo', 'filterLine', 'filterModel', 'filterCountType', 'filterStartDate', 'filterEndDate'];
+            filterInputs.forEach(id => {
+                document.getElementById(id)?.addEventListener('input', () => {
+                    clearTimeout(window.filterDebounceTimer);
+                    window.filterDebounceTimer = setTimeout(() => handleFilterChange(), 500);
+                });
+            });
+        });
+    </script>
+
+    <script src="../auto_logout.js"></script>
+    <script src="../datetime.js"></script>
+    <script src="script/paginationTable.js"></script>
+    <script src="script/export_data.js"></script>
+    <script src="script/modal_handler.js"></script> 
 </body>
 </html>

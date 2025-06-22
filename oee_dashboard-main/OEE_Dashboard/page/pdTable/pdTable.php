@@ -39,12 +39,8 @@
 
                     <select id="filterCountType">
                         <option value="">All Types</option>
-                        <option value="FG">FG</option>
-                        <option value="NG">NG</option>
-                        <option value="HOLD">HOLD</option>
-                        <option value="REWORK">REWORK</option>
-                        <option value="SCRAP">SCRAP</option>
-                        <option value="ETC.">ETC.</option>
+                        <option value="FG">FG</option><option value="NG">NG</option><option value="HOLD">HOLD</option>
+                        <option value="REWORK">REWORK</option><option value="SCRAP">SCRAP</option><option value="ETC.">ETC.</option>
                     </select>     
 
                     <input type="date" id="filterStartDate">
@@ -52,7 +48,6 @@
                     <input type="date" id="filterEndDate">
                 </div>
             </div>
-
             <div class="assis-tool">
                 <p id="date"></p>
                 <p id="time"></p>
@@ -60,9 +55,8 @@
         </div>
 
         <div class="production-history">
-
-            <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
-                <div id="grandSummary" style="font-weight: bold;"></div>
+            <div class="action-bar"  style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
+                <div id="grandSummary" class="summary-text" style="font-weight: bold;"></div>
                 <div>
                     <button onclick="openSummaryModal()">Show Detailed Summary</button>
                     <button onclick="exportToExcel()">Export to Excel</button>
@@ -81,7 +75,7 @@
                             <th>Model</th>
                             <th>Part No.</th>
                             <th>Lot No.</th>
-                            <th>Quatity</th>
+                            <th>Quantity</th>
                             <th style="width: 150px;">Type</th>
                             <th style="width: 250px;">Note</th>
                             <th style="width: 175px;">Actions</th>
@@ -91,43 +85,35 @@
                 </table>
             </div>
 
-            <div style="display: flex; gap: 20px; justify-content: center; margin: 10px auto;">
+            <div class="pagination-container" style="display: flex; gap: 20px; justify-content: center; margin: 10px auto;">
                 <button id="prevPageBtn">Previous</button>
                 <span id="pagination-info"></span>
                 <button id="nextPageBtn">Next</button>
             </div>
-
         </div>
 
-        <?php include('../components/pdComponents/addModal.php'); ?>
-        <?php include('../components/pdComponents/editModal.php'); ?>
-        <?php include('../components/pdComponents/summaryModal.php'); ?>
-
+        <?php include('components/addModal.php'); ?>
+        <?php include('components/editModal.php'); ?>
+        <?php include('components/summaryModal.php'); ?>
     </div>
     
     <script>
-        // This is a new small script block to handle initial setup
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
-            
             const savedStart = localStorage.getItem('oee_startDate');
             const savedEnd = localStorage.getItem('oee_endDate');
-
             const startInput = document.getElementById("filterStartDate");
             const endInput = document.getElementById("filterEndDate");
-
             if (startInput) startInput.value = savedStart || dateStr;
             if (endInput) endInput.value = savedEnd || dateStr;
-
-            // The main logic will be in the external files below
         });
     </script>
     
-    <script src="../datetime.js"></script>
     <script src="../auto_logout.js"></script>
-    <script src="export_data.js"></script>
-    <script src="paginationTable.js"></script>
-
+    <script src="../datetime.js"></script>
+    <script src="script/paginationTable.js"></script>
+    <script src="script/export_data.js"></script>
+    <script src="script/modal_handler.js"></script> 
 </body>
 </html>
