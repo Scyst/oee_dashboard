@@ -134,9 +134,9 @@
     </div>
 
     <script src="../datetime.js"></script>
-    <script src="OEE_piechart.js"></script>
-    <script src="OEE_linechart.js"></script>
-    <script src="OEE_barchart.js"></script>
-    <script src="filterManager.js"></script>
+    <script src="script/OEE_piechart.js"></script>
+    <script src="script/OEE_linechart.js"></script>
+    <script src="script/OEE_barchart.js"></script>
+    <script src="script/filterManager.js"></script>
 </body>
 </html>

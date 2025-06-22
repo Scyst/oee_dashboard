@@ -342,6 +342,6 @@
     </script>
 
     <script src="../auto_logout.js"></script>
-    <script src="export_data.js"></script>
+    <script src="script/export_data.js"></script>
 </body>
 </html>
