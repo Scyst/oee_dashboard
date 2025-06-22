@@ -1,28 +1,33 @@
 <?php
-session_start();
+// ตรวจสอบว่า session ถูกเริ่มแล้วหรือยัง ถ้ายังให้เริ่ม
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// If user is not logged in, redirect to login page
+// ตรวจสอบว่ามีการล็อกอินหรือยัง
 if (!isset($_SESSION['user'])) {
-  header("Location: ../../auth/login_form.php");
-  exit;
+    // ถ้ายังไม่ได้ล็อกอิน ให้ redirect ไปหน้า login พร้อมกับส่งหน้าที่พยายามจะเข้าถึงไปด้วย
+    $redirect_url = str_replace('/oee_dashboard/oee_dashboard-main/OEE_Dashboard', '', $_SERVER['REQUEST_URI']);
+    header("Location: ../auth/login_form.php?redirect=" . urlencode($redirect_url));
+    exit;
 }
 
-$timeout = 300; 
-if (isset($_SESSION['last_activity']) && time() - $_SESSION['last_activity'] > $timeout) {
-  session_unset();
-  session_destroy();
-  header("Location: ../../page/OEE_Dashboard/OEE_Dashboard.php");
-  exit;
-}
-$_SESSION['last_activity'] = time(); // update last activity timestamp
+/**
+ * ฟังก์ชันสำหรับตรวจสอบว่าผู้ใช้ที่ล็อกอินอยู่มี Role ที่ต้องการหรือไม่
+ * @param array|string $roles Role ที่ต้องการตรวจสอบ (สามารถเป็น string เดียว หรือ array ของ role)
+ * @return bool
+ */
+function hasRole($roles): bool {
+    if (empty($_SESSION['user']['role'])) {
+        return false;
+    }
 
-function hasRole($requiredRole) {
-  return isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === $requiredRole;
+    $userRole = $_SESSION['user']['role'];
+    
+    if (is_array($roles)) {
+        return in_array($userRole, $roles);
+    }
+    
+    return $userRole === $roles;
 }
-
-// ✅ Check if the user has any of the roles in the allowed list
-function allowRoles(array $allowedRoles) {
-  return isset($_SESSION['user']['role']) && in_array($_SESSION['user']['role'], $allowedRoles);
-}
-
 ?>

@@ -1,4 +1,4 @@
-<?php include_once("../auth/check_auth.php"); ?>
+<?php include_once("../../auth/check_auth.php"); ?>
 <?php if (!hasRole('admin')) { header("Location: ../page/OEE_Dashboard.php"); exit; } ?>
 
 <!DOCTYPE html>
@@ -36,7 +36,7 @@
 
   <script>
     async function loadLogs() {
-      const res = await fetch('../api/userManage/userManage.php?action=logs');
+      const res = await fetch('../../api/userManage/userManage.php?action=logs');
       const logs = await res.json();
       const tbody = document.getElementById('logTableBody');
       tbody.innerHTML = '';

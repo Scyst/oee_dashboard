@@ -1,5 +1,8 @@
+// --- Constants ---
+const STOP_CAUSE_API_URL = '../../api/Stop_Cause/stopCauseManage.php';
+
 // --- Helper Functions ---
-function getFilterParams() {
+function getStopCauseFilterParams() {
     return new URLSearchParams({
         action: 'get_stop',
         startDate: document.getElementById("filterStartDate")?.value,
@@ -12,7 +15,7 @@ function getFilterParams() {
     });
 }
 
-function formatDuration(totalMinutes) {
+function formatDurationForExport(totalMinutes) {
     if (isNaN(totalMinutes) || totalMinutes === null) return '0h 0m';
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
@@ -23,7 +26,6 @@ function formatDuration(totalMinutes) {
 async function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-
     if (!doc.autoTable) {
         alert("jsPDF AutoTable plugin not loaded.");
         return;
@@ -32,39 +34,30 @@ async function exportToPDF() {
     alert("Preparing PDF export... Please wait.");
 
     try {
-        const response = await fetch(`${API_URL}?${getFilterParams().toString()}`);
+        const response = await fetch(`${STOP_CAUSE_API_URL}?${getStopCauseFilterParams().toString()}`);
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {
-            alert("Failed to export data or no data found.");
+            alert("No data to export.");
             return;
         }
 
         const headers = [["Date", "Start", "End", "Duration (m)", "Line", "Machine", "Cause", "Recovered By", "Note"]];
         const rows = result.data.map(row => [
-            row.log_date,
-            row.stop_begin,
-            row.stop_end,
-            row.duration,
-            row.line,
-            row.machine,
-            row.cause,
-            row.recovered_by,
-            row.note || ''
+            row.log_date, row.stop_begin, row.stop_end,
+            row.duration, row.line, row.machine,
+            row.cause, row.recovered_by, row.note || ''
         ]);
 
         doc.setFontSize(16);
         doc.text("Filtered Stop Cause History", 14, 16);
-
         doc.autoTable({
             head: headers,
             body: rows,
             startY: 20,
-            headStyles: { fillColor: [220, 53, 69], halign: 'center' }, // Red theme
-            bodyStyles: { halign: 'center' },
-            theme: 'striped',
+            headStyles: { fillColor: [220, 53, 69] },
+            theme: 'grid',
         });
-
         doc.save(`Stop_Cause_History_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
         console.error("PDF Export failed:", error);
@@ -76,7 +69,7 @@ async function exportToExcel() {
     alert("Preparing Excel export... Please wait.");
     
     try {
-        const response = await fetch(`${API_URL}?${getFilterParams().toString()}`);
+        const response = await fetch(`${STOP_CAUSE_API_URL}?${getStopCauseFilterParams().toString()}`);
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {
@@ -84,18 +77,21 @@ async function exportToExcel() {
             return;
         }
 
+        const workbook = XLSX.utils.book_new();
+
         // --- Summary Sheet ---
+        const totalOccurrences = result.summary.reduce((acc, curr) => acc + Number(curr.count || 0), 0);
+
         const grandTotalRow = { 
             "Line": "Grand Total", 
-            "Occurrences": result.summary.reduce((acc, curr) => acc + curr.count, 0),
-            "Total Duration": formatDuration(result.grand_total_minutes)
+            "Occurrences": totalOccurrences,
+            "Total Duration": formatDurationForExport(result.grand_total_minutes)
         };
         const summaryData = result.summary.map(row => ({
             "Line": row.line || 'N/A',
             "Occurrences": row.count,
-            "Total Duration": formatDuration(row.total_minutes)
+            "Total Duration": formatDurationForExport(row.total_minutes)
         }));
-        const summarySheet = XLSX.utils.json_to_sheet([grandTotalRow, ...summaryData]);
 
         // --- Raw Data Sheet ---
         const rawData = result.data.map(row => ({
@@ -111,12 +107,10 @@ async function exportToExcel() {
             "Note": row.note || ''
         }));
         const rawDataSheet = XLSX.utils.json_to_sheet(rawData);
-
-        // --- Create Workbook ---
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, summarySheet, "Stop Cause Summary");
         XLSX.utils.book_append_sheet(workbook, rawDataSheet, "Raw Data");
-
+        const summarySheet = XLSX.utils.json_to_sheet([grandTotalRow, ...summaryData]);
+        XLSX.utils.book_append_sheet(workbook, summarySheet, "Stop Cause Summary");
+        
         XLSX.writeFile(workbook, `Stop_Cause_History_${new Date().toISOString().split('T')[0]}.xlsx`);
 
     } catch (error) {

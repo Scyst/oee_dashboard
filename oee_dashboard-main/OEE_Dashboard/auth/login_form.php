@@ -42,11 +42,11 @@ if (isset($_SESSION['user'])) {
         <form id="loginForm">
             <div class="mb-3">
                 <label class="form-label">Username</label>
-                <input type="text" name="username" class="form-control" required autofocus>
+                <input type="text" name="username" class="form-control" required autofocus autocomplete="username">
             </div>
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" required>
+                <input type="password" name="password" class="form-control" required autocomplete="current-password">
             </div>
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
@@ -54,39 +54,29 @@ if (isset($_SESSION['user'])) {
 
     <script>
         document.getElementById('loginForm').addEventListener('submit', async function (e) {
-            e.preventDefault(); // ป้องกันการส่งฟอร์มแบบปกติ
-
+            e.preventDefault();
             const form = e.target;
             const username = form.username.value;
             const password = form.password.value;
             const errorAlert = document.getElementById('error-alert');
-
-            errorAlert.classList.add('d-none'); // ซ่อนข้อความ Error เก่า
+            errorAlert.classList.add('d-none');
 
             try {
                 const response = await fetch('login.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-
                 const result = await response.json();
-
                 if (result.success) {
-                    // ถ้าสำเร็จ ให้ redirect ไปหน้า Dashboard
                     window.location.href = '../page/OEE_Dashboard/OEE_Dashboard.php';
                 } else {
-                    // ถ้าไม่สำเร็จ ให้แสดงข้อความ Error
                     errorAlert.textContent = result.message || 'An unknown error occurred.';
                     errorAlert.classList.remove('d-none');
                 }
             } catch (error) {
-                // กรณีเกิด Error ที่ไม่คาดฝัน
                 errorAlert.textContent = 'Failed to connect to the server.';
                 errorAlert.classList.remove('d-none');
-                console.error('Login request failed:', error);
             }
         });
     </script>

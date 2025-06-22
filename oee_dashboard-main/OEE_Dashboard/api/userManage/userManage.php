@@ -1,148 +1,160 @@
 <?php
-require_once("../../api/db.php");
-require_once("../../auth/check_auth.php");
-header('Content-Type: application/json');
+require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../../auth/check_auth.php'; 
+require_once __DIR__ . '/../logger.php'; 
 
-if (!allowRoles(['admin'])) {
-    echo json_encode(["success" => false, "message" => "Unauthorized"]);
+$action = $_REQUEST['action'] ?? '';
+$input = json_decode(file_get_contents("php://input"), true);
+
+if (!hasRole(['admin', 'creator'])) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
 
-$action = $_GET['action'] ?? '';
-$input = json_decode(file_get_contents("php://input"), true);
-$currentUser = $_SESSION['user']['username'];
-$currentRole = $_SESSION['user']['role'];
+try {
+    $currentUser = $_SESSION['user'];
 
-function logAction($conn, $actor, $action, $target, $detail = null) {
-    $sql = "INSERT INTO IOT_TOOLBOX_USER_LOGS (action_by, action_type, target_user, detail, created_at)
-            VALUES (?, ?, ?, ?, GETDATE())";
-    sqlsrv_query($conn, $sql, [$actor, $action, $target, $detail]);
-}
-
-switch ($action) {
-    case 'read':
-        $stmt = sqlsrv_query($conn, "SELECT id, username, role, created_at FROM IOT_TOOLBOX_USERS ORDER BY created_at DESC");
-        $users = [];
-        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-            $row['created_at'] = $row['created_at']->format('Y-m-d H:i:s');
-            $users[] = $row;
-        }
-        echo json_encode($users);
-        break;
-
-    case 'create':
-        $username = trim($input['username'] ?? '');
-        $password = trim($input['password'] ?? '');
-        $role = trim($input['role'] ?? 'operator');
-
-        if (!$username || !$password || $role === 'admin') {
-            echo json_encode(["success" => false, "message" => "Invalid input or not allowed to create admin"]);
-            break;
-        }
-
-        $hashed = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = sqlsrv_query($conn,
-            "INSERT INTO IOT_TOOLBOX_USERS (username, password, role, created_at) VALUES (?, ?, ?, GETDATE())",
-            [$username, $hashed, $role]
-        );
-
-        if ($stmt) {
-            logAction($conn, $currentUser, 'create', $username, "role: $role");
-        }
-
-        echo json_encode(["success" => $stmt ? true : false]);
-        break;
-
-    case 'update':
-        $id = (int)($input['id'] ?? 0);
-        $username = trim($input['username'] ?? '');
-        $password = trim($input['password'] ?? '');
-        $role = trim($input['role'] ?? '');
-
-        if (!$id || !$username || !$role) {
-            echo json_encode(["success" => false, "message" => "Invalid input"]);
-            break;
-        }
-
-        $stmt = sqlsrv_query($conn, "SELECT * FROM IOT_TOOLBOX_USERS WHERE id = ?", [$id]);
-        $targetUser = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
-        if (!$targetUser) {
-            echo json_encode(["success" => false, "message" => "User not found"]);
-            break;
-        }
-
-        // Restrict admin changes
-        if ($targetUser['role'] === 'admin' && $targetUser['username'] !== $currentUser) {
-            echo json_encode(["success" => false, "message" => "You cannot modify another admin"]);
-            break;
-        }
-
-        if ($targetUser['role'] !== 'admin' && $role === 'admin') {
-            echo json_encode(["success" => false, "message" => "Cannot promote user to admin"]);
-            break;
-        }
-
-        $success = false;
-        if ($password) {
-            $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = sqlsrv_query($conn,
-                "UPDATE IOT_TOOLBOX_USERS SET username = ?, password = ?, role = ? WHERE id = ?",
-                [$username, $hashed, $role, $id]
-            );
-        } else {
-            $stmt = sqlsrv_query($conn,
-                "UPDATE IOT_TOOLBOX_USERS SET username = ?, role = ? WHERE id = ?",
-                [$username, $role, $id]
-            );
-        }
-
-        if ($stmt) {
-            logAction($conn, $currentUser, 'update', $targetUser['username'], "role: $role");
-            $success = true;
-        }
-
-        echo json_encode(["success" => $success]);
-        break;
-
-    case 'delete':
-        $id = (int)($_GET['id'] ?? 0);
-
-        $stmt = sqlsrv_query($conn, "SELECT * FROM IOT_TOOLBOX_USERS WHERE id = ?", [$id]);
-        $targetUser = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
-        if (!$targetUser) {
-            echo json_encode(["success" => false, "message" => "User not found"]);
-            break;
-        }
-
-        if ($targetUser['role'] === 'admin') {
-            echo json_encode(["success" => false, "message" => "Cannot delete another admin"]);
-            break;
-        }
-
-        $stmt = sqlsrv_query($conn, "DELETE FROM IOT_TOOLBOX_USERS WHERE id = ?", [$id]);
-        if ($stmt) {
-            logAction($conn, $currentUser, 'delete', $targetUser['username']);
-        }
-
-        echo json_encode(["success" => $stmt ? true : false]);
-        break;
-    
-    case 'logs':
-        $stmt = sqlsrv_query($conn, "SELECT * FROM IOT_TOOLBOX_USER_LOGS ORDER BY created_at DESC");
-        $logs = [];
-
-        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-            if ($row['created_at'] instanceof DateTime) {
-                $row['created_at'] = $row['created_at']->format('Y-m-d H:i:s');
+    switch ($action) {
+        case 'read':
+            $stmt = $pdo->query("SELECT id, username, role, created_at FROM IOT_TOOLBOX_USERS WHERE role != 'creator' ORDER BY id ASC");
+            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($users as &$user) {
+                if ($user['created_at']) $user['created_at'] = (new DateTime($user['created_at']))->format('Y-m-d H:i:s');
             }
-            $logs[] = $row;
-        }
+            echo json_encode(['success' => true, 'data' => $users]);
+            break;
 
-        echo json_encode($logs);
-        break;
+        case 'create':
+            if (!hasRole(['admin', 'creator'])) {
+                 throw new Exception("Permission denied.");
+            }
+            $username = trim($input['username'] ?? '');
+            $password = trim($input['password'] ?? '');
+            $role = trim($input['role'] ?? '');
 
-    default:
-        echo json_encode(["success" => false, "message" => "Invalid action"]);
-        break;
+            if (empty($username) || empty($password) || empty($role)) {
+                throw new Exception("Username, password, and role are required.");
+            }
+            if ($role === 'creator') {
+                 throw new Exception("Cannot create a user with the 'creator' role.");
+            }
+            if ($role === 'admin' && !hasRole('creator')) {
+                throw new Exception("Only creators can create admin users.");
+            }
+
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $sql = "INSERT INTO IOT_TOOLBOX_USERS (username, password, role) VALUES (?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$username, $hashedPassword, $role]);
+
+            logAction($pdo, $currentUser['username'], 'CREATE USER', $username, "Role: $role");
+            echo json_encode(['success' => true, 'message' => 'User created successfully.']);
+            break;
+
+        case 'update':
+            $id = (int)($input['id'] ?? 0);
+            $username = trim($input['username'] ?? '');
+            $role = trim($input['role'] ?? '');
+            $password = trim($input['password'] ?? '');
+
+            if (!$id || !$username || !$role) throw new Exception("ID, username, and role are required for update.");
+
+            $stmt = $pdo->prepare("SELECT username, role FROM IOT_TOOLBOX_USERS WHERE id = ?");
+            $stmt->execute([$id]);
+            $targetUser = $stmt->fetch();
+            if (!$targetUser) throw new Exception("Target user not found.");
+
+            $isEditingSelf = ($id === (int)$currentUser['id']);
+            $isCreator = hasRole('creator');
+
+            if ($targetUser['role'] === 'creator') throw new Exception("Creator accounts cannot be modified.");
+            
+            if (!$isEditingSelf) { // --- ตรรกะเมื่อแก้ไขผู้ใช้อื่น
+                if ($targetUser['role'] === 'admin' && !$isCreator) {
+                    throw new Exception("Only creators can modify other admins.");
+                }
+                if ($role === 'admin' && !$isCreator) {
+                    throw new Exception("Only creators can promote users to admin.");
+                }
+            }
+            
+            $updateFields = [];
+            $params = [];
+            
+            if ($isEditingSelf && ($username !== $currentUser['username'] || $role !== $currentUser['role'])) {
+                throw new Exception("You can only change your own password.");
+            } else {
+                $updateFields[] = "username = ?";
+                $params[] = $username;
+                $updateFields[] = "role = ?";
+                $params[] = $role;
+            }
+            
+            if (!empty($password)) {
+                $updateFields[] = "password = ?";
+                $params[] = password_hash($password, PASSWORD_DEFAULT);
+            }
+            
+            if (empty($updateFields)) {
+                 echo json_encode(['success' => true, 'message' => 'No changes were made.']);
+                 break;
+            }
+
+            $sql = "UPDATE IOT_TOOLBOX_USERS SET " . implode(', ', $updateFields) . " WHERE id = ?";
+            $params[] = $id;
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            logAction($pdo, $currentUser['username'], 'UPDATE USER', $username, "Role: $role");
+            echo json_encode(['success' => true, 'message' => 'User updated successfully.']);
+            break;
+
+        case 'delete':
+            $id = (int)($_GET['id'] ?? 0);
+            if ($id === (int)$currentUser['id']) {
+                throw new Exception("You cannot delete your own account.");
+            }
+
+            $stmt = $pdo->prepare("SELECT username, role FROM IOT_TOOLBOX_USERS WHERE id = ?");
+            $stmt->execute([$id]);
+            $targetUser = $stmt->fetch();
+            if (!$targetUser) {
+                throw new Exception("User not found.");
+            }
+            if ($targetUser['role'] === 'creator' || $targetUser['role'] === 'admin') {
+                if (!hasRole('creator')) {
+                    throw new Exception("Permission denied. Only creators can delete admins.");
+                }
+            }
+
+            $deleteStmt = $pdo->prepare("DELETE FROM IOT_TOOLBOX_USERS WHERE id = ?");
+            $deleteStmt->execute([$id]);
+
+            logAction($pdo, $currentUser['username'], 'DELETE USER', $targetUser['username']);
+            echo json_encode(['success' => true, 'message' => 'User deleted successfully.']);
+            break;
+        
+        case 'logs':
+            $stmt = $pdo->query("SELECT TOP 500 * FROM IOT_TOOLBOX_USER_LOGS ORDER BY created_at DESC");
+            
+            $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($logs as &$log) {
+                if ($log['created_at']) {
+                    $log['created_at'] = (new DateTime($log['created_at']))->format('Y-m-d H:i:s');
+                }
+            }
+            echo json_encode(['success' => true, 'data' => $logs]);
+            break;
+
+        default:
+            http_response_code(400);
+            throw new Exception("Invalid action specified for User Management.");
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    error_log("Error in userManage.php: " . $e->getMessage());
 }
 ?>

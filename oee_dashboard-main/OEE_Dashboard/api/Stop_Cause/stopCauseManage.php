@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../logger.php'; // เพิ่มการเรียกใช้ logger
+session_start(); // เพิ่มการเริ่ม session
 
-$action = $_REQUEST['action'] ?? 'get_stop'; // ตั้งให้ get_stop เป็น action เริ่มต้น
+$action = $_REQUEST['action'] ?? 'get_stop';
 
 $input = json_decode(file_get_contents("php://input"), true);
 if (empty($input) && !empty($_POST)) {
@@ -9,6 +11,8 @@ if (empty($input) && !empty($_POST)) {
 }
 
 try {
+    $currentUser = $_SESSION['user']['username'] ?? 'system'; 
+
     switch ($action) {
         case 'get_stop':
             $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -94,9 +98,7 @@ try {
                 $stop_end_dt->modify('+1 day');
             }
 
-            $sql = "INSERT INTO IOT_TOOLBOX_STOP_CAUSES 
-                        (log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+             $sql = "INSERT INTO IOT_TOOLBOX_STOP_CAUSES (log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             
             $params = [
                 $input['log_date'],
@@ -110,7 +112,13 @@ try {
             ];
 
             $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            $success = $stmt->execute($params);
+
+            if ($success) {
+                $lastId = $pdo->lastInsertId();
+                $detail = "Line: {$input['line']}, Cause: {$input['cause']}";
+                logAction($pdo, $currentUser, 'ADD STOP_CAUSE', $lastId, $detail);
+            }
 
             echo json_encode(['success' => true, 'message' => 'Stop cause added successfully.']);
             break;
@@ -140,9 +148,7 @@ try {
                 $stop_end_dt->modify('+1 day');
             }
         
-            $sql = "UPDATE IOT_TOOLBOX_STOP_CAUSES 
-                    SET log_date = ?, stop_begin = ?, stop_end = ?, line = ?, machine = ?, cause = ?, recovered_by = ?, note = ? 
-                    WHERE id = ?";
+            $sql = "UPDATE IOT_TOOLBOX_STOP_CAUSES SET log_date = ?, stop_begin = ?, stop_end = ?, line = ?, machine = ?, cause = ?, recovered_by = ?, note = ? WHERE id = ?";
             
             $params = [
                 $log_date,
@@ -159,9 +165,9 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
         
-            $rowCount = $stmt->rowCount();
-        
-            if ($rowCount > 0) {
+            if ($stmt->rowCount() > 0) {
+                $detail = "Line: {$input['line']}, Cause: {$input['cause']}";
+                logAction($pdo, $currentUser, 'UPDATE STOP_CAUSE', $input['id'], $detail);
                 echo json_encode(['success' => true, 'message' => 'Stop Cause updated successfully.']);
             } else {
                 echo json_encode(['success' => true, 'message' => 'No changes made or data not found.']);
@@ -169,9 +175,7 @@ try {
             break;
 
         case 'delete_stop':
-            // สำหรับการลบ เป็นเรื่องปกติที่จะรับ ID จาก URL (GET parameter)
             $id = $_GET['id'] ?? null;
-
             if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
                 http_response_code(400);
                 throw new Exception('Invalid or missing Stop Cause ID.');
@@ -181,9 +185,8 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id]);
 
-            $rowCount = $stmt->rowCount();
-
-            if ($rowCount > 0) {
+            if ($stmt->rowCount() > 0) {
+                logAction($pdo, $currentUser, 'DELETE STOP_CAUSE', $id);
                 echo json_encode(['success' => true, 'message' => 'Stop Cause data deleted successfully.']);
             } else {
                 http_response_code(404);

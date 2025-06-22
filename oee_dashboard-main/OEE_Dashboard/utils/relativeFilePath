@@ -31,7 +31,11 @@ oee_dashboard-main\OEE_Dashboard\page\OEE_Dashboard\script\OEE_barchart.js
 oee_dashboard-main\OEE_Dashboard\page\OEE_Dashboard\script\OEE_linechart.js
 oee_dashboard-main\OEE_Dashboard\page\OEE_Dashboard\script\OEE_piechart.js
 oee_dashboard-main\OEE_Dashboard\page\OEE_Dashboard\OEE_Dashboard.php
+oee_dashboard-main\OEE_Dashboard\page\paraManageUI\components\addModal.php
+oee_dashboard-main\OEE_Dashboard\page\paraManageUI\components\editModal.php
 oee_dashboard-main\OEE_Dashboard\page\paraManageUI\script\export_data.js
+oee_dashboard-main\OEE_Dashboard\page\paraManageUI\script\modal_handler.js
+oee_dashboard-main\OEE_Dashboard\page\paraManageUI\script\paraManage.js
 oee_dashboard-main\OEE_Dashboard\page\paraManageUI\paraManageUI.php
 oee_dashboard-main\OEE_Dashboard\page\pdTable\Components\addModal.php
 oee_dashboard-main\OEE_Dashboard\page\pdTable\Components\editModal.php
@@ -53,6 +57,7 @@ oee_dashboard-main\OEE_Dashboard\page\datetime.js
 oee_dashboard-main\OEE_Dashboard\style\barchart.css
 oee_dashboard-main\OEE_Dashboard\style\dropdown.css
 oee_dashboard-main\OEE_Dashboard\style\linechart.css
+oee_dashboard-main\OEE_Dashboard\style\paraManageUI.css
 oee_dashboard-main\OEE_Dashboard\style\PDtable.css
 oee_dashboard-main\OEE_Dashboard\style\piechart.css
 oee_dashboard-main\OEE_Dashboard\style\Stop_Cause.css

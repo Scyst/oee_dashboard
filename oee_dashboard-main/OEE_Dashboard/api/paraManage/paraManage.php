@@ -1,10 +1,14 @@
 <?php
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../logger.php'; 
+session_start(); 
 
 $action = $_GET['action'] ?? '';
 $input = json_decode(file_get_contents("php://input"), true);
 
 try {
+    $currentUser = $_SESSION['user']['username'] ?? 'system'; 
+
     switch ($action) {
         case 'read':
             $stmt = $pdo->query("SELECT * FROM IOT_TOOLBOX_PARAMETER ORDER BY updated_at DESC");
@@ -28,21 +32,23 @@ try {
             ];
             $stmt = $pdo->prepare($sql);
             $success = $stmt->execute($params);
-            echo json_encode(['success' => $success]);
+
+            if ($success) {
+                $detail = "{$params[0]}-{$params[1]}-{$params[2]}";
+                logAction($pdo, $currentUser, 'CREATE PARAMETER', null, $detail);
+            }
+
+            echo json_encode(['success' => $success, 'message' => 'Parameter created.']);
             break;
 
         case 'update':
             $id = $input['id'] ?? null;
-            if (!$id) {
-                throw new Exception("Missing ID");
-            }
-
+            if (!$id) throw new Exception("Missing ID");
+            
             $stmt = $pdo->prepare("SELECT * FROM IOT_TOOLBOX_PARAMETER WHERE id = ?");
             $stmt->execute([$id]);
             $row = $stmt->fetch();
-            if (!$row) {
-                throw new Exception("Parameter not found");
-            }
+            if (!$row) throw new Exception("Parameter not found");
 
             $line = strtoupper($input['line'] ?? $row['line']);
             $model = strtoupper($input['model'] ?? $row['model']);
@@ -55,21 +61,31 @@ try {
             $stmt = $pdo->prepare($updateSql);
             $success = $stmt->execute($params);
 
-            echo json_encode(["success" => $success]);
+            if ($success) {
+                $detail = "ID: $id, Data: {$line}-{$model}-{$part_no}";
+                logAction($pdo, $currentUser, 'UPDATE PARAMETER', $id, $detail);
+            }
+
+            echo json_encode(["success" => $success, 'message' => 'Parameter updated.']);
             break;
 
         case 'delete':
             $id = $_GET['id'] ?? 0;
+            if (!$id) throw new Exception("Missing ID");
+
             $stmt = $pdo->prepare("DELETE FROM IOT_TOOLBOX_PARAMETER WHERE id = ?");
             $success = $stmt->execute([(int)$id]);
-            echo json_encode(["success" => $success]);
+            
+            if ($success && $stmt->rowCount() > 0) {
+                 logAction($pdo, $currentUser, 'DELETE PARAMETER', $id);
+            }
+
+            echo json_encode(["success" => $success, 'message' => 'Parameter deleted.']);
             break;
 
         case 'bulk_import':
-            if (!is_array($input) || empty($input)) {
-                throw new Exception("Invalid or empty data for bulk import.");
-            }
-
+            if (!is_array($input) || empty($input)) throw new Exception("Invalid data");
+            
             $pdo->beginTransaction();
             
             $checkSql = "SELECT id FROM IOT_TOOLBOX_PARAMETER WHERE line = ? AND model = ? AND part_no = ?";
@@ -103,13 +119,14 @@ try {
             }
 
             $pdo->commit();
+            logAction($pdo, $currentUser, 'BULK IMPORT PARAMETER', null, "Imported $imported rows");
+
             echo json_encode(["success" => true, "imported" => $imported, "message" => "Imported $imported row(s) successfully."]);
             break;
 
         default:
             http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Invalid action specified."]);
-            break;
+            throw new Exception("Invalid action specified.");
     }
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
