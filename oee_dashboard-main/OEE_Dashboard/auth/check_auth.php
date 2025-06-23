@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($_SESSION['user'])) {
     // ถ้ายังไม่ได้ล็อกอิน ให้ redirect ไปหน้า login พร้อมกับส่งหน้าที่พยายามจะเข้าถึงไปด้วย
     $redirect_url = str_replace('/oee_dashboard/oee_dashboard-main/OEE_Dashboard', '', $_SERVER['REQUEST_URI']);
-    header("Location: ../auth/login_form.php?redirect=" . urlencode($redirect_url));
+    header("Location: ../../auth/login_form.php?redirect=" . urlencode($redirect_url));
     exit;
 }
 
