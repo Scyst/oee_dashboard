@@ -92,10 +92,13 @@
             </div>
         </div>
 
-        <?php include('components/addModal.php'); ?>
-        <?php include('components/editModal.php'); ?>
-        <?php include('components/summaryModal.php'); ?>
     </div>
+
+    <div id="toast"></div>
+
+    <?php include('components/addModal.php'); ?>
+    <?php include('components/editModal.php'); ?>
+    <?php include('components/summaryModal.php'); ?>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -110,8 +113,8 @@
         });
     </script>
     
-    <script src="../auto_logout.js"></script>
-    <script src="../datetime.js"></script>
+    <script src="../components/auto_logout.js"></script>
+    <script src="../components/datetime.js"></script>
     <script src="script/paginationTable.js"></script>
     <script src="script/export_data.js"></script>
     <script src="script/modal_handler.js"></script> 

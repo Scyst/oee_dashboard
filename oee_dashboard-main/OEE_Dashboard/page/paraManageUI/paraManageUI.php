@@ -54,8 +54,9 @@
             <ul class="pagination justify-content-center" id="paginationControls"></ul>
         </nav>
 
-        <div id="toast"></div>
     </div>
+    
+    <div id="toast"></div>
 
     <?php if ($isAdmin) {
         include('components/addModal.php');
@@ -65,7 +66,9 @@
     <script>
         const isAdmin = <?php echo json_encode($isAdmin ?? false); ?>;
     </script>
-    <script src="../../page/auto_logout.js"></script>
+
+
+    <script src="../components/auto_logout.js"></script>
     <script src="script/paraManage.js"></script>
     <script src="script/export_data.js"></script>
     <script src="script/modal_handler.js"></script>

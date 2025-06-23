@@ -66,8 +66,10 @@
         const isAdmin = <?php echo json_encode($isAdmin); ?>;
         const currentUserId = <?php echo json_encode($_SESSION['user']['id'] ?? 0); ?>;
     </script>
-    <script src="../../page/auto_logout.js"></script>
+
+    <script src="../components/auto_logout.js"></script>
     <script src="script/userManage.js"></script>  
     <script src="script/modal_handler.js"></script>
+    
 </body>
 </html>
