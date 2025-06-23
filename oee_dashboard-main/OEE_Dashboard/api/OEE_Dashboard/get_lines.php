@@ -1,36 +1,18 @@
 <?php
-header('Content-Type: application/json');
-require_once '../db.php';
 
-// โครงสร้าง Response ที่ JavaScript ใหม่ของคุณคาดหวัง
-$response = [
-    'success' => false,
-    'message' => 'An unknown error occurred.',
-    'data' => []
-];
+require_once __DIR__ . '/../db.php';
 
-$sql = "SELECT DISTINCT line FROM IOT_TOOLBOX_PARTS WHERE line IS NOT NULL AND line != '' ORDER BY line ASC";
-$stmt = sqlsrv_query($conn, $sql);
+try {
+    $sql = "SELECT DISTINCT line FROM IOT_TOOLBOX_PARAMETER WHERE line IS NOT NULL ORDER BY line";
+    $stmt = $pdo->query($sql);
+    $lines = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-if ($stmt) {
-    $lines = [];
-    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-        // ดึงข้อมูลใส่ array ปกติ
-        $lines[] = $row['line'];
-    }
+    echo json_encode(['success' => true, 'data' => $lines]);
+
+} catch (PDOException $e) {
+    http_response_code(500); // Internal Server Error
+    echo json_encode(['success' => false, 'message' => 'Failed to fetch lines.']);
     
-    // เมื่อสำเร็จ กำหนด 'success' เป็น true และใส่ข้อมูลลงใน 'data'
-    $response['success'] = true;
-    $response['message'] = 'Lines fetched successfully.';
-    $response['data'] = $lines;
-
-} else {
-    $errors = sqlsrv_errors();
-    // (Optional) สามารถ log error ไว้ดูเองได้
-    // error_log(json_encode($errors)); 
-    $response['message'] = 'Failed to retrieve lines from the database.';
+    error_log("Error in get_lines.php: " . $e->getMessage());
 }
-
-echo json_encode($response);
-exit();
 ?>
