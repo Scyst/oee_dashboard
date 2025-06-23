@@ -115,6 +115,7 @@
     
     <script src="../components/auto_logout.js"></script>
     <script src="../components/datetime.js"></script>
+    <script src="../components/toast.js"></script>
     <script src="script/paginationTable.js"></script>
     <script src="script/export_data.js"></script>
     <script src="script/modal_handler.js"></script> 

@@ -136,6 +136,7 @@
     <div id="toast"></div>
 
     <script src="../components/datetime.js"></script>
+    <script src="../components/toast.js"></script>
     <script src="script/OEE_piechart.js"></script>
     <script src="script/OEE_linechart.js"></script>
     <script src="script/OEE_barchart.js"></script>

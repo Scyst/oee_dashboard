@@ -125,14 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                alert(result.message);
+                showToast(result.message, result.success ? '#28a745' : '#dc3545');
                 if (result.success) {
                     closeModal('addPartModal');
                     addForm.reset();
                     fetchPartsData(1);
                 }
             } catch (error) {
-                alert('An error occurred while adding data.');
+                showToast('An error occurred while adding data.', '#dc3545');
             }
         });
     }
@@ -149,13 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                alert(result.message);
+                showToast(result.message, result.success ? '#28a745' : '#dc3545');
                 if (result.success) {
                     closeModal('editPartModal');
                     fetchPartsData(currentPage);
                 }
             } catch (error) {
-                alert('An error occurred while updating data.');
+                showToast('An error occurred while updating data.', '#dc3545');
             }
         });
     }

@@ -35,10 +35,10 @@ async function openEditModal(id) {
             }
             openModal('editStopModal');
         } else {
-            alert(result.message);
+            showToast(result.message, result.success ? '#28a745' : '#dc3545');
         }
     } catch (error) {
-        alert('Failed to fetch details for editing.');
+        showToast('Failed to fetch details for editing.', '#dc3545');
     }
 }
 
@@ -55,14 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                alert(result.message);
+                showToast(result.message, result.success ? '#28a745' : '#dc3545');
                 if(result.success) {
                     closeModal('addStopModal');
                     addForm.reset();
                     fetchStopData(1);
                 }
             } catch(error) {
-                alert('An error occurred while adding data.');
+                showToast('An error occurred while adding data.', '#dc3545');
             }
         });
     }
@@ -79,13 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                alert(result.message);
+                showToast(result.message, result.success ? '#28a745' : '#dc3545');
                 if(result.success) {
                     closeModal('editStopModal');
                     fetchStopData(currentPage);
                 }
             } catch(error) {
-                alert('An error occurred while updating data.');
+                showToast('An error occurred while updating data.', '#dc3545');
             }
         });
     }

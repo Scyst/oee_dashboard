@@ -129,10 +129,10 @@ async function deleteStop(id) {
     try {
         const response = await fetch(`${API_URL}?action=delete_stop&id=${id}`);
         const result = await response.json();
-        alert(result.message);
+        showToast(result.message, result.success ? '#28a745' : '#dc3545');
         if (result.success) fetchStopData(currentPage);
     } catch (error) {
-        alert('An error occurred while deleting.');
+        showToast('An error occurred while deleting.', '#dc3545');
     }
 }
 

@@ -68,8 +68,9 @@
     </script>
 
     <script src="../components/auto_logout.js"></script>
+    <script src="../components/toast.js"></script>
     <script src="script/userManage.js"></script>  
     <script src="script/modal_handler.js"></script>
-    
+
 </body>
 </html>

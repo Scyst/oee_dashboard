@@ -140,14 +140,14 @@ async function handleDelete(id) {
     try {
         const response = await fetch(`${API_URL}?action=delete_part&id=${id}`);
         const result = await response.json();
-        alert(result.message);
+        showToast(result.message, result.success ? '#28a745' : '#dc3545');
         if (result.success) {
             const rowCount = document.querySelectorAll('#partTableBody tr').length;
             const newPage = (rowCount === 1 && currentPage > 1) ? currentPage - 1 : currentPage;
             fetchPartsData(newPage);
         }
     } catch (error) {
-        alert('An error occurred while deleting the part.');
+        showToast('An error occurred while deleting the part.', '#dc3545');
     }
 }
 
