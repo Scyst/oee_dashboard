@@ -33,17 +33,47 @@ function renderTable(data) {
         tbody.innerHTML = `<tr><td colspan="11" class="text-center">No records found.</td></tr>`;
         return;
     }
-    tbody.innerHTML = data.map(row => `
-        <tr data-id="${row.id}">
-            <td class="text-center">${row.id}</td><td>${row.log_date}</td><td>${row.stop_begin}</td>
-            <td>${row.stop_end}</td><td class="text-center">${row.duration}</td><td>${row.line}</td>
-            <td>${row.machine}</td><td>${row.cause}</td><td>${row.recovered_by}</td>
-            <td><div class="note-truncate" title="${row.note || ''}">${row.note || ''}</div></td>
-            <td class="text-center">
-                <button class="btn btn-sm btn-warning" onclick='openEditModal(${row.id})'>Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteStop(${row.id})">Delete</button>
-            </td>
-        </tr>`).join('');
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = row.id;
+
+        const createCell = (text) => { const td = document.createElement('td'); td.textContent = text; return td; };
+        const createCenteredCell = (text) => { const td = createCell(text); td.className = 'text-center'; return td; };
+
+        tr.appendChild(createCenteredCell(row.id));
+        tr.appendChild(createCell(row.log_date));
+        tr.appendChild(createCell(row.stop_begin));
+        tr.appendChild(createCell(row.stop_end));
+        tr.appendChild(createCenteredCell(row.duration));
+        tr.appendChild(createCell(row.line));
+        tr.appendChild(createCell(row.machine));
+        tr.appendChild(createCell(row.cause));
+        tr.appendChild(createCell(row.recovered_by));
+
+        const noteTd = document.createElement('td');
+        const noteDiv = document.createElement('div');
+        noteDiv.className = 'note-truncate';
+        noteDiv.title = row.note || '';
+        noteDiv.textContent = row.note || '';
+        noteTd.appendChild(noteDiv);
+        tr.appendChild(noteTd);
+        
+        const actionsTd = document.createElement('td');
+        actionsTd.className = 'text-center';
+        const editButton = document.createElement('button');
+        editButton.className = 'btn btn-sm btn-warning';
+        editButton.textContent = 'Edit';
+        editButton.addEventListener('click', () => openEditModal(row.id));
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-sm btn-danger';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => deleteStop(row.id));
+        actionsTd.appendChild(editButton);
+        actionsTd.appendChild(deleteButton);
+        tr.appendChild(actionsTd);
+
+        tbody.appendChild(tr);
+    });
 }
 
 function renderPagination(page, totalItems, limit) {
@@ -57,12 +87,21 @@ function renderPagination(page, totalItems, limit) {
 function renderSummary(summaryData, grandTotalMinutes) {
     const summaryContainer = document.getElementById('causeSummary');
     if (!summaryContainer) return;
+    summaryContainer.innerHTML = ''; // Clear previous content
+
     const formatMins = (mins) => `${Math.floor(mins / 60)}h ${mins % 60}m`;
-    let summaryHTML = `<strong>Total Downtime: ${formatMins(grandTotalMinutes || 0)}</strong>`;
+
+    const strong = document.createElement('strong');
+    strong.textContent = `Total Downtime: ${formatMins(grandTotalMinutes || 0)}`;
+    summaryContainer.appendChild(strong);
+
     if (summaryData && summaryData.length > 0) {
-        summaryHTML += ' | ' + summaryData.map(item => `${item.line}: ${item.count} stops (${formatMins(item.total_minutes)})`).join(' | ');
+        summaryData.forEach(item => {
+            summaryContainer.appendChild(document.createTextNode(' | '));
+            const summaryText = `${item.line}: ${item.count} stops (${formatMins(item.total_minutes)})`;
+            summaryContainer.appendChild(document.createTextNode(summaryText));
+        });
     }
-    summaryContainer.innerHTML = summaryHTML;
 }
 
 async function populateDatalist(datalistId, action) {
@@ -71,7 +110,14 @@ async function populateDatalist(datalistId, action) {
         const result = await response.json();
         if (result.success) {
             const datalist = document.getElementById(datalistId);
-            if (datalist) datalist.innerHTML = result.data.map(item => `<option value="${item}"></option>`).join('');
+            if (datalist) {
+                datalist.innerHTML = ''; // Clear existing options
+                result.data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    datalist.appendChild(option);
+                });
+            }
         }
     } catch (error) {
         console.error(`Failed to populate ${datalistId}:`, error);

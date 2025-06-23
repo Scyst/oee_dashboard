@@ -25,7 +25,7 @@ function openSummaryModal() {
         return;
     }
 
-    // --- Render Grand Totals ---
+    // --- Render Grand Totals (This part is safe as data is numerical) ---
     let grandTotalHTML = '<strong>Grand Total: </strong>';
     if (grandTotalData) {
         grandTotalHTML += Object.entries(grandTotalData)
@@ -35,37 +35,55 @@ function openSummaryModal() {
     }
     grandTotalContainer.innerHTML = grandTotalHTML;
 
-    // --- Render Detailed Table ---
+    // --- Render Detailed Table Securely ---
+    tableContainer.innerHTML = ''; // Clear previous content
+
     if (summaryData.length === 0) {
-        tableContainer.innerHTML = '<p class="text-center mt-3">No summary data to display.</p>';
+        const p = document.createElement('p');
+        p.className = 'text-center mt-3';
+        p.textContent = 'No summary data to display.';
+        tableContainer.appendChild(p);
         openModal('summaryModal');
         return;
     }
 
-    let tableHTML = `
-        <table class="table table-dark table-sm table-bordered table-hover mt-3">
-            <thead>
-                <tr>
-                    <th>Model</th><th>Part No.</th><th>Lot No.</th>
-                    <th>FG</th><th>NG</th><th>HOLD</th>
-                    <th>REWORK</th><th>SCRAP</th><th>ETC.</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-    summaryData.forEach(row => {
-        tableHTML += `
-            <tr>
-                <td>${row.model}</td><td>${row.part_no}</td><td>${row.lot_no || ''}</td>
-                <td class="text-center">${row.FG || 0}</td><td class="text-center">${row.NG || 0}</td>
-                <td class="text-center">${row.HOLD || 0}</td><td class="text-center">${row.REWORK || 0}</td>
-                <td class="text-center">${row.SCRAP || 0}</td><td class="text-center">${row.ETC || 0}</td>
-            </tr>
-        `;
+    const table = document.createElement('table');
+    table.className = 'table table-dark table-sm table-bordered table-hover mt-3';
+
+    // Create table header
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
+    const headers = ["Model", "Part No.", "Lot No.", "FG", "NG", "HOLD", "REWORK", "SCRAP", "ETC."];
+    headers.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        headerRow.appendChild(th);
     });
-    tableHTML += `</tbody></table>`;
-    
-    tableContainer.innerHTML = tableHTML;
+
+    // Create table body
+    const tbody = table.createTBody();
+    summaryData.forEach(row => {
+        const tr = tbody.insertRow();
+
+        // Helper to create cells safely with .textContent
+        const createCell = (text, className = '') => {
+            const td = tr.insertCell();
+            td.textContent = text;
+            if (className) td.className = className;
+        };
+
+        createCell(row.model);
+        createCell(row.part_no);
+        createCell(row.lot_no || '');
+        createCell(row.FG || 0, 'text-center');
+        createCell(row.NG || 0, 'text-center');
+        createCell(row.HOLD || 0, 'text-center');
+        createCell(row.REWORK || 0, 'text-center');
+        createCell(row.SCRAP || 0, 'text-center');
+        createCell(row.ETC || 0, 'text-center');
+    });
+
+    tableContainer.appendChild(table);
     openModal('summaryModal');
 }
 

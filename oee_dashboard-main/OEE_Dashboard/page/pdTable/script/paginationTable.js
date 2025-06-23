@@ -30,26 +30,69 @@ async function fetchPartsData(page = 1) {
 
 function renderTable(data) {
     const tbody = document.getElementById('partTableBody');
-    tbody.innerHTML = '';
+    tbody.innerHTML = ''; // Clear existing rows
     if (!data || data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="11" class="text-center">No records found.</td></tr>`;
         return;
     }
-    tbody.innerHTML = data.map(row => {
+
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = row.id;
+
+        const createCell = (text) => {
+            const td = document.createElement('td');
+            td.textContent = text;
+            return td;
+        };
+        const createCenteredCell = (text) => {
+            const td = createCell(text);
+            td.className = 'text-center';
+            return td;
+        };
+
         const formattedDate = row.log_date ? new Date(row.log_date).toLocaleDateString('en-GB') : '';
         const formattedTime = row.log_time ? row.log_time.substring(0, 8) : '';
-        return `
-            <tr data-id="${row.id}">
-                <td class="text-center">${row.id}</td><td>${formattedDate}</td><td>${formattedTime}</td>
-                <td>${row.line}</td><td>${row.model}</td><td>${row.part_no}</td>
-                <td>${row.lot_no || ''}</td><td class="text-center">${row.count_value}</td>
-                <td>${row.count_type}</td><td><div class="note-truncate" title="${row.note || ''}">${row.note || ''}</div></td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-warning" onclick='openEditModal(${JSON.stringify(row)})'>Edit</button>
-                    <button class="btn btn-sm btn-danger" onclick="handleDelete(${row.id})">Delete</button>
-                </td>
-            </tr>`;
-    }).join('');
+        
+        tr.appendChild(createCenteredCell(row.id));
+        tr.appendChild(createCell(formattedDate));
+        tr.appendChild(createCell(formattedTime));
+        tr.appendChild(createCell(row.line));
+        tr.appendChild(createCell(row.model));
+        tr.appendChild(createCell(row.part_no));
+        tr.appendChild(createCell(row.lot_no || ''));
+        tr.appendChild(createCenteredCell(row.count_value));
+        tr.appendChild(createCell(row.count_type));
+        
+        // Safely create the note cell
+        const noteTd = document.createElement('td');
+        const noteDiv = document.createElement('div');
+        noteDiv.className = 'note-truncate';
+        noteDiv.title = row.note || '';
+        noteDiv.textContent = row.note || ''; // Use .textContent
+        noteTd.appendChild(noteDiv);
+        tr.appendChild(noteTd);
+        
+        // Safely create action buttons
+        const actionsTd = document.createElement('td');
+        actionsTd.className = 'text-center';
+        
+        const editButton = document.createElement('button');
+        editButton.className = 'btn btn-sm btn-warning';
+        editButton.textContent = 'Edit';
+        editButton.addEventListener('click', () => openEditModal(row));
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-sm btn-danger';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => handleDelete(row.id));
+
+        actionsTd.appendChild(editButton);
+        actionsTd.appendChild(deleteButton);
+        tr.appendChild(actionsTd);
+
+        tbody.appendChild(tr);
+    });
 }
 
 function renderPagination(page, totalItems, limit) {
@@ -78,7 +121,14 @@ async function populateDatalist(datalistId, action) {
         const result = await response.json();
         if (result.success) {
             const datalist = document.getElementById(datalistId);
-            if (datalist) datalist.innerHTML = result.data.map(item => `<option value="${item}"></option>`).join('');
+            if (datalist) {
+                datalist.innerHTML = ''; // Clear existing options
+                result.data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item; // Setting .value is safe from XSS
+                    datalist.appendChild(option);
+                });
+            }
         }
     } catch (error) {
         console.error(`Failed to populate ${datalistId}:`, error);

@@ -41,7 +41,7 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
 
 function renderTablePage(data) {
     const tbody = document.getElementById('paramTableBody');
-    tbody.innerHTML = '';
+    tbody.innerHTML = ''; // Clear existing rows
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     const pageData = data.slice(start, end);
@@ -53,12 +53,45 @@ function renderTablePage(data) {
     }
 
     pageData.forEach(row => {
-        const actionsHTML = isAdmin ? `
-        <td>
-        <button class="btn btn-sm btn-warning" onclick='editParameter(${JSON.stringify(row)})'>Edit</button>
-        <button class="btn btn-sm btn-danger" onclick='deleteParameter(${row.id})'>Delete</button>
-        </td>` : '';
-        tbody.innerHTML += `<tr data-id="${row.id}"><td>${row.line}</td><td>${row.model}</td><td>${row.part_no}</td><td>${row.sap_no || ''}</td><td>${row.planned_output}</td><td>${row.updated_at}</td>${actionsHTML}</tr>`;
+        const tr = document.createElement('tr');
+        tr.dataset.id = row.id;
+
+        // Helper function to create and append cells safely
+        const createCell = (text) => {
+            const td = document.createElement('td');
+            td.textContent = text; // Use .textContent to prevent XSS
+            return td;
+        };
+
+        tr.appendChild(createCell(row.line));
+        tr.appendChild(createCell(row.model));
+        tr.appendChild(createCell(row.part_no));
+        tr.appendChild(createCell(row.sap_no || ''));
+        tr.appendChild(createCell(row.planned_output));
+        tr.appendChild(createCell(row.updated_at));
+
+        // Create action buttons safely if the user is an admin
+        if (isAdmin) {
+            const actionsTd = document.createElement('td');
+
+            const editButton = document.createElement('button');
+            editButton.className = 'btn btn-sm btn-warning';
+            editButton.textContent = 'Edit';
+            // Add event listener instead of inline onclick
+            editButton.addEventListener('click', () => editParameter(row)); 
+            
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'btn btn-sm btn-danger';
+            deleteButton.textContent = 'Delete';
+            // Add event listener instead of inline onclick
+            deleteButton.addEventListener('click', () => deleteParameter(row.id));
+
+            actionsTd.appendChild(editButton);
+            actionsTd.appendChild(deleteButton);
+            tr.appendChild(actionsTd);
+        }
+        
+        tbody.appendChild(tr);
     });
 }
 

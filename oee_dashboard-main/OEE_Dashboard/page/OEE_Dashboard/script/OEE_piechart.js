@@ -1,3 +1,6 @@
+//ในอนาคตต้องรีแฟกเตอร์ updateInfoBox เพื่อสร้างองค์ประกอบ HTML โดยใช้โปรแกรม document.createElement และ .textContent
+//ตรวจสอบให้แน่ใจเสมอว่าข้อมูลสตริงใดๆ ที่ส่งไปยัง updateInfoBox ถูกเข้ารหัสอย่างถูกต้อง
+
 const charts = {
     oee: null,
     quality: null,

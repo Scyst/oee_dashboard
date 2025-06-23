@@ -50,8 +50,39 @@ function renderTable() {
         return;
     }
     allUsers.forEach(user => {
-        const actionsHTML = (isAdmin && user.id !== currentUserId) ? `<td><button class="btn btn-sm btn-warning" onclick='editUser(${JSON.stringify(user)})'>Edit</button> <button class="btn btn-sm btn-danger" onclick='deleteUser(${user.id})'>Delete</button></td>` : '<td></td>';
-        tbody.innerHTML += `<tr data-id="${user.id}"><td>${user.id}</td><td>${user.username}</td><td>${user.role}</td><td>${user.created_at || 'N/A'}</td>${actionsHTML}</tr>`;
+        const tr = document.createElement('tr');
+        tr.dataset.id = user.id;
+
+        const createCell = (text) => {
+            const td = document.createElement('td');
+            td.textContent = text;
+            return td;
+        };
+
+        tr.appendChild(createCell(user.id));
+        tr.appendChild(createCell(user.username));
+        tr.appendChild(createCell(user.role));
+        tr.appendChild(createCell(user.created_at || 'N/A'));
+
+        const actionsTd = document.createElement('td');
+        if (isAdmin && user.id !== currentUserId) {
+            const editButton = document.createElement('button');
+            editButton.className = 'btn btn-sm btn-warning';
+            editButton.textContent = 'Edit';
+            editButton.addEventListener('click', () => editUser(user));
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'btn btn-sm btn-danger';
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', () => deleteUser(user.id));
+            
+            actionsTd.appendChild(editButton);
+            actionsTd.appendChild(document.createTextNode(' ')); // For spacing
+            actionsTd.appendChild(deleteButton);
+        }
+        tr.appendChild(actionsTd);
+
+        tbody.appendChild(tr);
     });
 }
 
@@ -65,22 +96,44 @@ async function deleteUser(id) {
 async function loadLogs() {
     const tbody = document.getElementById('logTableBody');
     tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+    
+    const renderError = (message) => {
+        tbody.innerHTML = '';
+        const tr = tbody.insertRow();
+        const td = tr.insertCell();
+        td.colSpan = 6;
+        td.className = 'text-center text-danger';
+        td.textContent = message;
+    };
+
     try {
         const result = await sendRequest('logs', 'GET');
+        tbody.innerHTML = ''; // Clear loading message
+
         if (result.success) {
-            tbody.innerHTML = '';
             if (result.data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center">No logs found.</td></tr>';
                 return;
             }
             result.data.forEach(log => {
-                tbody.innerHTML += `<tr><td>${log.id}</td><td>${log.action_by}</td><td>${log.action_type}</td><td>${log.target_user || '-'}</td><td>${log.detail || '-'}</td><td>${log.created_at}</td></tr>`;
+                const tr = tbody.insertRow();
+                const createCell = (text) => {
+                    const td = tr.insertCell();
+                    td.textContent = text;
+                };
+
+                createCell(log.id);
+                createCell(log.action_by);
+                createCell(log.action_type);
+                createCell(log.target_user || '-');
+                createCell(log.detail || '-');
+                createCell(log.created_at);
             });
         } else {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+            renderError(result.message || 'An error occurred.');
         }
     } catch (error) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to load logs.</td></tr>`;
+        renderError('Failed to load logs.');
     }
 }
 
