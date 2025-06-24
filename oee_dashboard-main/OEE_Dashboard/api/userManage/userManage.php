@@ -3,6 +3,18 @@ require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../../auth/check_auth.php';
 require_once __DIR__ . '/../logger.php';
 
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    if (
+        !isset($_SERVER['HTTP_X_CSRF_TOKEN']) ||
+        !isset($_SESSION['csrf_token']) ||
+        !hash_equals($_SESSION['csrf_token'], $_SERVER['HTTP_X_CSRF_TOKEN'])
+    ) {
+        http_response_code(403); // Forbidden
+        echo json_encode(['success' => false, 'message' => 'CSRF token validation failed. Request rejected.']);
+        exit;
+    }
+}
+
 $action = $_REQUEST['action'] ?? '';
 $input = json_decode(file_get_contents("php://input"), true);
 
@@ -126,7 +138,7 @@ try {
             if (!$targetUser) throw new Exception("User not found.");
 
             if ($targetUser['role'] === 'creator') {
-                throw new Exception("Creator accounts cannot be deleted."); // ไม่มีใครลบ creator ได้
+                throw new Exception("Creator accounts cannot be deleted."); 
             }
             if ($targetUser['role'] === 'admin' && !hasRole('creator')) {
                 throw new Exception("Permission denied. Only creators can delete other admins.");

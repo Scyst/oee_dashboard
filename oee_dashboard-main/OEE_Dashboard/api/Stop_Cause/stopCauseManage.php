@@ -1,7 +1,19 @@
 <?php
 require_once __DIR__ . '/../db.php';
-require_once __DIR__ . '/../logger.php'; // เพิ่มการเรียกใช้ logger
-session_start(); // เพิ่มการเริ่ม session
+require_once __DIR__ . '/../logger.php';
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    if (
+        !isset($_SERVER['HTTP_X_CSRF_TOKEN']) ||
+        !isset($_SESSION['csrf_token']) ||
+        !hash_equals($_SESSION['csrf_token'], $_SERVER['HTTP_X_CSRF_TOKEN'])
+    ) {
+        http_response_code(403); // Forbidden
+        echo json_encode(['success' => false, 'message' => 'CSRF token validation failed. Request rejected.']);
+        exit;
+    }
+}
 
 $action = $_REQUEST['action'] ?? 'get_stop';
 

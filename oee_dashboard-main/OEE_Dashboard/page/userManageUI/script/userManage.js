@@ -6,11 +6,23 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
         urlParams.action = action;
         const queryString = new URLSearchParams(urlParams).toString();
         const url = `${API_URL}?${queryString}`;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const options = {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+            },
             body: body ? JSON.stringify(body) : null
         };
+
+        if (body) {
+            options.headers['Content-Type'] = 'application/json';
+        }
+
+        if (method.toUpperCase() !== 'GET' && csrfToken) {
+            options.headers['X-CSRF-TOKEN'] = csrfToken;
+        }
+        
         const response = await fetch(url, options);
         return await response.json();
     } catch (error) {

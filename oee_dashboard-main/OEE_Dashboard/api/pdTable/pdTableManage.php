@@ -3,6 +3,18 @@ require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../logger.php';
 session_start();
 
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    if (
+        !isset($_SERVER['HTTP_X_CSRF_TOKEN']) ||
+        !isset($_SESSION['csrf_token']) ||
+        !hash_equals($_SESSION['csrf_token'], $_SERVER['HTTP_X_CSRF_TOKEN'])
+    ) {
+        http_response_code(403); // Forbidden
+        echo json_encode(['success' => false, 'message' => 'CSRF token validation failed. Request rejected.']);
+        exit;
+    }
+}
+
 $action = $_REQUEST['action'] ?? 'get_parts';
 
 $input = json_decode(file_get_contents("php://input"), true);

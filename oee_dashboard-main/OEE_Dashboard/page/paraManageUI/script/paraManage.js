@@ -8,6 +8,8 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
         const queryString = new URLSearchParams(urlParams).toString();
         const url = `${API_URL}?${queryString}`;
 
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
         const options = {
             method,
             headers: {},
@@ -15,6 +17,10 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
         if (body) {
             options.headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(body);
+        }
+
+        if (method.toUpperCase() !== 'GET' && csrfToken) {
+            options.headers['X-CSRF-TOKEN'] = csrfToken;
         }
         
         const response = await fetch(url, options);

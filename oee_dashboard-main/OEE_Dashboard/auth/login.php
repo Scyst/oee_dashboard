@@ -30,6 +30,8 @@ try {
             'username' => $user['username'],
             'role' => $user['role']
         ];
+
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         
         echo json_encode(['success' => true, 'message' => 'Login successful.']);
     } else {
