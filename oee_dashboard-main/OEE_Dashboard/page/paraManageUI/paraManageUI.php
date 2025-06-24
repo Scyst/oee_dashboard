@@ -23,9 +23,6 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Parameter Manager</h2>
-            <?php if ($isAdmin): ?>
-                <button class="btn btn-success" onclick="openModal('addParamModal')">Add New Parameter</button>
-            <?php endif; ?>
         </div>
 
         <div class="row mb-2 align-items-center sticky-bar">
@@ -34,9 +31,12 @@
             </div>
             <div class="col-md-3 text-end">
                 <?php if ($isAdmin): ?>
-                    <button class="btn btn-sm btn-primary me-2" onclick="triggerImport()">Import</button>
+                    <button class="btn btn-info me-2" onclick="triggerImport()">Import</button>
                 <?php endif; ?>
-                <button class="btn btn-sm btn-info" onclick="exportToExcel()">Export</button>
+                <button class="btn btn-primary me-2" onclick="exportToExcel()">Export</button>
+                <?php if ($isAdmin): ?>
+                <button class="btn btn-success" onclick="openModal('addParamModal')">Add New</button>
+                <?php endif; ?>
             </div>
             <input type="file" id="importFile" accept=".csv, .xlsx, .xls" class="d-none">
         </div>

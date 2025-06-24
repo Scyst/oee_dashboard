@@ -68,13 +68,13 @@ function renderTablePage(data) {
             const actionsTd = document.createElement('td');
 
             const editButton = document.createElement('button');
-            editButton.className = 'btn btn-sm btn-warning';
+            editButton.className = 'btn btn-sm btn-warning me-2';
             editButton.textContent = 'Edit';
             // Add event listener instead of inline onclick
             editButton.addEventListener('click', () => editParameter(row)); 
             
             const deleteButton = document.createElement('button');
-            deleteButton.className = 'btn btn-sm btn-danger';
+            deleteButton.className = 'btn btn-sm btn-danger me-2';
             deleteButton.textContent = 'Delete';
             // Add event listener instead of inline onclick
             deleteButton.addEventListener('click', () => deleteParameter(row.id));
