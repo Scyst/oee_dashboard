@@ -33,11 +33,11 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
 
 async function loadUsers() {
     const result = await sendRequest('read', 'GET');
-    if (result.success) {
+    if (result && result.success) {
         allUsers = result.data;
         renderTable();
     } else {
-        showToast(result.message || 'Failed to load users.', '#dc3545');
+        showToast(result?.message || 'Failed to load users.', '#dc3545');
     }
 }
 
@@ -45,7 +45,8 @@ function renderTable() {
     const tbody = document.getElementById('userTable');
     tbody.innerHTML = '';
     if (!allUsers || allUsers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No users found.</td></tr>';
+        const colSpan = canManage ? 5 : 4;
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">No users found.</td></tr>`;
         return;
     }
 
@@ -64,40 +65,33 @@ function renderTable() {
         tr.appendChild(createCell(user.role));
         tr.appendChild(createCell(user.created_at || 'N/A'));
 
-        const actionsTd = document.createElement('td');
-        const isSelf = (user.id === currentUserId);
-        
-        if (isSelf) {
-            const editButton = document.createElement('button');
-            editButton.className = 'btn btn-sm btn-warning';
-            editButton.textContent = 'Edit';
-            editButton.addEventListener('click', () => editUser(user));
-            actionsTd.appendChild(editButton);
+        if (canManage) {
+            const actionsTd = document.createElement('td');
+            const buttonWrapper = document.createElement('div');
+            buttonWrapper.className = 'd-flex gap-1 btn-group-equal'; // ใช้คลาสที่เราสร้างไว้
 
-        } else {
-            let canManageTarget = true;
-            if (currentUserRole === 'admin' && user.role === 'admin') {
-                canManageTarget = false;
-            }
+            const isSelf = (user.id === currentUserId);
 
-            if (isAdmin && canManageTarget) {
+            if (isSelf || (currentUserRole === 'creator') || (currentUserRole === 'admin' && user.role !== 'admin')) {
                 const editButton = document.createElement('button');
-                editButton.className = 'btn btn-sm btn-warning';
+                editButton.className = 'btn btn-sm btn-warning flex-fill'; // ขนาดปกติ
                 editButton.textContent = 'Edit';
                 editButton.addEventListener('click', () => editUser(user));
-                actionsTd.appendChild(editButton);
-                
-                actionsTd.appendChild(document.createTextNode(' '));
+                buttonWrapper.appendChild(editButton);
+            }
 
+            if (!isSelf && ((currentUserRole === 'creator') || (currentUserRole === 'admin' && user.role !== 'admin'))) {
                 const deleteButton = document.createElement('button');
-                deleteButton.className = 'btn btn-sm btn-danger';
+                deleteButton.className = 'btn btn-sm btn-danger flex-fill'; // ขนาดปกติ
                 deleteButton.textContent = 'Delete';
                 deleteButton.addEventListener('click', () => deleteUser(user.id));
-                actionsTd.appendChild(deleteButton);
+                buttonWrapper.appendChild(deleteButton);
             }
+            
+            actionsTd.appendChild(buttonWrapper);
+            tr.appendChild(actionsTd);
         }
-        
-        tr.appendChild(actionsTd);
+
         tbody.appendChild(tr);
     });
 }
@@ -124,7 +118,7 @@ async function loadLogs() {
 
     try {
         const result = await sendRequest('logs', 'GET');
-        tbody.innerHTML = ''; // Clear loading message
+        tbody.innerHTML = '';
 
         if (result.success) {
             if (result.data.length === 0) {

@@ -1,10 +1,11 @@
-<?php include_once("../../auth/check_auth.php"); ?>
 <?php 
+    include_once("../../auth/check_auth.php"); 
+
     if (!hasRole(['admin', 'creator'])) { 
         header("Location: ../OEE_Dashboard/OEE_Dashboard.php"); 
         exit; 
     }
-    $isAdmin = hasRole(['admin', 'creator']);
+    $canManage = hasRole(['admin', 'creator']);
 ?>
 
 <!DOCTYPE html>
@@ -22,63 +23,67 @@
 
 <body class="bg-dark text-white p-4">
     <?php include('../components/nav_dropdown.php'); ?>
+    
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>User Manager</h2>
-            <button class="btn btn-secondary" onclick="openLogsModal()">View Logs</button>
+            <h2 class="mb-0">User Manager</h2>
         </div>
 
-        <form id="userForm" class="row g-3 mb-4">
-            <input type="hidden" name="id" id="userId">
+        <div class="row mb-3 align-items-center sticky-bar">
+            <div class="col-md-5">
+                <div class="filter-controls-wrapper">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search users...">
+                </div>
+            </div>
+            <div class="col-md-4"></div>
             <div class="col-md-3">
-                <input type="text" name="username" class="form-control" id="username" placeholder="Username" required autocomplete="off">
+                <div class="d-flex justify-content-end gap-2 btn-group-equal">
+                    <button class="btn btn-secondary flex-fill" onclick="openLogsModal()">View Logs</button>
+                    <?php if ($canManage): ?>
+                        <button class="btn btn-success flex-fill" onclick="openModal('addUserModal')">Add New</button>
+                    <?php endif; ?>
+                </div>
             </div>
-            <div class="col-md-3">
-                <input type="password" name="password" class="form-control" id="password" placeholder="Password" autocomplete="new-password">
-            </div>
-            <div class="col-md-3">
-                <select class="form-control" name="role" id="role" required>
-                    <option value="">Select Role</option>
-                    <option value="admin" <?php if (!hasRole('creator')) echo 'disabled'; ?>>Admin</option>
-                    <option value="supervisor">Supervisor</option>
-                    <option value="operator">Operator</option>
-                </select>
-            </div>
-            <div class="col-md-3 d-flex gap-2">
-                <button type="submit" id="addBtn" class="btn btn-success w-50">Add</button>
-                <button type="submit" id="updateBtn" class="btn btn-warning w-50 d-none">Update</button>
-                <button type="button" id="cancelBtn" class="btn btn-secondary" style="flex-grow: 1;">Cancel</button>
-            </div>
-        </form>
+        </div>
 
-        <table class="table table-dark table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Created at</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="userTable"></tbody>
-        </table>
-    </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Created at</th>
+                        <?php if ($canManage): ?>
+                            <th style="width: 150px; text-align: center;">Actions</th>
+                        <?php endif; ?>
+                    </tr>
+                </thead>
+                <tbody id="userTable"></tbody>
+            </table>
+        </div>
 
+        </div>
     <div id="toast"></div>
 
-    <?php include('components/logsModal.php'); ?>
+    <?php 
+        include('components/logsModal.php'); 
+        if ($canManage) {
+
+            include('components/addUserModal.php');
+            include('components/editUserModal.php');
+        }
+    ?>
 
     <script>
-        const isAdmin = <?php echo json_encode($isAdmin); ?>;
+        const canManage = <?php echo json_encode($canManage); ?>;
         const currentUserId = <?php echo json_encode($_SESSION['user']['id'] ?? 0); ?>;
-        const currentUserRole = <?php echo json_encode($_SESSION['user']['role'] ?? ''); ?>; /* <-- เพิ่มบรรทัดนี้ */
+        const currentUserRole = <?php echo json_encode($_SESSION['user']['role'] ?? ''); ?>;
     </script>
 
-    <script src="../components/auto_logout.js"></script>
     <script src="../components/toast.js"></script>
-    <script src="script/userManage.js"></script>  
+    <script src="../components/auto_logout.js"></script>
     <script src="script/modal_handler.js"></script>
-
+    <script src="script/userManage.js"></script>  
 </body>
 </html>

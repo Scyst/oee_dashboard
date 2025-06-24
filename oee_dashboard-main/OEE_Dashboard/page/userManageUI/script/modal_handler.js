@@ -57,7 +57,7 @@ function resetForm() {
 
 // --- Event Listeners for Forms and Modals ---
 document.addEventListener('DOMContentLoaded', () => {
-    if (isAdmin) {
+    if (canManage) {
         const userForm = document.getElementById('userForm');
         if (userForm) {
             userForm.addEventListener('submit', async (e) => {
