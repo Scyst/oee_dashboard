@@ -63,27 +63,31 @@ function renderTable(data, canManage) { // รับ canManage เข้าม�
         
         if (canManage) {
             const actionsTd = document.createElement('td');
-            actionsTd.className = 'text-center';
+
+            const buttonWrapper = document.createElement('div');
+            buttonWrapper.className = 'd-flex gap-1'; 
+
             const editButton = document.createElement('button');
-            editButton.className = 'btn btn-sm btn-warning';
+            editButton.className = 'btn btn-sm btn-warning w-100'; 
             editButton.textContent = 'Edit';
             editButton.addEventListener('click', () => openEditModal(row.id));
             
             const deleteButton = document.createElement('button');
-            deleteButton.className = 'btn btn-sm btn-danger ms-1';
+            deleteButton.className = 'btn btn-sm btn-danger w-100'; 
             deleteButton.textContent = 'Delete';
             deleteButton.addEventListener('click', () => deleteStop(row.id));
 
-            actionsTd.appendChild(editButton);
-            actionsTd.appendChild(deleteButton);
+            buttonWrapper.appendChild(editButton);
+            buttonWrapper.appendChild(deleteButton);
+
+            actionsTd.appendChild(buttonWrapper);
             tr.appendChild(actionsTd);
         }
 
-        tbody.appendChild(tr);
-    });
-}
+                tbody.appendChild(tr);
+            });
+        }
 
-// --- START: แก้ไขฟังก์ชัน renderPagination ทั้งหมด ---
 function renderPagination(page, totalItems, limit) {
     totalPages = totalItems > 0 ? Math.ceil(totalItems / limit) : 1;
     currentPage = parseInt(page);
@@ -103,7 +107,7 @@ function renderPagination(page, totalItems, limit) {
         if (!isDisabled) {
             a.onclick = (e) => {
                 e.preventDefault();
-                fetchStopData(pageNum); // เปลี่ยนเป็น fetchStopData
+                fetchStopData(pageNum);
             };
         }
         li.appendChild(a);
@@ -116,8 +120,6 @@ function renderPagination(page, totalItems, limit) {
     }
     paginationContainer.appendChild(createPageItem(currentPage + 1, 'Next', currentPage === totalPages));
 }
-// --- END: แก้ไขฟังก์ชัน renderPagination ทั้งหมด ---
-
 
 function renderSummary(summaryData, grandTotalMinutes) {
     const summaryContainer = document.getElementById('causeSummary');
@@ -189,4 +191,4 @@ document.addEventListener('DOMContentLoaded', () => {
     populateDatalist('machineListFilter', 'get_machines');
     
     fetchStopData(1);
-});
+}); 

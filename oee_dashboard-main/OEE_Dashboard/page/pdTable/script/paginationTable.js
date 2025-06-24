@@ -72,20 +72,24 @@ function renderTable(data, canManage) { // รับตัวแปร canManage
         
         if (canManage) {
             const actionsTd = document.createElement('td');
-            actionsTd.className = 'text-center';
             
+            const buttonWrapper = document.createElement('div');
+            buttonWrapper.className = 'd-flex gap-1'; 
+
             const editButton = document.createElement('button');
-            editButton.className = 'btn btn-sm btn-warning';
+            editButton.className = 'btn btn-sm btn-warning w-100'; 
             editButton.textContent = 'Edit';
             editButton.addEventListener('click', () => openEditModal(row));
             
             const deleteButton = document.createElement('button');
-            deleteButton.className = 'btn btn-sm btn-danger ms-1';
+            deleteButton.className = 'btn btn-sm btn-danger w-100'; 
             deleteButton.textContent = 'Delete';
             deleteButton.addEventListener('click', () => handleDelete(row.id));
 
-            actionsTd.appendChild(editButton);
-            actionsTd.appendChild(deleteButton);
+            buttonWrapper.appendChild(editButton);
+            buttonWrapper.appendChild(deleteButton);
+
+            actionsTd.appendChild(buttonWrapper);
             tr.appendChild(actionsTd);
         }
 
@@ -94,12 +98,11 @@ function renderTable(data, canManage) { // รับตัวแปร canManage
 }
 
 
-// --- START: แก้ไขฟังก์ชัน renderPagination ทั้งหมด ---
 function renderPagination(page, totalItems, limit) {
     totalPages = totalItems > 0 ? Math.ceil(totalItems / limit) : 1;
     currentPage = parseInt(page);
     const paginationContainer = document.getElementById('paginationControls');
-    paginationContainer.innerHTML = ''; // Clear old controls
+    paginationContainer.innerHTML = ''; 
 
     if (totalPages <= 1) return;
 
@@ -121,21 +124,14 @@ function renderPagination(page, totalItems, limit) {
         return li;
     };
 
-    // "Previous" button
     paginationContainer.appendChild(createPageItem(currentPage - 1, 'Previous', currentPage === 1));
 
-    // Page number buttons
-    // Logic to show a limited number of pages, e.g., ... 3 4 5 ...
-    // This is a simple implementation showing all pages. For a large number of pages, you might want to add ellipsis logic.
-    for (let i = 1; i <= totalPages; i++) {
+        for (let i = 1; i <= totalPages; i++) {
         paginationContainer.appendChild(createPageItem(i, i, false, i === currentPage));
     }
 
-    // "Next" button
     paginationContainer.appendChild(createPageItem(currentPage + 1, 'Next', currentPage === totalPages));
 }
-// --- END: แก้ไขฟังก์ชัน renderPagination ทั้งหมด ---
-
 
 function renderSummary(summaryData, grandTotalData) {
     window.cachedSummary = summaryData || [];
@@ -197,11 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.filterDebounceTimer = setTimeout(handleFilterChange, 500);
         });
     });
-
-    // The pagination buttons are now dynamically created, so we attach event listeners to the container
-    // The createPageItem function handles the click logic, so we don't need these anymore.
-    // document.getElementById('prevPageBtn')?.addEventListener('click', ...);
-    // document.getElementById('nextPageBtn')?.addEventListener('click', ...);
 
     populateDatalist('partNoList', 'get_part_nos');
     populateDatalist('lotList', 'get_lot_numbers');

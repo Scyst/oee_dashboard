@@ -81,7 +81,7 @@
                         <th>Recoverer</th>
                         <th style="min-width: 200px;">Note</th>
                         <?php if ($canManage): ?>
-                            <th style="width: 130px;">Actions</th>
+                            <th style="width: 150px; text-align: center;">Actions</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
