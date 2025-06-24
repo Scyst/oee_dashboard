@@ -65,14 +65,14 @@
                     <span>-</span>
                     <input type="date" id="filterEndDate" class="form-control">
                 </div>
-                 </div>
+            </div>
 
             <div class="col-md-1"></div>
 
             <div class="col-md-2">
                 <div class="d-flex justify-content-end gap-2 btn-group-equal">
                     <button class="btn btn-secondary flex-fill" onclick="openSummaryModal()">Summary</button>
-                    <button class="btn btn-info flex-fill" onclick="exportToExcel()">Export</button>
+                    <button class="btn btn-primary flex-fill" onclick="exportToExcel()">Export</button>
                      <?php if ($canManage): ?>
                         <button class="btn btn-success flex-fill" onclick="openModal('addPartModal')">Add</button>
                     <?php endif; ?>

@@ -2,14 +2,13 @@ let allParameters = [], currentPage = 1;
 const rowsPerPage = 25;
 const API_URL = '../../api/paraManage/paraManage.php';
 
+// ฟังก์ชันนี้ถูกต้องดีแล้ว
 async function sendRequest(action, method, body = null, urlParams = {}) {
     try {
         urlParams.action = action;
         const queryString = new URLSearchParams(urlParams).toString();
         const url = `${API_URL}?${queryString}`;
-
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
         const options = {
             method,
             headers: {},
@@ -18,29 +17,29 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
             options.headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(body);
         }
-
         if (method.toUpperCase() !== 'GET' && csrfToken) {
             options.headers['X-CSRF-TOKEN'] = csrfToken;
         }
-        
         const response = await fetch(url, options);
         return await response.json();
     } catch (error) {
         console.error(`Request for action '${action}' failed:`, error);
-        showToast('An unexpected error occurred.', '#dc3545');
-        return { success: false };
+        // showToast จะถูกเรียกจาก toast.js ที่เป็น global
+        showToast('An unexpected error occurred.', '#dc3545'); 
+        return { success: false, message: "Network or server error." }; // คืนค่า object เสมอ
     }
 }
 
 function renderTablePage(data) {
     const tbody = document.getElementById('paramTableBody');
-    tbody.innerHTML = ''; // Clear existing rows
+    tbody.innerHTML = '';
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     const pageData = data.slice(start, end);
 
     if (pageData.length === 0) {
-        const colSpan = isAdmin ? 7 : 6;
+        // --- ใช้ตัวแปร global 'canManage' ที่ถูกต้อง ---
+        const colSpan = canManage ? 7 : 6;
         tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">No parameters found.</td></tr>`;
         return;
     }
@@ -48,42 +47,35 @@ function renderTablePage(data) {
     pageData.forEach(row => {
         const tr = document.createElement('tr');
         tr.dataset.id = row.id;
-
-        // Helper function to create and append cells safely
         const createCell = (text) => {
             const td = document.createElement('td');
-            td.textContent = text; // Use .textContent to prevent XSS
+            td.textContent = text;
             return td;
         };
-
         tr.appendChild(createCell(row.line));
         tr.appendChild(createCell(row.model));
         tr.appendChild(createCell(row.part_no));
         tr.appendChild(createCell(row.sap_no || ''));
         tr.appendChild(createCell(row.planned_output));
         tr.appendChild(createCell(row.updated_at));
-
-        // Create action buttons safely if the user is an admin
-        if (isAdmin) {
+        
+        if (canManage) {
             const actionsTd = document.createElement('td');
-
+            const buttonWrapper = document.createElement('div');
+            buttonWrapper.className = 'd-flex gap-1';
             const editButton = document.createElement('button');
-            editButton.className = 'btn btn-sm btn-warning me-2';
+            editButton.className = 'btn btn-sm btn-warning w-100';
             editButton.textContent = 'Edit';
-            // Add event listener instead of inline onclick
-            editButton.addEventListener('click', () => editParameter(row)); 
-            
+            editButton.addEventListener('click', () => editParameter(row));
             const deleteButton = document.createElement('button');
-            deleteButton.className = 'btn btn-sm btn-danger me-2';
+            deleteButton.className = 'btn btn-sm btn-danger w-100';
             deleteButton.textContent = 'Delete';
-            // Add event listener instead of inline onclick
             deleteButton.addEventListener('click', () => deleteParameter(row.id));
-
-            actionsTd.appendChild(editButton);
-            actionsTd.appendChild(deleteButton);
+            buttonWrapper.appendChild(editButton);
+            buttonWrapper.appendChild(deleteButton);
+            actionsTd.appendChild(buttonWrapper);
             tr.appendChild(actionsTd);
         }
-        
         tbody.appendChild(tr);
     });
 }
@@ -96,7 +88,10 @@ function renderPaginationControls(totalItems) {
     const createPageItem = (page, text = page, isDisabled = false, isActive = false) => {
         const li = document.createElement('li');
         li.className = `page-item ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}`;
-        const a = document.createElement('a'); a.className = 'page-link'; a.href = '#'; a.textContent = text;
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.href = '#';
+        a.textContent = text;
         a.onclick = (e) => { e.preventDefault(); if (!isDisabled) goToPage(page); };
         li.appendChild(a);
         return li;
@@ -124,40 +119,34 @@ function filterAndRenderTable() {
 }
 
 function editParameter(data) {
-    const modal = document.getElementById('editParamModal');
-    if (!modal) return;
+    openModal('editParamModal');
     for (const key in data) {
-        const input = modal.querySelector(`#edit_${key}`);
+        const input = document.getElementById('editParamModal').querySelector(`#edit_${key}`);
         if (input) input.value = data[key];
     }
-    openModal('editParamModal');
 }
 
 async function deleteParameter(id) {
     if (!confirm(`Delete parameter ID ${id}?`)) return;
-    // --- START: การแก้ไขที่สำคัญ ---
     const result = await sendRequest('delete', 'GET', null, { id: id });
-    // --- END: การแก้ไขที่สำคัญ ---
+    showToast(result.message || 'Error', !result.success ? '#dc3545' : '#28a745');
     if (result.success) {
-        showToast('Parameter deleted successfully!');
         loadParameters();
-    } else {
-        showToast(result.message || 'Failed to delete parameter.', '#dc3545');
     }
 }
 
 async function loadParameters() {
     const result = await sendRequest('read', 'GET');
-    if (result.success) {
+    if (result && result.success) {
         allParameters = result.data;
-        filterAndRenderTable();
+        filterAndRenderTable(); 
     } else {
-        showToast(result.message || 'Failed to load parameters.', '#dc3545');
+        showToast(result?.message || 'Failed to load parameters.', '#dc3545');
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadParameters();
+    loadParameters(); 
     document.getElementById('searchInput')?.addEventListener('input', () => {
         currentPage = 1;
         filterAndRenderTable();

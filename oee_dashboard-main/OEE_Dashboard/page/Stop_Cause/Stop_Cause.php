@@ -58,7 +58,7 @@
 
             <div class="col-md-2">
                 <div class="d-flex justify-content-end gap-2 btn-group-equal">
-                    <button class="btn btn-info flex-fill" onclick="exportToExcel()">Export</button>
+                    <button class="btn btn-primary flex-fill" onclick="exportToExcel()">Export</button>
                     <?php if ($canManage): ?>
                         <button class="btn btn-success flex-fill" onclick="openModal('addStopModal')">Add</button>
                     <?php endif; ?>

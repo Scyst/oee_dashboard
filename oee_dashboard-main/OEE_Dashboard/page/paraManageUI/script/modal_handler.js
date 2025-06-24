@@ -28,7 +28,7 @@ async function openEditModal(id) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (!isAdmin) return;
+    if (!canManage) return;
 
     document.getElementById('addParamForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
