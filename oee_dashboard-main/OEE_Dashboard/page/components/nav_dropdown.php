@@ -42,7 +42,10 @@
       </a>
     </li>
 
-    <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
+    <?php 
+      $userRole = $_SESSION['user']['role'] ?? null;
+      if ($userRole && in_array($userRole, ['admin', 'creator'])): 
+    ?>
       <li>
         <a class="dropdown-item-icon" href="../userManageUI/userManageUI.php" title="User Manager">
           <img src="../../icons/admin.png" alt="User Manager">

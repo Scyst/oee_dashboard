@@ -65,6 +65,7 @@
     <script>
         const isAdmin = <?php echo json_encode($isAdmin); ?>;
         const currentUserId = <?php echo json_encode($_SESSION['user']['id'] ?? 0); ?>;
+        const currentUserRole = <?php echo json_encode($_SESSION['user']['role'] ?? ''); ?>; /* <-- เพิ่มบรรทัดนี้ */
     </script>
 
     <script src="../components/auto_logout.js"></script>

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../db.php';
-require_once __DIR__ . '/../../auth/check_auth.php'; 
-require_once __DIR__ . '/../logger.php'; 
+require_once __DIR__ . '/../../auth/check_auth.php';
+require_once __DIR__ . '/../logger.php';
 
 $action = $_REQUEST['action'] ?? '';
 $input = json_decode(file_get_contents("php://input"), true);
@@ -27,7 +27,7 @@ try {
 
         case 'create':
             if (!hasRole(['admin', 'creator'])) {
-                 throw new Exception("Permission denied.");
+                throw new Exception("Permission denied.");
             }
             $username = trim($input['username'] ?? '');
             $password = trim($input['password'] ?? '');
@@ -37,7 +37,7 @@ try {
                 throw new Exception("Username, password, and role are required.");
             }
             if ($role === 'creator') {
-                 throw new Exception("Cannot create a user with the 'creator' role.");
+                throw new Exception("Cannot create a user with the 'creator' role.");
             }
             if ($role === 'admin' && !hasRole('creator')) {
                 throw new Exception("Only creators can create admin users.");
@@ -53,97 +53,97 @@ try {
             break;
 
         case 'update':
-            $id = (int)($input['id'] ?? 0);
-            $username = trim($input['username'] ?? '');
-            $role = trim($input['role'] ?? '');
-            $password = trim($input['password'] ?? '');
+            $targetId = (int)($input['id'] ?? 0);
+            if (!$targetId) throw new Exception("Target user ID is required.");
 
-            if (!$id || !$username || !$role) throw new Exception("ID, username, and role are required for update.");
-
-            $stmt = $pdo->prepare("SELECT username, role FROM IOT_TOOLBOX_USERS WHERE id = ?");
-            $stmt->execute([$id]);
+            $stmt = $pdo->prepare("SELECT id, username, role FROM IOT_TOOLBOX_USERS WHERE id = ?");
+            $stmt->execute([$targetId]);
             $targetUser = $stmt->fetch();
             if (!$targetUser) throw new Exception("Target user not found.");
 
-            $isEditingSelf = ($id === (int)$currentUser['id']);
-            $isCreator = hasRole('creator');
-
             if ($targetUser['role'] === 'creator') throw new Exception("Creator accounts cannot be modified.");
+
+            $isEditingSelf = ($targetId === (int)$currentUser['id']);
             
-            if (!$isEditingSelf) { // --- ตรรกะเมื่อแก้ไขผู้ใช้อื่น
-                if ($targetUser['role'] === 'admin' && !$isCreator) {
-                    throw new Exception("Only creators can modify other admins.");
-                }
-                if ($role === 'admin' && !$isCreator) {
-                    throw new Exception("Only creators can promote users to admin.");
+            if (hasRole('admin') && !hasRole('creator')) {
+                if (!$isEditingSelf && $targetUser['role'] === 'admin') {
+                    throw new Exception("Admins cannot modify other admins.");
                 }
             }
-            
+
             $updateFields = [];
             $params = [];
-            
-            if ($isEditingSelf && ($username !== $currentUser['username'] || $role !== $currentUser['role'])) {
-                throw new Exception("You can only change your own password.");
-            } else {
-                $updateFields[] = "username = ?";
-                $params[] = $username;
-                $updateFields[] = "role = ?";
-                $params[] = $role;
+            $logDetails = [];
+
+            if (!$isEditingSelf || hasRole('creator')) {
+                if (isset($input['username']) && $input['username'] !== $targetUser['username']) {
+                    $updateFields[] = "username = ?";
+                    $params[] = trim($input['username']);
+                    $logDetails[] = "username to " . trim($input['username']);
+                }
+                if (isset($input['role']) && $input['role'] !== $targetUser['role']) {
+                    if ($input['role'] === 'admin' && !hasRole('creator')) {
+                         throw new Exception("Only creators can promote users to admin.");
+                    }
+                    $updateFields[] = "role = ?";
+                    $params[] = trim($input['role']);
+                    $logDetails[] = "role to " . trim($input['role']);
+                }
             }
-            
-            if (!empty($password)) {
+
+            if (!empty($input['password'])) {
                 $updateFields[] = "password = ?";
-                $params[] = password_hash($password, PASSWORD_DEFAULT);
+                $params[] = password_hash(trim($input['password']), PASSWORD_DEFAULT);
+                $logDetails[] = "password changed";
             }
             
             if (empty($updateFields)) {
-                 echo json_encode(['success' => true, 'message' => 'No changes were made.']);
-                 break;
+                echo json_encode(['success' => true, 'message' => 'No changes were made.']);
+                break;
             }
 
             $sql = "UPDATE IOT_TOOLBOX_USERS SET " . implode(', ', $updateFields) . " WHERE id = ?";
-            $params[] = $id;
+            $params[] = $targetId;
 
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
-            logAction($pdo, $currentUser['username'], 'UPDATE USER', $username, "Role: $role");
+            logAction($pdo, $currentUser['username'], 'UPDATE USER', $targetUser['username'], implode(', ', $logDetails));
             echo json_encode(['success' => true, 'message' => 'User updated successfully.']);
             break;
-
+            
         case 'delete':
-            $id = (int)($_GET['id'] ?? 0);
-            if ($id === (int)$currentUser['id']) {
+            $targetId = (int)($_GET['id'] ?? 0);
+            if (!$targetId) throw new Exception("Missing user ID.");
+
+            if ($targetId === (int)$currentUser['id']) {
                 throw new Exception("You cannot delete your own account.");
             }
 
             $stmt = $pdo->prepare("SELECT username, role FROM IOT_TOOLBOX_USERS WHERE id = ?");
-            $stmt->execute([$id]);
+            $stmt->execute([$targetId]);
             $targetUser = $stmt->fetch();
-            if (!$targetUser) {
-                throw new Exception("User not found.");
+            if (!$targetUser) throw new Exception("User not found.");
+
+            if ($targetUser['role'] === 'creator') {
+                throw new Exception("Creator accounts cannot be deleted."); // ไม่มีใครลบ creator ได้
             }
-            if ($targetUser['role'] === 'creator' || $targetUser['role'] === 'admin') {
-                if (!hasRole('creator')) {
-                    throw new Exception("Permission denied. Only creators can delete admins.");
-                }
+            if ($targetUser['role'] === 'admin' && !hasRole('creator')) {
+                throw new Exception("Permission denied. Only creators can delete other admins.");
             }
 
             $deleteStmt = $pdo->prepare("DELETE FROM IOT_TOOLBOX_USERS WHERE id = ?");
-            $deleteStmt->execute([$id]);
+            $deleteStmt->execute([$targetId]);
 
             logAction($pdo, $currentUser['username'], 'DELETE USER', $targetUser['username']);
             echo json_encode(['success' => true, 'message' => 'User deleted successfully.']);
             break;
-        
+            
         case 'logs':
             $stmt = $pdo->query("SELECT TOP 500 * FROM IOT_TOOLBOX_USER_LOGS ORDER BY created_at DESC");
-            
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($logs as &$log) {
-                if ($log['created_at']) {
-                    $log['created_at'] = (new DateTime($log['created_at']))->format('Y-m-d H:i:s');
-                }
+                if ($log['created_at']) $log['created_at'] = (new DateTime($log['created_at']))->format('Y-m-d H:i:s');
             }
             echo json_encode(['success' => true, 'data' => $logs]);
             break;

@@ -1,4 +1,11 @@
-<?php include_once("../../auth/check_auth.php"); ?>
+<?php 
+    include_once("../../auth/check_auth.php"); 
+
+    if (!hasRole(['supervisor', 'admin', 'creator'])) {
+        header("Location: ../OEE_Dashboard/OEE_Dashboard.php");
+        exit;
+    }
+?>
 
 <!DOCTYPE html>
 <html lang="en">

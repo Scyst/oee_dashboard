@@ -1,4 +1,11 @@
-<?php include_once("../../auth/check_auth.php"); ?>
+<?php 
+    include_once("../../auth/check_auth.php"); 
+    if (!hasRole(['supervisor', 'admin', 'creator'])) {
+        header("Location: ../OEE_Dashboard/OEE_Dashboard.php");
+        exit;
+    }
+    $canManage = hasRole(['supervisor', 'admin', 'creator']);
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -43,11 +50,13 @@
         </div>
         
         <div class="stop-cause">
-            <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px; align-items: center;">
+           <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px; align-items: center;">
                 <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto;"></div>
                 <div>
                     <button onclick="exportToExcel()">Export to Excel</button>
-                    <button onclick="openModal('addStopModal')">Add</button>
+                    <?php if ($canManage): ?>
+                        <button onclick="openModal('addStopModal')">Add</button>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -65,7 +74,9 @@
                             <th>Cause</th>
                             <th>Recovered By</th>
                             <th style="width: 250px;">Note</th>
-                            <th style="width: 175px;">Actions</th>
+                            <?php if ($canManage): ?>
+                                <th style="width: 175px;">Actions</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody id="stopTableBody"></tbody>
@@ -82,10 +93,14 @@
 
     <div id="toast"></div>
 
+    <?php if ($canManage): ?>
     <?php include('components/addModal.php'); ?>
     <?php include('components/editModal.php'); ?>
+    <?php endif; ?>
     
     <script>
+        const canManage = <?php echo json_encode($canManage); ?>;
+
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];

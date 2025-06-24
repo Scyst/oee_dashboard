@@ -1,5 +1,7 @@
-<?php include_once("../../auth/check_auth.php"); ?>
-<?php $isAdmin = ($_SESSION['user']['role'] ?? 'operator') === 'admin'; ?>
+<?php 
+    include_once("../../auth/check_auth.php"); 
+    $isAdmin = hasRole(['admin', 'creator']);
+?>
 
 <!DOCTYPE html>
 <html lang="en">

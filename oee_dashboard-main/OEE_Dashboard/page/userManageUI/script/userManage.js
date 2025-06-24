@@ -36,6 +36,7 @@ function renderTable() {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center">No users found.</td></tr>';
         return;
     }
+
     allUsers.forEach(user => {
         const tr = document.createElement('tr');
         tr.dataset.id = user.id;
@@ -52,23 +53,39 @@ function renderTable() {
         tr.appendChild(createCell(user.created_at || 'N/A'));
 
         const actionsTd = document.createElement('td');
-        if (isAdmin && user.id !== currentUserId) {
+        const isSelf = (user.id === currentUserId);
+        
+        if (isSelf) {
             const editButton = document.createElement('button');
             editButton.className = 'btn btn-sm btn-warning';
             editButton.textContent = 'Edit';
             editButton.addEventListener('click', () => editUser(user));
-
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'btn btn-sm btn-danger';
-            deleteButton.textContent = 'Delete';
-            deleteButton.addEventListener('click', () => deleteUser(user.id));
-            
             actionsTd.appendChild(editButton);
-            actionsTd.appendChild(document.createTextNode(' ')); // For spacing
-            actionsTd.appendChild(deleteButton);
-        }
-        tr.appendChild(actionsTd);
 
+        } else {
+            let canManageTarget = true;
+            if (currentUserRole === 'admin' && user.role === 'admin') {
+                canManageTarget = false;
+            }
+
+            if (isAdmin && canManageTarget) {
+                const editButton = document.createElement('button');
+                editButton.className = 'btn btn-sm btn-warning';
+                editButton.textContent = 'Edit';
+                editButton.addEventListener('click', () => editUser(user));
+                actionsTd.appendChild(editButton);
+                
+                actionsTd.appendChild(document.createTextNode(' '));
+
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'btn btn-sm btn-danger';
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteUser(user.id));
+                actionsTd.appendChild(deleteButton);
+            }
+        }
+        
+        tr.appendChild(actionsTd);
         tbody.appendChild(tr);
     });
 }

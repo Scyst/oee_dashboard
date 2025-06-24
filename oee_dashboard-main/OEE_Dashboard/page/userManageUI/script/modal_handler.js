@@ -48,14 +48,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const id = document.getElementById('userId').value;
                 const action = id ? 'update' : 'create';
                 const payload = Object.fromEntries(new FormData(userForm).entries());
-
-                if (!payload.username || !payload.role || (action === 'create' && !payload.password)) {
-                    showToast("Please fill all required fields.", "#ffc107");
-                    return;
+            
+                if (action === 'create') {
+                    if (!payload.username || !payload.role || !payload.password) {
+                        showToast("Username, password, and role are required for new users.", "#ffc107");
+                        return;
+                    }
+                } else { 
+                    if (!payload.username || !payload.role) {
+                        showToast("Username and role cannot be empty when updating.", "#ffc107");
+                        return;
+                    }
                 }
 
                 const result = await sendRequest(action, 'POST', payload);
                 showToast(result.message, result.success ? '#28a745' : '#dc3545');
+                
                 if (result.success) {
                     resetForm();
                     loadUsers();

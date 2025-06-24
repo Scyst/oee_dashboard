@@ -58,19 +58,24 @@ function renderTable(data) {
         noteTd.appendChild(noteDiv);
         tr.appendChild(noteTd);
         
-        const actionsTd = document.createElement('td');
-        actionsTd.className = 'text-center';
-        const editButton = document.createElement('button');
-        editButton.className = 'btn btn-sm btn-warning';
-        editButton.textContent = 'Edit';
-        editButton.addEventListener('click', () => openEditModal(row.id));
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-sm btn-danger';
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', () => deleteStop(row.id));
-        actionsTd.appendChild(editButton);
-        actionsTd.appendChild(deleteButton);
-        tr.appendChild(actionsTd);
+        if (canManage) {
+            const actionsTd = document.createElement('td');
+            actionsTd.className = 'text-center';
+            
+            const editButton = document.createElement('button');
+            editButton.className = 'btn btn-sm btn-warning';
+            editButton.textContent = 'Edit';
+            editButton.addEventListener('click', () => openEditModal(row.id));
+            
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'btn btn-sm btn-danger';
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', () => deleteStop(row.id));
+
+            actionsTd.appendChild(editButton);
+            actionsTd.appendChild(deleteButton);
+            tr.appendChild(actionsTd);
+        }
 
         tbody.appendChild(tr);
     });
