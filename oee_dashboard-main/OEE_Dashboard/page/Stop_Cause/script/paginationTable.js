@@ -18,7 +18,7 @@ async function fetchStopData(page = 1) {
         const result = await response.json();
         if (!result.success) throw new Error(result.message);
 
-        renderTable(result.data, canManage);
+            renderTable(result.data, canManage);
 
         renderPagination(result.page, result.total, result.limit);
         renderSummary(result.summary, result.grand_total_minutes);
@@ -65,12 +65,12 @@ function renderTable(data, canManage) { // รับ canManage เข้าม�
             const actionsTd = document.createElement('td');
             actionsTd.className = 'text-center';
             const editButton = document.createElement('button');
-            editButton.className = 'btn btn-warning';
+            editButton.className = 'btn btn-sm btn-warning';
             editButton.textContent = 'Edit';
             editButton.addEventListener('click', () => openEditModal(row.id));
             
             const deleteButton = document.createElement('button');
-            deleteButton.className = 'btn btn-danger ms-1';
+            deleteButton.className = 'btn btn-sm btn-danger ms-1';
             deleteButton.textContent = 'Delete';
             deleteButton.addEventListener('click', () => deleteStop(row.id));
 

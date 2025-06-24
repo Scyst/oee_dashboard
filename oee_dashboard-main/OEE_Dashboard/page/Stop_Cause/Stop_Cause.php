@@ -78,7 +78,7 @@
                         <th>Line</th>
                         <th>Machine</th>
                         <th>Cause</th>
-                        <th>Recovered By</th>
+                        <th>Recoverer</th>
                         <th style="min-width: 200px;">Note</th>
                         <?php if ($canManage): ?>
                             <th style="width: 130px;">Actions</th>
