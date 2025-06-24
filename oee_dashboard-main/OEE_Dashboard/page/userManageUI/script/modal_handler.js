@@ -16,11 +16,28 @@ async function openLogsModal() {
 }
 
 function editUser(user) {
+    const isSelf = (user.id === currentUserId);
+    const usernameInput = document.getElementById('username');
+    const roleInput = document.getElementById('role');
+
+    // เปิดใช้งาน input ก่อนเสมอ เพื่อให้แน่ใจว่าค่าจะถูกตั้งได้
+    usernameInput.disabled = false;
+    roleInput.disabled = false;
+
+    // ตั้งค่าฟอร์ม
     document.getElementById('userId').value = user.id;
-    document.getElementById('username').value = user.username;
-    document.getElementById('role').value = user.role;
+    usernameInput.value = user.username;
+    roleInput.value = user.role;
     document.getElementById('password').placeholder = 'Leave blank to keep unchanged';
     document.getElementById('password').value = '';
+
+    // ตรวจสอบเงื่อนไข: ถ้าเป็น admin แก้ไขตัวเอง ให้ disable ช่องที่ไม่ต้องการให้แก้
+    if (currentUserRole === 'admin' && isSelf) {
+        usernameInput.disabled = true;
+        roleInput.disabled = true;
+    }
+
+    // สลับปุ่ม
     document.getElementById('addBtn').classList.add('d-none');
     document.getElementById('updateBtn').classList.remove('d-none');
     document.getElementById('cancelBtn').classList.remove('d-none');
@@ -48,15 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const id = document.getElementById('userId').value;
                 const action = id ? 'update' : 'create';
                 const payload = Object.fromEntries(new FormData(userForm).entries());
-            
+
                 if (action === 'create') {
-                    if (!payload.username || !payload.role || !payload.password) {
-                        showToast("Username, password, and role are required for new users.", "#ffc107");
-                        return;
-                    }
-                } else { 
-                    if (!payload.username || !payload.role) {
-                        showToast("Username and role cannot be empty when updating.", "#ffc107");
+                    if (!payload.username || !payload.password || !payload.role) {
+                        showToast("Please fill all required fields for new user.", "#ffc107");
                         return;
                     }
                 }
