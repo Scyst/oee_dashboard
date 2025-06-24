@@ -1,4 +1,6 @@
 function exportToExcel() {
+    showToast('Exporting data... Please wait.', '#0dcaf0');
+    
     const dataToExport = getFilteredData();
 
     if (!dataToExport || dataToExport.length === 0) {

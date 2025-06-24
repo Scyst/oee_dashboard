@@ -73,7 +73,6 @@ async function exportToExcel() {
     showToast('Exporting data... Please wait.', '#0dcaf0');
 
     try {
-        // --- การเปลี่ยนแปลง ---
         const response = await fetch(`../../api/pdTable/pdTableManage.php?${params.toString()}`);
         const result = await response.json();
 

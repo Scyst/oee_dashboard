@@ -35,7 +35,7 @@
                 <?php endif; ?>
                 <button class="btn btn-sm btn-info" onclick="exportToExcel()">Export</button>
             </div>
-            <input type="file" id="importFile" accept=".csv, .xlsx, .xls" class="d-none" onchange="handleImport(event)">
+            <input type="file" id="importFile" accept=".csv, .xlsx, .xls" class="d-none">
         </div>
 
         <div>
@@ -70,8 +70,8 @@
 
     <script src="../components/auto_logout.js"></script>
     <script src="../components/toast.js"></script>
-    <script src="script/paraManage.js"></script>
-    <script src="script/export_data.js"></script>
     <script src="script/modal_handler.js"></script>
+    <script src="script/export_data.js"></script>
+    <script src="script/paraManage.js"></script>
 </body>
 </html>
