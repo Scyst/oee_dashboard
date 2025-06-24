@@ -27,18 +27,18 @@ async function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     if (!doc.autoTable) {
-        alert("jsPDF AutoTable plugin not loaded.");
+        showToast("jsPDF AutoTable plugin not loaded.", '#dc3545');
         return;
     }
     
-    alert("Preparing PDF export... Please wait.");
+    showToast("Preparing PDF export... Please wait.", '#0dcaf0');
 
     try {
         const response = await fetch(`${STOP_CAUSE_API_URL}?${getStopCauseFilterParams().toString()}`);
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {
-            alert("No data to export.");
+            showToast("No data to export.", '#ffc107');
             return;
         }
 
@@ -61,19 +61,19 @@ async function exportToPDF() {
         doc.save(`Stop_Cause_History_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
         console.error("PDF Export failed:", error);
-        alert("An error occurred during PDF export.");
+        showToast("An error occurred during PDF export.", '#dc3545');
     }
 }
 
 async function exportToExcel() {
-    alert("Preparing Excel export... Please wait.");
+    showToast("Preparing Excel export... Please wait.", '#0dcaf0');
     
     try {
         const response = await fetch(`${STOP_CAUSE_API_URL}?${getStopCauseFilterParams().toString()}`);
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {
-            alert("No data to export.");
+            showToast("No data to export.", '#ffc107');
             return;
         }
 
@@ -115,6 +115,6 @@ async function exportToExcel() {
 
     } catch (error) {
         console.error('Excel Export failed:', error);
-        alert('Failed to export data.');
+        showToast('Failed to export data.', '#dc3545');
     }
 }

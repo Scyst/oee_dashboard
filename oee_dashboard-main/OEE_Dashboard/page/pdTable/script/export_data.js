@@ -3,7 +3,7 @@ async function exportToPDF() {
     const doc = new jsPDF();
 
     if (!doc.autoTable) {
-        alert("jsPDF AutoTable plugin not loaded.");
+        showToast("jsPDF AutoTable plugin not loaded.", '#dc3545');
         return;
     }
 
@@ -25,7 +25,7 @@ async function exportToPDF() {
     const result = await response.json();
 
     if (!result.success || result.data.length === 0) {
-        alert("Failed to export data or no data found.");
+        showToast("Failed to export data or no data found.", '#ffc107');
         return;
     }
 
@@ -70,7 +70,7 @@ async function exportToExcel() {
         limit: 100000
     });
     
-    alert('Exporting data... Please wait.');
+    showToast('Exporting data... Please wait.', '#0dcaf0');
 
     try {
         // --- การเปลี่ยนแปลง ---
@@ -78,7 +78,7 @@ async function exportToExcel() {
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {
-            alert("No data to export.");
+            showToast("No data to export.", '#ffc107');
             return;
         }
 
@@ -131,7 +131,7 @@ async function exportToExcel() {
 
     } catch (error) {
         console.error('Export to Excel failed:', error);
-        alert('Failed to export data. Please check the console for errors.');
+        showToast('Failed to export data. Please check the console for errors.', '#dc3545');
     }
 }
 
@@ -140,7 +140,7 @@ function exportSummaryToExcel() {
     const grandTotalData = window.cachedGrand || {};
 
     if (summaryData.length === 0) {
-        alert("No summary data to export.");
+        showToast("No summary data to export.", '#ffc107');
         return;
     }
 

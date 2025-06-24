@@ -2,7 +2,7 @@ function exportToExcel() {
     const dataToExport = getFilteredData();
 
     if (!dataToExport || dataToExport.length === 0) {
-        alert("No data to export based on the current filter.");
+        showToast("No data to export based on the current filter.", '#ffc107');
         return;
     }
 
