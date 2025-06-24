@@ -17,7 +17,9 @@ async function fetchStopData(page = 1) {
         const response = await fetch(`${API_URL}?${params.toString()}`);
         const result = await response.json();
         if (!result.success) throw new Error(result.message);
-        renderTable(result.data);
+
+        renderTable(result.data, canManage);
+
         renderPagination(result.page, result.total, result.limit);
         renderSummary(result.summary, result.grand_total_minutes);
     } catch (error) {
@@ -26,25 +28,26 @@ async function fetchStopData(page = 1) {
     }
 }
 
-function renderTable(data) {
+function renderTable(data, canManage) { // รับ canManage เข้ามา
     const tbody = document.getElementById('stopTableBody');
     tbody.innerHTML = '';
     if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center">No records found.</td></tr>`;
+        const colSpan = canManage ? 11 : 10;
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">No records found.</td></tr>`;
         return;
     }
+
     data.forEach(row => {
         const tr = document.createElement('tr');
         tr.dataset.id = row.id;
 
         const createCell = (text) => { const td = document.createElement('td'); td.textContent = text; return td; };
-        const createCenteredCell = (text) => { const td = createCell(text); td.className = 'text-center'; return td; };
-
-        tr.appendChild(createCenteredCell(row.id));
+        
+        tr.appendChild(createCell(row.id));
         tr.appendChild(createCell(row.log_date));
         tr.appendChild(createCell(row.stop_begin));
         tr.appendChild(createCell(row.stop_end));
-        tr.appendChild(createCenteredCell(row.duration));
+        tr.appendChild(createCell(row.duration));
         tr.appendChild(createCell(row.line));
         tr.appendChild(createCell(row.machine));
         tr.appendChild(createCell(row.cause));
@@ -61,14 +64,13 @@ function renderTable(data) {
         if (canManage) {
             const actionsTd = document.createElement('td');
             actionsTd.className = 'text-center';
-            
             const editButton = document.createElement('button');
-            editButton.className = 'btn btn-sm btn-warning';
+            editButton.className = 'btn btn-warning';
             editButton.textContent = 'Edit';
             editButton.addEventListener('click', () => openEditModal(row.id));
             
             const deleteButton = document.createElement('button');
-            deleteButton.className = 'btn btn-sm btn-danger';
+            deleteButton.className = 'btn btn-danger ms-1';
             deleteButton.textContent = 'Delete';
             deleteButton.addEventListener('click', () => deleteStop(row.id));
 
@@ -81,20 +83,48 @@ function renderTable(data) {
     });
 }
 
+// --- START: แก้ไขฟังก์ชัน renderPagination ทั้งหมด ---
 function renderPagination(page, totalItems, limit) {
     totalPages = totalItems > 0 ? Math.ceil(totalItems / limit) : 1;
     currentPage = parseInt(page);
-    document.getElementById('pagination-info').textContent = `Page ${currentPage} of ${totalPages}`;
-    document.getElementById('prevPageBtn').disabled = currentPage <= 1;
-    document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+    const paginationContainer = document.getElementById('paginationControls');
+    paginationContainer.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    const createPageItem = (pageNum, text, isDisabled = false, isActive = false) => {
+        const li = document.createElement('li');
+        li.className = `page-item ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}`;
+        
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.href = '#';
+        a.textContent = text;
+        if (!isDisabled) {
+            a.onclick = (e) => {
+                e.preventDefault();
+                fetchStopData(pageNum); // เปลี่ยนเป็น fetchStopData
+            };
+        }
+        li.appendChild(a);
+        return li;
+    };
+
+    paginationContainer.appendChild(createPageItem(currentPage - 1, 'Previous', currentPage === 1));
+    for (let i = 1; i <= totalPages; i++) {
+        paginationContainer.appendChild(createPageItem(i, i, false, i === currentPage));
+    }
+    paginationContainer.appendChild(createPageItem(currentPage + 1, 'Next', currentPage === totalPages));
 }
+// --- END: แก้ไขฟังก์ชัน renderPagination ทั้งหมด ---
+
 
 function renderSummary(summaryData, grandTotalMinutes) {
     const summaryContainer = document.getElementById('causeSummary');
     if (!summaryContainer) return;
-    summaryContainer.innerHTML = ''; // Clear previous content
+    summaryContainer.innerHTML = '';
 
-    const formatMins = (mins) => `${Math.floor(mins / 60)}h ${mins % 60}m`;
+    const formatMins = (mins) => `${Math.floor(mins / 60)}h ${Math.round(mins % 60)}m`;
 
     const strong = document.createElement('strong');
     strong.textContent = `Total Downtime: ${formatMins(grandTotalMinutes || 0)}`;
@@ -116,7 +146,7 @@ async function populateDatalist(datalistId, action) {
         if (result.success) {
             const datalist = document.getElementById(datalistId);
             if (datalist) {
-                datalist.innerHTML = ''; // Clear existing options
+                datalist.innerHTML = '';
                 result.data.forEach(item => {
                     const option = document.createElement('option');
                     option.value = item;
@@ -152,14 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(window.filterDebounceTimer);
             window.filterDebounceTimer = setTimeout(handleFilterChange, 500);
         });
-    });
-
-    document.getElementById('prevPageBtn')?.addEventListener('click', () => {
-        if (currentPage > 1) fetchStopData(currentPage - 1);
-    });
-
-    document.getElementById('nextPageBtn')?.addEventListener('click', () => {
-        if (currentPage < totalPages) fetchStopData(currentPage + 1);
     });
 
     populateDatalist('causeListFilter', 'get_causes');
