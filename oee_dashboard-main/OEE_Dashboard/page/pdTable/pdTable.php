@@ -1,10 +1,13 @@
 <?php 
     include_once("../../auth/check_auth.php"); 
-
+    
+    // ตรวจสอบสิทธิ์การเข้าถึงหน้านี้ (supervisor ขึ้นไป)
     if (!hasRole(['supervisor', 'admin', 'creator'])) {
         header("Location: ../OEE_Dashboard/OEE_Dashboard.php");
         exit;
     }
+    // สร้างตัวแปรไว้ส่งให้ JavaScript เพื่อควบคุมการแสดงผลปุ่ม
+    $canManage = hasRole(['supervisor', 'admin', 'creator']);
 ?>
 
 <!DOCTYPE html>
@@ -21,104 +24,97 @@
 
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
     <link rel="stylesheet" href="../../style/dropdown.css">
-    <link rel="stylesheet" href="../../style/style.css">
+    <link rel="stylesheet" href="../../style/paraManageUI.css">
     <link rel="stylesheet" href="../../style/pdTable.css">
 </head>
 
-<body style="width: 100vw; height: fit-content; min-width: fit-content;">
+<body class="bg-dark text-white p-4">
     <?php include('../components/nav_dropdown.php'); ?>
 
-    <div style="height: calc(100vh - 20px);">
-        <div class="Header">
-            <div class="OEE-head">
-                <h2>PRODUCTION HISTORY</h2>
-                <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
-                    
-                    <input list="partNoList" id="filterPartNo" placeholder="Part No.">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Production History</h2>
+            <?php if ($canManage): ?>
+                <button class="btn btn-success" onclick="openModal('addPartModal')">Add New Record</button>
+            <?php endif; ?>
+        </div>
+
+        <div class="row mb-2 align-items-center sticky-bar">
+            <div class="col-md-9">
+                <div class="filter-controls-wrapper">
+                    <input list="partNoList" id="filterPartNo" class="form-control form-control-sm" placeholder="Part No.">
                     <datalist id="partNoList"></datalist>
 
-                    <input list="lotList" id="filterLotNo" placeholder="Lot No.">
+                    <input list="lotList" id="filterLotNo" class="form-control form-control-sm" placeholder="Lot No.">
                     <datalist id="lotList"></datalist>
 
-                    <input list="lineList" id="filterLine" placeholder="Line">
+                    <input list="lineList" id="filterLine" class="form-control form-control-sm" placeholder="Line">
                     <datalist id="lineList"></datalist>
 
-                    <input list="modelList" id="filterModel" placeholder="Model">
+                    <input list="modelList" id="filterModel" class="form-control form-control-sm" placeholder="Model">
                     <datalist id="modelList"></datalist>
 
-                    <select id="filterCountType">
+                    <select id="filterCountType" class="form-select form-select-sm">
                         <option value="">All Types</option>
                         <option value="FG">FG</option><option value="NG">NG</option><option value="HOLD">HOLD</option>
                         <option value="REWORK">REWORK</option><option value="SCRAP">SCRAP</option><option value="ETC.">ETC.</option>
-                    </select>     
+                    </select>
 
-                    <input type="date" id="filterStartDate">
-                    <p style="text-align: center; align-content: center;"> - </p>
-                    <input type="date" id="filterEndDate">
+                    <input type="date" id="filterStartDate" class="form-control form-control-sm">
+                    <input type="date" id="filterEndDate" class="form-control form-control-sm">
                 </div>
             </div>
-            <div class="assis-tool">
-                <p id="date"></p>
-                <p id="time"></p>
+            <div class="col-md-3 text-end">
+                <button class="btn btn-sm btn-secondary me-2" onclick="openSummaryModal()">Summary</button>
+                <button class="btn btn-sm btn-info" onclick="exportToExcel()">Export</button>
             </div>
         </div>
 
-        <div class="production-history">
-            <div class="action-bar"  style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px;">
-                <div id="grandSummary" class="summary-text" style="font-weight: bold;"></div>
-                <div>
-                    <button onclick="openSummaryModal()">Show Detailed Summary</button>
-                    <button onclick="exportToExcel()">Export to Excel</button>
-                    <button onclick="openModal('addPartModal')">Add</button>
-                </div>
-            </div>
-
-            <div class="table-wrapper">
-                <table id="partTable" border="1">
-                    <thead>
-                        <tr>
-                            <th style="width: 100px; text-align: center;">ID</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Line</th>
-                            <th>Model</th>
-                            <th>Part No.</th>
-                            <th>Lot No.</th>
-                            <th>Quantity</th>
-                            <th style="width: 150px;">Type</th>
-                            <th style="width: 250px;">Note</th>
-                            <th style="width: 175px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="partTableBody"></tbody>
-                </table>
-            </div>
-
-            <div class="pagination-container" style="display: flex; gap: 20px; justify-content: center; margin: 10px auto;">
-                <button id="prevPageBtn">Previous</button>
-                <span id="pagination-info"></span>
-                <button id="nextPageBtn">Next</button>
-            </div>
+        <div class="table-responsive">
+            <table id="partTable" class="table table-dark table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Line</th>
+                        <th>Model</th>
+                        <th>Part No.</th>
+                        <th>Lot No.</th>
+                        <th>Qty</th>
+                        <th>Type</th>
+                        <th style="min-width: 200px;">Note</th>
+                        <?php if ($canManage): ?>
+                            <th style="width: 130px;">Actions</th>
+                        <?php endif; ?>
+                    </tr>
+                </thead>
+                <tbody id="partTableBody"></tbody>
+            </table>
         </div>
 
+        <nav class="sticky-bottom">
+            <ul class="pagination justify-content-center" id="paginationControls"></ul>
+        </nav>
     </div>
-
     <div id="toast"></div>
 
-    <?php include('components/addModal.php'); ?>
-    <?php include('components/editModal.php'); ?>
     <?php include('components/summaryModal.php'); ?>
+    <?php 
+        if ($canManage) {
+            include('components/addModal.php');
+            include('components/editModal.php');
+        }
+    ?>
     
     <script>
+        const canManage = <?php echo json_encode($canManage); ?>;
+        
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
-            const savedStart = localStorage.getItem('oee_startDate');
-            const savedEnd = localStorage.getItem('oee_endDate');
-            const startInput = document.getElementById("filterStartDate");
-            const endInput = document.getElementById("filterEndDate");
-            if (startInput) startInput.value = savedStart || dateStr;
-            if (endInput) endInput.value = savedEnd || dateStr;
+            document.getElementById("filterStartDate").value = dateStr;
+            document.getElementById("filterEndDate").value = dateStr;
         });
     </script>
     

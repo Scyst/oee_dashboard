@@ -63,7 +63,7 @@
             </div>
 
             <div class="table-wrapper">
-                <table id="stopTable" border="1">
+                <table id="stopTable" class="table table-dark table-striped table-hover">
                     <thead>
                         <tr>
                             <th style="width: 100px; text-align: center;">ID</th>

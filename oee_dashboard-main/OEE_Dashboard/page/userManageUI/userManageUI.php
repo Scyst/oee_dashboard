@@ -17,15 +17,15 @@
     <script src="../../utils/libs/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
     <link rel="stylesheet" href="../../style/dropdown.css">
-    <link rel="stylesheet" href="../../style/userManageUI.css">
+    <link rel="stylesheet" href="../../style/paraManageUI.css">
 </head>
 
 <body class="bg-dark text-white p-4">
     <?php include('../components/nav_dropdown.php'); ?>
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>User Manager</h2>
-            <button class="btn btn-secondary btn-sm" onclick="openLogsModal()">View Logs</button>
+            <button class="btn btn-secondary" onclick="openLogsModal()">View Logs</button>
         </div>
 
         <form id="userForm" class="row g-3 mb-4">
@@ -53,7 +53,13 @@
 
         <table class="table table-dark table-striped table-hover">
             <thead>
-                <tr><th>ID</th><th>Username</th><th>Role</th><th>Created at</th><th>Actions</th></tr>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Created at</th>
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody id="userTable"></tbody>
         </table>

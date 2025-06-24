@@ -45,7 +45,12 @@
             <table class="table table-dark table-striped table-hover">
                 <thead>
                     <tr>
-                        <th>Line</th><th>Model</th><th>Part No.</th><th>SAP No.</th><th>Planned Output</th><th>Updated At</th>
+                        <th>Line</th>
+                        <th>Model</th>
+                        <th>Part No.</th>
+                        <th>SAP No.</th>
+                        <th>Planned Output</th>
+                        <th>Updated At</th>
                         <?php if ($isAdmin): ?><th>Actions</th><?php endif; ?>
                     </tr>
                 </thead>

@@ -19,7 +19,9 @@ async function fetchPartsData(page = 1) {
         const response = await fetch(`${API_URL}?${params.toString()}`);
         const result = await response.json();
         if (!result.success) throw new Error(result.message);
-        renderTable(result.data);
+
+        // เราจะใช้ตัวแปร canManage ที่ส่งมาจาก pdTable.php
+        renderTable(result.data, window.canManage);
         renderPagination(result.page, result.total, result.limit);
         renderSummary(result.summary, result.grand_total);
     } catch (error) {
@@ -28,11 +30,12 @@ async function fetchPartsData(page = 1) {
     }
 }
 
-function renderTable(data) {
+function renderTable(data, canManage) { // รับตัวแปร canManage เข้ามา
     const tbody = document.getElementById('partTableBody');
-    tbody.innerHTML = ''; // Clear existing rows
+    tbody.innerHTML = ''; 
     if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center">No records found.</td></tr>`;
+        const colSpan = canManage ? 11 : 10;
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">No records found.</td></tr>`;
         return;
     }
 
@@ -45,63 +48,94 @@ function renderTable(data) {
             td.textContent = text;
             return td;
         };
-        const createCenteredCell = (text) => {
-            const td = createCell(text);
-            td.className = 'text-center';
-            return td;
-        };
-
+        
         const formattedDate = row.log_date ? new Date(row.log_date).toLocaleDateString('en-GB') : '';
         const formattedTime = row.log_time ? row.log_time.substring(0, 8) : '';
         
-        tr.appendChild(createCenteredCell(row.id));
+        tr.appendChild(createCell(row.id));
         tr.appendChild(createCell(formattedDate));
         tr.appendChild(createCell(formattedTime));
         tr.appendChild(createCell(row.line));
         tr.appendChild(createCell(row.model));
         tr.appendChild(createCell(row.part_no));
         tr.appendChild(createCell(row.lot_no || ''));
-        tr.appendChild(createCenteredCell(row.count_value));
+        tr.appendChild(createCell(row.count_value));
         tr.appendChild(createCell(row.count_type));
         
-        // Safely create the note cell
         const noteTd = document.createElement('td');
         const noteDiv = document.createElement('div');
         noteDiv.className = 'note-truncate';
         noteDiv.title = row.note || '';
-        noteDiv.textContent = row.note || ''; // Use .textContent
+        noteDiv.textContent = row.note || '';
         noteTd.appendChild(noteDiv);
         tr.appendChild(noteTd);
         
-        // Safely create action buttons
-        const actionsTd = document.createElement('td');
-        actionsTd.className = 'text-center';
-        
-        const editButton = document.createElement('button');
-        editButton.className = 'btn btn-sm btn-warning';
-        editButton.textContent = 'Edit';
-        editButton.addEventListener('click', () => openEditModal(row));
-        
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-sm btn-danger';
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', () => handleDelete(row.id));
+        if (canManage) {
+            const actionsTd = document.createElement('td');
+            actionsTd.className = 'text-center';
+            
+            const editButton = document.createElement('button');
+            editButton.className = 'btn btn-sm btn-warning';
+            editButton.textContent = 'Edit';
+            editButton.addEventListener('click', () => openEditModal(row));
+            
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'btn btn-sm btn-danger ms-1';
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', () => handleDelete(row.id));
 
-        actionsTd.appendChild(editButton);
-        actionsTd.appendChild(deleteButton);
-        tr.appendChild(actionsTd);
+            actionsTd.appendChild(editButton);
+            actionsTd.appendChild(deleteButton);
+            tr.appendChild(actionsTd);
+        }
 
         tbody.appendChild(tr);
     });
 }
 
+
+// --- START: แก้ไขฟังก์ชัน renderPagination ทั้งหมด ---
 function renderPagination(page, totalItems, limit) {
     totalPages = totalItems > 0 ? Math.ceil(totalItems / limit) : 1;
     currentPage = parseInt(page);
-    document.getElementById('pagination-info').textContent = `Page ${currentPage} of ${totalPages}`;
-    document.getElementById('prevPageBtn').disabled = currentPage <= 1;
-    document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+    const paginationContainer = document.getElementById('paginationControls');
+    paginationContainer.innerHTML = ''; // Clear old controls
+
+    if (totalPages <= 1) return;
+
+    const createPageItem = (pageNum, text, isDisabled = false, isActive = false) => {
+        const li = document.createElement('li');
+        li.className = `page-item ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}`;
+        
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.href = '#';
+        a.textContent = text;
+        if (!isDisabled) {
+            a.onclick = (e) => {
+                e.preventDefault();
+                fetchPartsData(pageNum);
+            };
+        }
+        li.appendChild(a);
+        return li;
+    };
+
+    // "Previous" button
+    paginationContainer.appendChild(createPageItem(currentPage - 1, 'Previous', currentPage === 1));
+
+    // Page number buttons
+    // Logic to show a limited number of pages, e.g., ... 3 4 5 ...
+    // This is a simple implementation showing all pages. For a large number of pages, you might want to add ellipsis logic.
+    for (let i = 1; i <= totalPages; i++) {
+        paginationContainer.appendChild(createPageItem(i, i, false, i === currentPage));
+    }
+
+    // "Next" button
+    paginationContainer.appendChild(createPageItem(currentPage + 1, 'Next', currentPage === totalPages));
 }
+// --- END: แก้ไขฟังก์ชัน renderPagination ทั้งหมด ---
+
 
 function renderSummary(summaryData, grandTotalData) {
     window.cachedSummary = summaryData || [];
@@ -122,10 +156,10 @@ async function populateDatalist(datalistId, action) {
         if (result.success) {
             const datalist = document.getElementById(datalistId);
             if (datalist) {
-                datalist.innerHTML = ''; // Clear existing options
+                datalist.innerHTML = ''; 
                 result.data.forEach(item => {
                     const option = document.createElement('option');
-                    option.value = item; // Setting .value is safe from XSS
+                    option.value = item; 
                     datalist.appendChild(option);
                 });
             }
@@ -164,13 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.getElementById('prevPageBtn')?.addEventListener('click', () => {
-        if (currentPage > 1) fetchPartsData(currentPage - 1);
-    });
-
-    document.getElementById('nextPageBtn')?.addEventListener('click', () => {
-        if (currentPage < totalPages) fetchPartsData(currentPage + 1);
-    });
+    // The pagination buttons are now dynamically created, so we attach event listeners to the container
+    // The createPageItem function handles the click logic, so we don't need these anymore.
+    // document.getElementById('prevPageBtn')?.addEventListener('click', ...);
+    // document.getElementById('nextPageBtn')?.addEventListener('click', ...);
 
     populateDatalist('partNoList', 'get_part_nos');
     populateDatalist('lotList', 'get_lot_numbers');
