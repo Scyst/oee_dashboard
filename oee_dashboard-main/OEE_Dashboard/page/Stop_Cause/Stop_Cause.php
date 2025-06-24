@@ -35,7 +35,7 @@
         </div>
 
         <div class="row mb-3 align-items-center sticky-bar">
-            <div class="col-md-9">
+            <div class="col-md-8">
                 <div class="filter-controls-wrapper">
                     <input list="causeListFilter" id="filterCause" class="form-control" placeholder="Search Stop Cause" />
                     <datalist id="causeListFilter"></datalist>
@@ -46,12 +46,15 @@
                     <input list="machineListFilter" id="filterMachine" class="form-control" placeholder="Machine/Station">
                     <datalist id="machineListFilter"></datalist>
                     
-                    <input type="date" id="filterStartDate" class="form-control">
-                    <input type="date" id="filterEndDate" class="form-control">
+                    <div class="filter-controls-wrapper">
+                        <input type="date" id="filterStartDate" class="form-control">
+                        <span>-</span>
+                        <input type="date" id="filterEndDate" class="form-control">
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-1"></div>
+            <div class="col-md-2"></div>
 
             <div class="col-md-2">
                 <div class="d-flex justify-content-end gap-2 btn-group-equal">

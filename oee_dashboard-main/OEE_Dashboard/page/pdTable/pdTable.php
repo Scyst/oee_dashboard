@@ -37,7 +37,7 @@
         </div>
 
         <div class="row mb-3 align-items-center sticky-bar">
-            <div class="col-md-8">
+            <div class="col-md-9">
                 <div class="filter-controls-wrapper">
                     <input list="partNoList" id="filterPartNo" class="form-control" placeholder="Part No.">
                     <datalist id="partNoList"></datalist>
@@ -61,21 +61,19 @@
                         <option value="ETC.">ETC.</option>
                     </select>
 
-                    <div class="filter-controls-wrapper">
-                        <input type="date" id="filterStartDate" class="form-control">
-                        <span>-</span>
-                        <input type="date" id="filterEndDate" class="form-control">
-                    </div>
+                    <input type="date" id="filterStartDate" class="form-control">
+                    <span>-</span>
+                    <input type="date" id="filterEndDate" class="form-control">
                 </div>
-            </div>
+                 </div>
 
             <div class="col-md-1"></div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="d-flex justify-content-end gap-2 btn-group-equal">
                     <button class="btn btn-secondary flex-fill" onclick="openSummaryModal()">Summary</button>
                     <button class="btn btn-info flex-fill" onclick="exportToExcel()">Export</button>
-                    <?php if ($canManage): ?>
+                     <?php if ($canManage): ?>
                         <button class="btn btn-success flex-fill" onclick="openModal('addPartModal')">Add</button>
                     <?php endif; ?>
                 </div>
@@ -109,6 +107,7 @@
             <ul class="pagination justify-content-center" id="paginationControls"></ul>
         </nav>
     </div>
+    
     <div id="toast"></div>
 
     <?php include('components/summaryModal.php'); ?>

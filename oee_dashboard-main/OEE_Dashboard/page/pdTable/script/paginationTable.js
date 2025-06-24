@@ -21,7 +21,7 @@ async function fetchPartsData(page = 1) {
         if (!result.success) throw new Error(result.message);
 
         // เราจะใช้ตัวแปร canManage ที่ส่งมาจาก pdTable.php
-        renderTable(result.data, window.canManage);
+        renderTable(result.data, canManage);
         renderPagination(result.page, result.total, result.limit);
         renderSummary(result.summary, result.grand_total);
     } catch (error) {

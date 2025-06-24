@@ -1,6 +1,7 @@
 .filter-controls-wrapper {
     display: flex;
     gap: 0.5rem;      
+    align-items: center;
 }
 
 .filter-controls-wrapper .form-control,
