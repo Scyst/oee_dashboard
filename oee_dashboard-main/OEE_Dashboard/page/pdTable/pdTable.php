@@ -34,9 +34,6 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Production History</h2>
-            <?php if ($canManage): ?>
-                <button class="btn btn-success" onclick="openModal('addPartModal')">Add New Record</button>
-            <?php endif; ?>
         </div>
 
         <div class="row mb-2 align-items-center sticky-bar">
@@ -65,8 +62,11 @@
                 </div>
             </div>
             <div class="col-md-3 text-end">
-                <button class="btn btn-sm btn-secondary me-2" onclick="openSummaryModal()">Summary</button>
-                <button class="btn btn-sm btn-info" onclick="exportToExcel()">Export</button>
+                <button class="btn btn-secondary me-2" onclick="openSummaryModal()">Summary</button>
+                <button class="btn btn-info me-2" onclick="exportToExcel()">Export</button>
+                <?php if ($canManage): ?>
+                    <button class="btn btn-success" onclick="openModal('addPartModal')">Add New Record</button>
+                <?php endif; ?>
             </div>
         </div>
 

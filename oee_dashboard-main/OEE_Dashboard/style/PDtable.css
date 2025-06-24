@@ -1,16 +1,9 @@
-/* Add this to style/pdTable.css */
-
 .filter-controls-wrapper {
     display: flex;
-    flex-wrap: nowrap; /* Prevent wrapping to next line */
-    gap: 0.5rem;      /* Space between filter inputs */
-    align-items: center;
-    overflow-x: auto; /* Allow horizontal scrolling if it overflows */
-    padding-bottom: 5px; /* Add some space for scrollbar */
+    gap: 0.5rem;      
 }
 
 .filter-controls-wrapper .form-control,
 .filter-controls-wrapper .form-select {
-    min-width: 140px; /* Give each filter a minimum width */
-    flex-shrink: 0;   /* Prevent inputs from shrinking */
+    flex-grow: 1;
 }
