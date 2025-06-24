@@ -1,9 +1,12 @@
 <?php 
     include_once("../../auth/check_auth.php"); 
+    
+    // ตรวจสอบสิทธิ์การเข้าถึงหน้านี้ (supervisor ขึ้นไป)
     if (!hasRole(['supervisor', 'admin', 'creator'])) {
         header("Location: ../OEE_Dashboard/OEE_Dashboard.php");
         exit;
     }
+    // สร้างตัวแปรไว้ส่งให้ JavaScript เพื่อควบคุมการแสดงผลปุ่ม
     $canManage = hasRole(['supervisor', 'admin', 'creator']);
 ?>
 
@@ -16,110 +19,94 @@
     <title>OEE - STOP CAUSE HISTORY</title>
     <script src="../../utils/libs/xlsx.full.min.js"></script>
     <script src="../../utils/libs/bootstrap.bundle.min.js"></script>
+
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
     <link rel="stylesheet" href="../../style/dropdown.css">
-    <link rel="stylesheet" href="../../style/style.css">
-    <link rel="stylesheet" href="../../style/Stop_Cause.css">
+    <link rel="stylesheet" href="../../style/paraManageUI.css"> 
+    <link rel="stylesheet" href="../../style/pdTable.css">
 </head>
 
-<body>
+<body class="bg-dark text-white p-4">
     <?php include('../components/nav_dropdown.php'); ?>
 
-    <div style="height: calc(100vh - 20px);">
-        <div class="Header">
-            <div class="OEE-head">
-                <h2>STOPS & CAUSES</h2>
-                <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin:0 auto; width: fit-content;">
-                    
-                    <input list="causeListFilter" id="filterCause" placeholder="Search Stop Cause" />
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Stops & Causes History</h2>
+        </div>
+
+        <div class="row mb-3 align-items-center sticky-bar">
+            <div class="col-md-9">
+                <div class="filter-controls-wrapper">
+                    <input list="causeListFilter" id="filterCause" class="form-control" placeholder="Search Stop Cause" />
                     <datalist id="causeListFilter"></datalist>
                     
-                    <input list="lineListFilter" id="filterLine" placeholder="Line">
+                    <input list="lineListFilter" id="filterLine" class="form-control" placeholder="Line">
                     <datalist id="lineListFilter"></datalist>
                     
-                    <input list="machineListFilter" id="filterMachine" placeholder="Machine/Station">
+                    <input list="machineListFilter" id="filterMachine" class="form-control" placeholder="Machine/Station">
                     <datalist id="machineListFilter"></datalist>
                     
-                    <input type="date" id="filterStartDate">
-                    <p style="text-align: center; align-content: center;"> - </p>
-                    <input type="date" id="filterEndDate">
+                    <input type="date" id="filterStartDate" class="form-control">
+                    <input type="date" id="filterEndDate" class="form-control">
                 </div>
             </div>
-            <div class="assis-tool">
-                <p id="date"></p>
-                <p id="time"></p>
-            </div>
-        </div>
-        
-        <div class="stop-cause">
-           <div style="display: flex; justify-content: space-between; padding: 2px 10px; margin-top: 5px; align-items: center;">
-                <div id="causeSummary" style="font-weight: bold; white-space: nowrap; overflow-x: auto;"></div>
-                <div>
-                    <button onclick="exportToExcel()">Export to Excel</button>
+
+            <div class="col-md-1"></div>
+
+            <div class="col-md-2">
+                <div class="d-flex justify-content-end gap-2 btn-group-equal">
+                    <button class="btn btn-info flex-fill" onclick="exportToExcel()">Export</button>
                     <?php if ($canManage): ?>
-                        <button onclick="openModal('addStopModal')">Add</button>
+                        <button class="btn btn-success flex-fill" onclick="openModal('addStopModal')">Add</button>
                     <?php endif; ?>
                 </div>
             </div>
-
-            <div class="table-wrapper">
-                <table id="stopTable" class="table table-dark table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 100px; text-align: center;">ID</th>
-                            <th>Date</th>
-                            <th>Start</th>
-                            <th>End</th>
-                            <th>Duration (m)</th>
-                            <th>Line</th>
-                            <th>Machine</th>
-                            <th>Cause</th>
-                            <th>Recovered By</th>
-                            <th style="width: 250px;">Note</th>
-                            <?php if ($canManage): ?>
-                                <th style="width: 175px;">Actions</th>
-                            <?php endif; ?>
-                        </tr>
-                    </thead>
-                    <tbody id="stopTableBody"></tbody>
-                </table>
-            </div>
-
-            <div class="pagination-container" style="display: flex; gap: 20px; justify-content: center; margin: 10px auto;">
-                <button id="prevPageBtn">Previous</button>
-                <span id="pagination-info"></span>
-                <button id="nextPageBtn">Next</button>
-            </div>
         </div>
-    </div>
+        
+        <div class="table-responsive">
+            <table id="stopTable" class="table table-dark table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Duration (m)</th>
+                        <th>Line</th>
+                        <th>Machine</th>
+                        <th>Cause</th>
+                        <th>Recovered By</th>
+                        <th style="min-width: 200px;">Note</th>
+                        <?php if ($canManage): ?>
+                            <th style="width: 130px;">Actions</th>
+                        <?php endif; ?>
+                    </tr>
+                </thead>
+                <tbody id="stopTableBody"></tbody>
+            </table>
+        </div>
 
+        <nav class="sticky-bottom">
+            <ul class="pagination justify-content-center" id="paginationControls"></ul>
+        </nav>
+    </div>
     <div id="toast"></div>
 
-    <?php if ($canManage): ?>
-    <?php include('components/addModal.php'); ?>
-    <?php include('components/editModal.php'); ?>
-    <?php endif; ?>
+    <?php 
+        if ($canManage) {
+            include('components/addModal.php');
+            include('components/editModal.php');
+        }
+    ?>
     
     <script>
         const canManage = <?php echo json_encode($canManage); ?>;
-
+        
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
-            const savedStart = localStorage.getItem('oee_startDate');
-            const savedEnd = localStorage.getItem('oee_endDate');
-            const startInput = document.getElementById("filterStartDate");
-            const endInput = document.getElementById("filterEndDate");
-            if (startInput) startInput.value = savedStart || dateStr;
-            if (endInput) endInput.value = savedEnd || dateStr;
-
-            const filterInputs = ['filterPartNo', 'filterLotNo', 'filterLine', 'filterModel', 'filterCountType', 'filterStartDate', 'filterEndDate'];
-            filterInputs.forEach(id => {
-                document.getElementById(id)?.addEventListener('input', () => {
-                    clearTimeout(window.filterDebounceTimer);
-                    window.filterDebounceTimer = setTimeout(() => handleFilterChange(), 500);
-                });
-            });
+            document.getElementById("filterStartDate").value = dateStr;
+            document.getElementById("filterEndDate").value = dateStr;
         });
     </script>
 

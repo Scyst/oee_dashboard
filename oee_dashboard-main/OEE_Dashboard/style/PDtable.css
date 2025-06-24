@@ -7,3 +7,7 @@
 .filter-controls-wrapper .form-select {
     flex-grow: 1;
 }
+
+.btn-group-equal > .btn {
+    flex-basis: 0;
+}

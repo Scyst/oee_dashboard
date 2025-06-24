@@ -31,42 +31,54 @@
 <body class="bg-dark text-white p-4">
     <?php include('../components/nav_dropdown.php'); ?>
 
-    <div class="container">
+    <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Production History</h2>
         </div>
 
-        <div class="row mb-2 align-items-center sticky-bar">
-            <div class="col-md-9">
+        <div class="row mb-3 align-items-center sticky-bar">
+            <div class="col-md-8">
                 <div class="filter-controls-wrapper">
-                    <input list="partNoList" id="filterPartNo" class="form-control form-control-sm" placeholder="Part No.">
+                    <input list="partNoList" id="filterPartNo" class="form-control" placeholder="Part No.">
                     <datalist id="partNoList"></datalist>
 
-                    <input list="lotList" id="filterLotNo" class="form-control form-control-sm" placeholder="Lot No.">
+                    <input list="lotList" id="filterLotNo" class="form-control" placeholder="Lot No.">
                     <datalist id="lotList"></datalist>
 
-                    <input list="lineList" id="filterLine" class="form-control form-control-sm" placeholder="Line">
+                    <input list="lineList" id="filterLine" class="form-control" placeholder="Line">
                     <datalist id="lineList"></datalist>
 
-                    <input list="modelList" id="filterModel" class="form-control form-control-sm" placeholder="Model">
+                    <input list="modelList" id="filterModel" class="form-control" placeholder="Model">
                     <datalist id="modelList"></datalist>
 
-                    <select id="filterCountType" class="form-select form-select-sm">
+                    <select id="filterCountType" class="form-select">
                         <option value="">All Types</option>
-                        <option value="FG">FG</option><option value="NG">NG</option><option value="HOLD">HOLD</option>
-                        <option value="REWORK">REWORK</option><option value="SCRAP">SCRAP</option><option value="ETC.">ETC.</option>
+                        <option value="FG">FG</option>
+                        <option value="NG">NG</option>
+                        <option value="HOLD">HOLD</option>
+                        <option value="REWORK">REWORK</option>
+                        <option value="SCRAP">SCRAP</option>
+                        <option value="ETC.">ETC.</option>
                     </select>
 
-                    <input type="date" id="filterStartDate" class="form-control form-control-sm">
-                    <input type="date" id="filterEndDate" class="form-control form-control-sm">
+                    <div class="filter-controls-wrapper">
+                        <input type="date" id="filterStartDate" class="form-control">
+                        <span>-</span>
+                        <input type="date" id="filterEndDate" class="form-control">
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3 text-end">
-                <button class="btn btn-secondary me-2" onclick="openSummaryModal()">Summary</button>
-                <button class="btn btn-info me-2" onclick="exportToExcel()">Export</button>
-                <?php if ($canManage): ?>
-                    <button class="btn btn-success" onclick="openModal('addPartModal')">Add New Record</button>
-                <?php endif; ?>
+
+            <div class="col-md-1"></div>
+
+            <div class="col-md-3">
+                <div class="d-flex justify-content-end gap-2 btn-group-equal">
+                    <button class="btn btn-secondary flex-fill" onclick="openSummaryModal()">Summary</button>
+                    <button class="btn btn-info flex-fill" onclick="exportToExcel()">Export</button>
+                    <?php if ($canManage): ?>
+                        <button class="btn btn-success flex-fill" onclick="openModal('addPartModal')">Add</button>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
