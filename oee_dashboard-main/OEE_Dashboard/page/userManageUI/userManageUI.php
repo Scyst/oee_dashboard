@@ -24,11 +24,11 @@
     <?php include('../components/nav_dropdown.php'); ?>
     
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0">User Manager</h2>
         </div>
 
-        <div class="row mb-3 align-items-center sticky-bar">
+        <div class="row mb-3 align-items-center sticky-bar pb-3">
             <div class="col-md-5">
                 <div class="filter-controls-wrapper">
                     <input type="text" class="form-control" id="searchInput" placeholder="Search users...">
