@@ -172,7 +172,7 @@ try {
             break;
 
         case 'delete_part':
-            $id = $_GET['id'] ?? null;
+            $id = $input['id'] ?? null;
             if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
                 http_response_code(400);
                 throw new Exception('Invalid or missing Part ID.');

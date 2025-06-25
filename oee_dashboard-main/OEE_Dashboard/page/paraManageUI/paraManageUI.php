@@ -15,19 +15,19 @@
     <script src="../../utils/libs/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
     <link rel="stylesheet" href="../../style/dropdown.css">
-    <link rel="stylesheet" href="../../style/paraManageUI.css">
+    <link rel="stylesheet" href="../../style/pdTable.css">
 </head>
 
 <body class="bg-dark text-white p-4">
     <?php include('../components/nav_dropdown.php'); ?>
     
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-0">
             <h2 class="mb-0">Parameter Manager</h2>
         </div>
 
         <div class="row mb-3 align-items-center sticky-bar">
-            <div class="col-md-5    ">
+            <div class="col-md-5">
                 <div class="filter-controls-wrapper">
                     <input type="text" class="form-control" id="searchInput" placeholder="Search parameters...">
                 </div>
@@ -36,7 +36,7 @@
             <div class="col-md-4"></div>
 
             <div class="col-md-3">
-                <div class="d-flex justify-content-end gap-2 btn-group-equal">
+                <div class="d-flex justify-content-end gap-2 btn-group-equal my-3">
                     <?php if ($canManage): ?>
                         <button class="btn btn-info flex-fill" onclick="triggerImport()">Import</button>
                     <?php endif; ?>
@@ -59,7 +59,7 @@
                         <th>SAP No.</th>
                         <th>Planned Output</th>
                         <th>Updated At</th>
-                        <?php if ($canManage): // ใช้ $canManage ?>
+                        <?php if ($canManage): ?>
                             <th style="width: 150px; text-align: center;">Actions</th>
                         <?php endif; ?>
                     </tr>
@@ -75,16 +75,13 @@
     
     <div id="toast"></div>
 
-    <?php if ($canManage) { // ใช้ $canManage
-        include('components/addModal.php');
-        include('components/editModal.php');
+    <?php if ($canManage) {
+        include('components/addParamModal.php');
+        include('components/editParamModal.php');
     } ?>
 
     <script>
-        // --- START: การแก้ไขที่สำคัญ ---
-        // เปลี่ยนชื่อตัวแปรเป็น canManage
         const canManage = <?php echo json_encode($canManage ?? false); ?>;
-        // --- END: การแก้ไขที่สำคัญ ---
     </script>
 
     <script src="../components/auto_logout.js"></script>

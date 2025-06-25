@@ -1,12 +1,10 @@
 <?php 
     include_once("../../auth/check_auth.php"); 
     
-    // ตรวจสอบสิทธิ์การเข้าถึงหน้านี้ (supervisor ขึ้นไป)
     if (!hasRole(['supervisor', 'admin', 'creator'])) {
         header("Location: ../OEE_Dashboard/OEE_Dashboard.php");
         exit;
     }
-    // สร้างตัวแปรไว้ส่งให้ JavaScript เพื่อควบคุมการแสดงผลปุ่ม
     $canManage = hasRole(['supervisor', 'admin', 'creator']);
 ?>
 
@@ -29,7 +27,7 @@
     <?php include('../components/nav_dropdown.php'); ?>
 
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="mb-0">Stops & Causes History</h2>
         </div>
 
@@ -63,8 +61,13 @@
                     <?php endif; ?>
                 </div>
             </div>
+            <div class="d-flex justify-content-between align-items-center my-3">
+                <div id="causeSummary" class="summary-grand-total">
+                </div>
+            </div>
         </div>
         
+
         <div class="table-responsive">
             <table id="stopTable" class="table table-dark table-striped table-hover">
                 <thead>

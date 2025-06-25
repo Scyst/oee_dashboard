@@ -1,12 +1,12 @@
 <div id="logsModal" class="modal">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 80%; min-width: 1000px;">
-        <div class="modal-content">
+        <div class="modal-content bg-dark text-white">
             <div class="modal-header">
                 <h2>User Activity Logs</h2>
                 <span class="close" onclick="closeModal('logsModal')">&times;</span>
             </div>
             <div class="table-responsive" style="max-height: 70vh;">
-                <table class="table table-dark table-striped table-sm table-hover">
+                <table class="table table-dark table-striped table-hover">
                     <thead>
                         <tr>
                             <th>ID</th>

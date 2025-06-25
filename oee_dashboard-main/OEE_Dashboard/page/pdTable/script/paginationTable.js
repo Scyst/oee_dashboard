@@ -79,7 +79,7 @@ function renderTable(data, canManage) { // รับตัวแปร canManage
             const editButton = document.createElement('button');
             editButton.className = 'btn btn-sm btn-warning w-100'; 
             editButton.textContent = 'Edit';
-            editButton.addEventListener('click', () => openEditModal(row));
+            editButton.addEventListener('click', () => openEditModal(row, editButton));
             
             const deleteButton = document.createElement('button');
             deleteButton.className = 'btn btn-sm btn-danger w-100'; 
@@ -167,10 +167,20 @@ async function populateDatalist(datalistId, action) {
 
 async function handleDelete(id) {
     if (!confirm(`Are you sure you want to delete Part ID ${id}?`)) return;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     try {
-        const response = await fetch(`${API_URL}?action=delete_part&id=${id}`);
+        const response = await fetch(`${API_URL}?action=delete_part`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({ id: id })
+        });
+
         const result = await response.json();
         showToast(result.message, result.success ? '#28a745' : '#dc3545');
+
         if (result.success) {
             const rowCount = document.querySelectorAll('#partTableBody tr').length;
             const newPage = (rowCount === 1 && currentPage > 1) ? currentPage - 1 : currentPage;

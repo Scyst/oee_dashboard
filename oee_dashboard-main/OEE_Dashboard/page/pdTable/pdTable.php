@@ -1,12 +1,10 @@
 <?php 
     include_once("../../auth/check_auth.php"); 
     
-    // ตรวจสอบสิทธิ์การเข้าถึงหน้านี้ (supervisor ขึ้นไป)
     if (!hasRole(['supervisor', 'admin', 'creator'])) {
         header("Location: ../OEE_Dashboard/OEE_Dashboard.php");
         exit;
     }
-    // สร้างตัวแปรไว้ส่งให้ JavaScript เพื่อควบคุมการแสดงผลปุ่ม
     $canManage = hasRole(['supervisor', 'admin', 'creator']);
 ?>
 
@@ -24,7 +22,6 @@
 
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
     <link rel="stylesheet" href="../../style/dropdown.css">
-    <link rel="stylesheet" href="../../style/paraManageUI.css">
     <link rel="stylesheet" href="../../style/pdTable.css">
 </head>
 
@@ -32,7 +29,7 @@
     <?php include('../components/nav_dropdown.php'); ?>
 
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="mb-0">Production History</h2>
         </div>
 
@@ -71,14 +68,19 @@
 
             <div class="col-md-2">
                 <div class="d-flex justify-content-end gap-2 btn-group-equal">
-                    <button class="btn btn-secondary flex-fill" onclick="openSummaryModal()">Summary</button>
                     <button class="btn btn-primary flex-fill" onclick="exportToExcel()">Export</button>
-                     <?php if ($canManage): ?>
-                        <button class="btn btn-success flex-fill" onclick="openModal('addPartModal')">Add</button>
+                    <?php if ($canManage): ?>
+                        <button class="btn btn-success flex-fill" onclick="openAddPartModal(this)">Add</button>
                     <?php endif; ?>
                 </div>
             </div>
+            <div class="d-flex justify-content-between align-items-center my-3">
+                 <div id="grandSummary" class="summary-grand-total">             
+                 </div>
+                 <button class="btn btn-info" onclick="openSummaryModal(this)">View Detailed Summary</button>
+             </div>
         </div>
+        
 
         <div class="table-responsive">
             <table id="partTable" class="table table-dark table-striped table-hover">
@@ -113,8 +115,8 @@
     <?php include('components/summaryModal.php'); ?>
     <?php 
         if ($canManage) {
-            include('components/addModal.php');
-            include('components/editModal.php');
+            include('components/addPartModal.php');
+            include('components/editPartModal.php');
         }
     ?>
     
