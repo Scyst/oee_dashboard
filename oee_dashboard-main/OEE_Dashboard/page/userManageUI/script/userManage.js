@@ -10,13 +10,12 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const options = {
             method,
-            headers: { 
-            },
-            body: body ? JSON.stringify(body) : null
+            headers: {},
         };
 
         if (body) {
             options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(body);
         }
 
         if (method.toUpperCase() !== 'GET' && csrfToken) {
@@ -24,10 +23,16 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
         }
         
         const response = await fetch(url, options);
+        if (!response.ok) {
+            // Handle HTTP errors like 404, 500 etc.
+            const errorText = await response.text();
+            throw new Error(`Server responded with ${response.status}: ${errorText}`);
+        }
         return await response.json();
     } catch (error) {
-        showToast('An unexpected error occurred.', '#dc3545');
-        return { success: false };
+        console.error(`Request for action '${action}' failed:`, error);
+        showToast('An unexpected error occurred. Check console for details.', '#dc3545');
+        return { success: false, message: "A network or server error occurred." };
     }
 }
 
@@ -67,26 +72,41 @@ function renderTable() {
 
         if (canManage) {
             const actionsTd = document.createElement('td');
+            actionsTd.className = 'text-center';
+
             const buttonWrapper = document.createElement('div');
-            buttonWrapper.className = 'd-flex gap-1 btn-group-equal'; // ใช้คลาสที่เราสร้างไว้
+            buttonWrapper.className = 'd-flex gap-1 btn-group-equal';
 
             const isSelf = (user.id === currentUserId);
 
-            if (isSelf || (currentUserRole === 'creator') || (currentUserRole === 'admin' && user.role !== 'admin')) {
+            // --- START: ตรรกะการแสดงผลปุ่มที่แก้ไขใหม่ ---
+            // Creator ทำได้ทุกอย่าง (ยกเว้นลบตัวเอง)
+            // Admin ทำได้เกือบทุกอย่าง (ยกเว้นแก้/ลบ creator และ admin คนอื่น)
+            const canEditTarget = (currentUserRole === 'creator') || 
+                                  (currentUserRole === 'admin' && user.role !== 'admin' && user.role !== 'creator') ||
+                                  isSelf;
+
+            const canDeleteTarget = !isSelf && 
+                                    ((currentUserRole === 'creator' && user.role !== 'creator') || 
+                                     (currentUserRole === 'admin' && user.role !== 'admin' && user.role !== 'creator'));
+
+            if (canEditTarget) {
                 const editButton = document.createElement('button');
-                editButton.className = 'btn btn-sm btn-warning flex-fill'; // ขนาดปกติ
+                editButton.className = 'btn btn-warning flex-fill';
                 editButton.textContent = 'Edit';
-                editButton.addEventListener('click', () => editUser(user));
+                // เรียกใช้ฟังก์ชันเปิด Modal ที่ถูกต้อง
+                editButton.addEventListener('click', () => openEditUserModal(user));
                 buttonWrapper.appendChild(editButton);
             }
 
-            if (!isSelf && ((currentUserRole === 'creator') || (currentUserRole === 'admin' && user.role !== 'admin'))) {
+            if (canDeleteTarget) {
                 const deleteButton = document.createElement('button');
-                deleteButton.className = 'btn btn-sm btn-danger flex-fill'; // ขนาดปกติ
+                deleteButton.className = 'btn btn-danger flex-fill';
                 deleteButton.textContent = 'Delete';
                 deleteButton.addEventListener('click', () => deleteUser(user.id));
                 buttonWrapper.appendChild(deleteButton);
             }
+            // --- END: ตรรกะการแสดงผลปุ่มที่แก้ไขใหม่ ---
             
             actionsTd.appendChild(buttonWrapper);
             tr.appendChild(actionsTd);

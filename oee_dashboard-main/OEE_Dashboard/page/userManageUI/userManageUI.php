@@ -18,7 +18,6 @@
     <script src="../../utils/libs/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
     <link rel="stylesheet" href="../../style/dropdown.css">
-    <link rel="stylesheet" href="../../style/paraManageUI.css">
 </head>
 
 <body class="bg-dark text-white p-4">
@@ -67,12 +66,12 @@
     <div id="toast"></div>
 
     <?php 
-        include('components/logsModal.php'); 
         if ($canManage) {
 
             include('components/addUserModal.php');
             include('components/editUserModal.php');
         }
+        include('components/logsModal.php'); 
     ?>
 
     <script>
