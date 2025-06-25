@@ -22,7 +22,6 @@
 
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
     <link rel="stylesheet" href="../../style/dropdown.css">
-    <link rel="stylesheet" href="../../style/paraManageUI.css"> 
     <link rel="stylesheet" href="../../style/pdTable.css">
 </head>
 
@@ -60,7 +59,7 @@
                 <div class="d-flex justify-content-end gap-2 btn-group-equal">
                     <button class="btn btn-primary flex-fill" onclick="exportToExcel()">Export</button>
                     <?php if ($canManage): ?>
-                        <button class="btn btn-success flex-fill" onclick="openModal('addStopModal')">Add</button>
+                        <button class="btn btn-success flex-fill" onclick="openAddStopModal()">Add</button>
                     <?php endif; ?>
                 </div>
             </div>
@@ -97,8 +96,8 @@
 
     <?php 
         if ($canManage) {
-            include('components/addModal.php');
-            include('components/editModal.php');
+            include('components/addStopModal.php');
+            include('components/editStopModal.php');
         }
     ?>
     
