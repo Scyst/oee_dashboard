@@ -92,3 +92,59 @@
 .dropdown-divider {
     border-top: 1px solid #616161;
 }
+
+.filter-controls-wrapper {
+    display: flex;
+    gap: 0.5rem;      
+    align-items: center;
+}
+
+.filter-controls-wrapper .form-control,
+.filter-controls-wrapper .form-select {
+    flex-grow: 1;
+}
+
+.btn-group-equal > .btn {
+    flex-basis: 0;
+}
+
+#toast {
+    position: fixed; 
+    top: 20px; 
+    right: 20px;
+    background-color: #333; 
+    color: white; 
+    padding: 15px;
+    border-radius: 8px; 
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    opacity: 0; 
+    transition: all 0.4s ease; 
+    z-index: 9999;
+    transform: translateY(20px);
+}
+
+.sticky-bar {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0; 
+  z-index: 1020; 
+  background-color: #212529;
+  padding-top: 1rem;
+  padding-bottom: 0rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.sticky-bottom {
+  position: -webkit-sticky;
+  position: sticky;
+  bottom: 0;
+  z-index: 1020;
+  background-color: #212529;
+  padding-top: 0.75rem;
+  padding-bottom: 0.5rem;
+  box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.2);
+}
+
+ul {
+  margin-bottom: 0.5rem;
+}
