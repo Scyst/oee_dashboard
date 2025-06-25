@@ -18,34 +18,29 @@
             scroll-behavior: smooth;
         }
         body {
-            /* ย้าย overflow และ snap-type ไปไว้ที่ container แทน */
-            background-color: #1a1a1a; /* สีพื้นหลังหลัก */
+            background-color: #1a1a1a;
         }
 
-        /* 1. สร้าง Header แบบ Sticky โดยเฉพาะ */
         .dashboard-header-sticky {
             position: sticky;
             top: 0;
-            z-index: 1030; /* z-index สูงเพื่อให้ทับทุกอย่าง */
+            z-index: 1030;
             background-color: #212529;
-            padding: 1rem 2rem; /* เพิ่ม padding ให้กับ header */
+            padding: 1rem 2rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
-        /* 2. Container หลักของ Chart จะเป็นตัวที่ scroll ได้ */
         .dashboard-container {
-            height: calc(100vh - 145px); /* ความสูงของจอ - ความสูงของ Header โดยประมาณ */
+            height: calc(100vh - 150px);
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
         }
 
-        /* 3. ปรับ Section ให้มีความสูงพอดีกับเนื้อหา ไม่ใช่ 100vh */
         .dashboard-section {
             scroll-snap-align: start;
-            padding: 2rem; /* ยังคงมี padding เพื่อความสวยงาม */
+            padding: 1rem 2rem 0rem 2rem;
         }
         
-        /* 4. สไตล์สำหรับ Card ของ Chart (เหมือนเดิม) */
         .chart-card {
             background-color: #2c3034;
             border-radius: 0.75rem;
@@ -59,7 +54,6 @@
         .chart-card .chart-wrapper { position: relative; flex-grow: 1; }
         .chart-card .chart-info { font-size: 0.9rem; color: #adb5bd; }
 
-        /* 5. สไตล์ขนาด Chart (เหมือนเดิม) */
         .pie-chart-card .chart-wrapper { max-height: 180px; margin: auto; }
         .line-chart-card .chart-wrapper { height: 300px; }
         .bar-chart-card .chart-wrapper { height: 300px; }
@@ -92,27 +86,27 @@
     
     <div class="dashboard-container">
     
-        <section class="dashboard-section pb-0">
+        <section class="dashboard-section">
             <div class="row g-4 mb-4">
-                <div class="col-xl-3 col-lg-6 mb-4 mb-xl-0">
+                <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
                         <div class="d-flex justify-content-between"><h4>OEE</h4><div class="chart-info" id="oeeInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="oeePieChart"></canvas></div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-lg-6 mb-4 mb-xl-0">
+                <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
                         <div class="d-flex justify-content-between"><h4>Quality</h4><div class="chart-info" id="qualityInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="qualityPieChart"></canvas></div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-lg-6 mb-4 mb-xl-0">
+                <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
                         <div class="d-flex justify-content-between"><h4>Performance</h4><div class="chart-info" id="performanceInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="performancePieChart"></canvas></div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-lg-6 mb-4 mb-xl-0">
+                <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
                         <div class="d-flex justify-content-between"><h4>Availability</h4><div class="chart-info" id="availabilityInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="availabilityPieChart"></canvas></div>
@@ -129,7 +123,7 @@
             </div>
         </section>
 
-        <section class="dashboard-section pb-0">
+        <section class="dashboard-section">
             <div class="row g-4">
                 <div class="col-lg-6">
                     <div class="chart-card bar-chart-card">
