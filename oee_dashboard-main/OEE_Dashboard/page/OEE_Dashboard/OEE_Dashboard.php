@@ -50,12 +50,35 @@
             flex-direction: column;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .chart-card h4 { margin-bottom: 1rem; }
+
+        .pie-chart-card {
+            flex-direction: row; /* เปลี่ยนทิศทางเป็นแนวนอน */
+            align-items: center; /* จัดให้อยู่กึ่งกลางแนวตั้ง */
+            justify-content: space-between; /* จัดให้มีช่องว่างระหว่างสองคอลัมน์ */
+            gap: 1rem; /* เพิ่มช่องว่างเล็กน้อย */
+        }
+
+        .pie-chart-details {
+            flex-grow: 1; /* ทำให้กลุ่มข้อมูลใช้พื้นที่ที่เหลือทั้งหมด */
+        }
+
+        .pie-chart-card .chart-info {
+            font-size: 0.85rem; /* อาจจะลดขนาดฟอนต์เล็กน้อย */
+            color: #adb5bd;
+            margin-top: 0.5rem; /* เพิ่มระยะห่างจาก Title */
+        }
+
+        .pie-chart-card .chart-wrapper {
+            flex-shrink: 0; /* ป้องกันไม่ให้ Chart หดตัว */
+            max-height: 200px; /* ลดขนาดสูงสุดของ Chart ลง */
+            margin: auto; /* ลบ margin auto ออก */
+        }
+
+        .chart-card h4 { margin-bottom: 0rem; }
         .chart-card .chart-wrapper { position: relative; flex-grow: 1; }
         .chart-card .chart-info { font-size: 0.9rem; color: #adb5bd; }
 
-        .pie-chart-card .chart-wrapper { max-height: 180px; margin: auto; }
-        .line-chart-card .chart-wrapper { height: 300px; }
+        .line-chart-card .chart-wrapper { height: 350px; }
         .bar-chart-card .chart-wrapper { height: 300px; }
     </style>
 </head>
@@ -90,25 +113,25 @@
             <div class="row g-4 mb-4">
                 <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
-                        <div class="d-flex justify-content-between"><h4>OEE</h4><div class="chart-info" id="oeeInfo"></div></div>
+                        <div class="pie-chart-details"><h4>OEE</h4><div class="chart-info" id="oeeInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="oeePieChart"></canvas></div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
-                        <div class="d-flex justify-content-between"><h4>Quality</h4><div class="chart-info" id="qualityInfo"></div></div>
+                        <div class="pie-chart-details"><h4>Quality</h4><div class="chart-info" id="qualityInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="qualityPieChart"></canvas></div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
-                        <div class="d-flex justify-content-between"><h4>Performance</h4><div class="chart-info" id="performanceInfo"></div></div>
+                        <div class="pie-chart-details"><h4>Performance</h4><div class="chart-info" id="performanceInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="performancePieChart"></canvas></div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
-                        <div class="d-flex justify-content-between"><h4>Availability</h4><div class="chart-info" id="availabilityInfo"></div></div>
+                        <div class="pie-chart-details"><h4>Availability</h4><div class="chart-info" id="availabilityInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="availabilityPieChart"></canvas></div>
                     </div>
                 </div>
@@ -116,7 +139,7 @@
             <div class="row g-4">
                 <div class="col-12">
                     <div class="chart-card line-chart-card">
-                        <h4>OEE Trend</h4>
+                        <h4 style="display: none;">OEE Trend</h4>
                         <div class="chart-wrapper"><canvas id="oeeLineChart"></canvas></div>
                     </div>
                 </div>
