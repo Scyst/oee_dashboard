@@ -41,7 +41,10 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: true },
+                legend: { 
+                    display: true,
+                    color: '#ccc' 
+                },
                 title: { display: false },
                 tooltip: {
                     callbacks: {

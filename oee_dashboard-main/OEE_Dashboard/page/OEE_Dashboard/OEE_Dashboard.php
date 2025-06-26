@@ -44,7 +44,7 @@
         .chart-card {
             background-color: #2c3034;
             border-radius: 0.75rem;
-            padding: 1.5rem;
+            padding: 1.5rem 1rem 1.5rem 1.5rem;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -52,33 +52,36 @@
         }
 
         .pie-chart-card {
-            flex-direction: row; /* เปลี่ยนทิศทางเป็นแนวนอน */
-            align-items: center; /* จัดให้อยู่กึ่งกลางแนวตั้ง */
-            justify-content: space-between; /* จัดให้มีช่องว่างระหว่างสองคอลัมน์ */
-            gap: 1rem; /* เพิ่มช่องว่างเล็กน้อย */
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 1rem;
+            min-height: 250px;
         }
 
         .pie-chart-details {
-            flex-grow: 1; /* ทำให้กลุ่มข้อมูลใช้พื้นที่ที่เหลือทั้งหมด */
+            flex-grow: 1;
         }
 
         .pie-chart-card .chart-info {
-            font-size: 0.85rem; /* อาจจะลดขนาดฟอนต์เล็กน้อย */
-            color: #adb5bd;
-            margin-top: 0.5rem; /* เพิ่มระยะห่างจาก Title */
+            font-size: 1rem;
+            color: #ffffff;
+            margin-top: 0.75rem;
         }
 
         .pie-chart-card .chart-wrapper {
-            flex-shrink: 0; /* ป้องกันไม่ให้ Chart หดตัว */
-            max-height: 200px; /* ลดขนาดสูงสุดของ Chart ลง */
-            margin: auto; /* ลบ margin auto ออก */
+            flex-shrink: 0;
+            max-height: 190px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .chart-card h4 { margin-bottom: 0rem; }
         .chart-card .chart-wrapper { position: relative; flex-grow: 1; }
-        .chart-card .chart-info { font-size: 0.9rem; color: #adb5bd; }
+        .chart-card .chart-info { font-size: 0.9rem; color: #ffffff; }
 
-        .line-chart-card .chart-wrapper { height: 350px; }
+        .line-chart-card .chart-wrapper { height: 400px; }
         .bar-chart-card .chart-wrapper { height: 300px; }
     </style>
 </head>
@@ -110,26 +113,26 @@
     <div class="dashboard-container">
     
         <section class="dashboard-section">
-            <div class="row g-4 mb-4">
-                <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
+            <div class="row g-4 mb-4 pt-2">
+                <div class="col-xxl-3 col-xl-6 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
                         <div class="pie-chart-details"><h4>OEE</h4><div class="chart-info" id="oeeInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="oeePieChart"></canvas></div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
+                <div class="col-xxl-3 col-xl-6 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
                         <div class="pie-chart-details"><h4>Quality</h4><div class="chart-info" id="qualityInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="qualityPieChart"></canvas></div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
+                <div class="col-xxl-3 col-xl-6 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
                         <div class="pie-chart-details"><h4>Performance</h4><div class="chart-info" id="performanceInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="performancePieChart"></canvas></div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-lg-6 mb-2 mb-xl-0">
+                <div class="col-xxl-3 col-xl-6 col-lg-6 mb-2 mb-xl-0">
                     <div class="chart-card pie-chart-card">
                         <div class="pie-chart-details"><h4>Availability</h4><div class="chart-info" id="availabilityInfo"></div></div>
                         <div class="chart-wrapper"><canvas id="availabilityPieChart"></canvas></div>
@@ -138,7 +141,7 @@
             </div>
             <div class="row g-4">
                 <div class="col-12">
-                    <div class="chart-card line-chart-card">
+                    <div class="chart-card line-chart-card" style="padding-top: 1rem;">
                         <h4 style="display: none;">OEE Trend</h4>
                         <div class="chart-wrapper"><canvas id="oeeLineChart"></canvas></div>
                     </div>
@@ -146,7 +149,7 @@
             </div>
         </section>
 
-        <section class="dashboard-section">
+        <section class="dashboard-section mt-2">
             <div class="row g-4">
                 <div class="col-lg-6">
                     <div class="chart-card bar-chart-card">

@@ -138,7 +138,7 @@ async function fetchAndRenderCharts() {
             const availabilityLoss = totalRatio > 0 ? totalLoss * (availabilityLossRatio / totalRatio) : 0;
 
             updateInfoBox("oeeInfo", [
-                `Total OEE Loss: <b>${totalLoss.toFixed(1)}%</b>`, // Added total OEE loss for clarity
+                `OEE Loss: <b>${totalLoss.toFixed(1)}%</b>`, // Added total OEE loss for clarity
                 `Q Loss: <b>${qualityLoss.toFixed(1)}%</b>`,
                 `P Loss: <b>${performanceLoss.toFixed(1)}%</b>`,
                 `A Loss: <b>${availabilityLoss.toFixed(1)}%</b>`
