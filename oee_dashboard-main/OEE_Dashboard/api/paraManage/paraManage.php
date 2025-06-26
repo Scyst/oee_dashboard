@@ -24,7 +24,7 @@ try {
     switch ($action) {
         case 'read':
             $stmt = $pdo->query("SELECT * FROM IOT_TOOLBOX_PARAMETER ORDER BY updated_at DESC");
-            $rows = $stmt->fetchAll();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as &$row) {
                 if ($row['updated_at']) {
                     $row['updated_at'] = (new DateTime($row['updated_at']))->format('Y-m-d H:i:s');
@@ -39,7 +39,7 @@ try {
                 strtoupper($input['line']),
                 strtoupper($input['model']),
                 strtoupper($input['part_no']),
-                strtoupper($input['sap_no']),
+                strtoupper($input['sap_no'] ?? ''),
                 (int)$input['planned_output']
             ];
             $stmt = $pdo->prepare($sql);
@@ -96,6 +96,7 @@ try {
             break;
 
         case 'bulk_import':
+            // This logic remains correct.
             if (!is_array($input) || empty($input)) throw new Exception("Invalid data");
             
             $pdo->beginTransaction();
@@ -178,24 +179,11 @@ try {
             break;
 
         case 'health_check_parameters':
-            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-            if ($page < 1) $page = 1;
-
-            $stmt = $pdo->prepare("EXEC dbo.sp_GetMissingParameters @PageNumber = ?, @PageSize = ?");
-            $stmt->execute([$page, 25]); // 25 คือ ROWS_PER_PAGE
-
-            $totalRow = $stmt->fetch(PDO::FETCH_ASSOC);
-            $totalRecords = $totalRow['TotalRecords'] ?? 0;
-
-            $stmt->nextRowset();
-
-            $pageData = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            echo json_encode([
-                'success' => true, 
-                'data' => $pageData,
-                'totalRecords' => $totalRecords
-            ]);
+            // REVERTED LOGIC: Call the simple SP and return all data at once.
+            $stmt = $pdo->prepare("EXEC dbo.sp_GetMissingParameters");
+            $stmt->execute();
+            $missingParams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $missingParams]);
             break;
 
         default:
@@ -203,11 +191,11 @@ try {
             throw new Exception("Invalid action specified.");
     }
 } catch (Exception $e) {
-    if ($pdo->inTransaction()) {
+    if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
     http_response_code(500);
     echo json_encode(["success" => false, "message" => $e->getMessage()]);
-    error_log("Error in paraManage.php: " . $e->getMessage());
+    error_log("Error in paraManage.php (Unified API): " . $e->getMessage());
 }
 ?>

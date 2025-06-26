@@ -63,11 +63,13 @@ ul {
 
 .pie-chart-card .pie-chart-details {
     flex-grow: 1;
+    max-width: 150px;
 }
 
 .pie-chart-card .chart-wrapper {
     flex-shrink: 0;
     width: 160px;
+    max-width: 200px;
     height: 100%;
     margin: 0;
     display: flex;
@@ -76,8 +78,10 @@ ul {
 }
 
 .pie-chart-card .chart-info {
-    font-size: 1rem;
+    font-size: 1.2rem;
+    font-weight: 300;
     margin-top: 0.75rem;
+    line-height: 2rem;
 }
 
 .line-chart-card .chart-wrapper {

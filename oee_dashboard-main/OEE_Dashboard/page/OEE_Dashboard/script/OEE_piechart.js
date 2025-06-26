@@ -1,6 +1,3 @@
-//ในอนาคตต้องรีแฟกเตอร์ updateInfoBox เพื่อสร้างองค์ประกอบ HTML โดยใช้โปรแกรม document.createElement และ .textContent
-//ตรวจสอบให้แน่ใจเสมอว่าข้อมูลสตริงใดๆ ที่ส่งไปยัง updateInfoBox ถูกเข้ารหัสอย่างถูกต้อง
-
 const charts = {
     oee: null,
     quality: null,
@@ -8,36 +5,51 @@ const charts = {
     availability: null
 };
 
+/**
+ * Converts minutes into a formatted "Xh Ym" string.
+ * @param {number} totalMinutes - The total minutes to format.
+ * @returns {string} The formatted time string.
+ */
+function formatMinutes(totalMinutes) {
+    if (isNaN(totalMinutes) || totalMinutes < 0) {
+        return '0h 0m';
+    }
+    const h = Math.floor(totalMinutes / 60);
+    const m = Math.floor(totalMinutes % 60);
+    return `${h}h ${m}m`;
+}
 
 function hideErrors() {
     ['oee', 'quality', 'performance', 'availability'].forEach(type => {
-        document.getElementById(`${type}Error`).style.display = 'none';
-        document.getElementById(`${type}PieChart`).style.opacity = '1';
+        const errorEl = document.getElementById(`${type}Error`);
+        const chartEl = document.getElementById(`${type}PieChart`);
+        if (errorEl) errorEl.style.display = 'none';
+        if (chartEl) chartEl.style.opacity = '1';
     });
 }
 
 function showError(type) {
-    document.getElementById(`${type}Error`).style.display = 'block';
-    document.getElementById(`${type}PieChart`).style.opacity = '0.2';
+    const errorEl = document.getElementById(`${type}Error`);
+    const chartEl = document.getElementById(`${type}PieChart`);
+    if (errorEl) errorEl.style.display = 'block';
+    if (chartEl) chartEl.style.opacity = '0.2';
 }
 
-/**
- * 
- * @param {string} elementId    
- * @param {string[]} lines
- */
 function updateInfoBox(elementId, lines) {
+    const infoBox = document.getElementById(elementId);
+    if (!infoBox) return;
     const content = lines.map(line => `<span>${line}</span>`).join('<br>');
-    document.getElementById(elementId).innerHTML = `<small>${content}</small>`;
+    infoBox.innerHTML = `<small>${content}</small>`;
 }
 
 function renderSimplePieChart(chartName, ctx, label, rawValue, mainColor) {
+    if (!ctx) return;
     if (charts[chartName]) {
         charts[chartName].destroy();
     }
 
-    const value = Math.max(0, Math.min(rawValue, 100)); // Clamp value between 0 and 100
-    const loss = Math.max(0, 100 - value);;
+    const value = Math.max(0, Math.min(rawValue, 100));
+    const loss = 100 - value;
 
     charts[chartName] = new Chart(ctx, {
         type: 'doughnut',
@@ -61,10 +73,6 @@ function renderSimplePieChart(chartName, ctx, label, rawValue, mainColor) {
                     }
                 },
                 title: { display: false },
-                centerText: {
-                    display: true,
-                    text: `${rawValue.toFixed(1)}%`
-                }
             }
         },
         plugins: [{
@@ -77,7 +85,7 @@ function renderSimplePieChart(chartName, ctx, label, rawValue, mainColor) {
                 ctx.textBaseline = "middle";
                 const text = `${rawValue.toFixed(1)}%`;
                 const textX = Math.round((width - ctx.measureText(text).width) / 2);
-                const textY = height / 2; // Adjust vertical position
+                const textY = height / 2;
                 ctx.fillStyle = "#ffffff";
                 ctx.fillText(text, textX, textY);
                 ctx.save();
@@ -97,7 +105,6 @@ async function fetchAndRenderCharts() {
             model: document.getElementById("modelFilter")?.value || ''
         });
 
-        // Update URL
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState({}, '', newUrl);
 
@@ -107,57 +114,53 @@ async function fetchAndRenderCharts() {
         const data = await response.json();
         if (!data.success) throw new Error(data.message || "API returned an error.");
 
-        // --- Render Charts ---
-        renderSimplePieChart('oee', document.getElementById("oeePieChart").getContext("2d"), 'OEE', data.oee || 0, '#00BF63');
-        renderSimplePieChart('quality', document.getElementById("qualityPieChart").getContext("2d"), 'Quality', data.quality || 0, '#ab47bc');
-        renderSimplePieChart('performance', document.getElementById("performancePieChart").getContext("2d"), 'Performance', data.performance || 0, '#ffa726');
-        renderSimplePieChart('availability', document.getElementById("availabilityPieChart").getContext("2d"), 'Availability', data.availability || 0, '#42a5f5');
+        renderSimplePieChart('oee', document.getElementById("oeePieChart")?.getContext("2d"), 'OEE', data.oee || 0, '#00BF63');
+        renderSimplePieChart('quality', document.getElementById("qualityPieChart")?.getContext("2d"), 'Quality', data.quality || 0, '#ab47bc');
+        renderSimplePieChart('performance', document.getElementById("performancePieChart")?.getContext("2d"), 'Performance', data.performance || 0, '#ffa726');
+        renderSimplePieChart('availability', document.getElementById("availabilityPieChart")?.getContext("2d"), 'Availability', data.availability || 0, '#42a5f5');
 
-        // --- Update Info Boxes ---
-        // Ensuring these values are numbers before calling toLocaleString()
-        updateInfoBox("oeeInfo", [ // Assuming "oeeInfo" is the target ID for overall OEE stats
-            `OEE : <b>${(parseFloat(data.oee) || 0).toLocaleString()}</b> %`, // Changed pcs to % for OEE
-            `Quality : <b>${(parseFloat(data.quality) || 0).toLocaleString()}</b> %`, // Changed pcs to % for Quality
-            `Performance : <b>${(parseFloat(data.performance) || 0).toLocaleString()}</b> %`, // Changed pcs to % for Performance
-            `Availability : <b>${(parseFloat(data.availability) || 0).toLocaleString()}</b> %` // Changed pcs to % for Availability
-        ]);
+        const { oee, quality, performance, availability } = data;
+        let oeeInfoLines = [];
 
-        const { oee, quality, performance, availability } = data; // Destructure after the initial info box update for consistency
-
-        if ((oee || 0) < 100) { // Added (oee || 0) to handle null/undefined oee
-            const totalLoss = 100 - (oee || 0);
-
-            const qualityLossRatio = 1 - ((quality || 0) / 100);
-            const performanceLossRatio = 1 - ((performance || 0) / 100);
-            const availabilityLossRatio = 1 - ((availability || 0) / 100);
-
+        if ((oee || 0) > 0 && oee < 100) {
+            const totalLoss = 100 - oee;
+            const qualityLossRatio = Math.max(0, 1 - (quality / 100));
+            const performanceLossRatio = Math.max(0, 1 - (performance / 100));
+            const availabilityLossRatio = Math.max(0, 1 - (availability / 100));
             const totalRatio = qualityLossRatio + performanceLossRatio + availabilityLossRatio;
 
-            const qualityLoss = totalRatio > 0 ? totalLoss * (qualityLossRatio / totalRatio) : 0;
-            const performanceLoss = totalRatio > 0 ? totalLoss * (performanceLossRatio / totalRatio) : 0;
-            const availabilityLoss = totalRatio > 0 ? totalLoss * (availabilityLossRatio / totalRatio) : 0;
-
-            updateInfoBox("oeeInfo", [
-                `OEE Loss: <b>${totalLoss.toFixed(1)}%</b>`, // Added total OEE loss for clarity
-                `Q Loss: <b>${qualityLoss.toFixed(1)}%</b>`,
-                `P Loss: <b>${performanceLoss.toFixed(1)}%</b>`,
-                `A Loss: <b>${availabilityLoss.toFixed(1)}%</b>`
-            ]);
-
+            const qualityLossContrib = totalRatio > 0 ? (qualityLossRatio / totalRatio) * 100 : 0;
+            const performanceLossContrib = totalRatio > 0 ? (performanceLossRatio / totalRatio) * 100 : 0;
+            const availabilityLossContrib = totalRatio > 0 ? (availabilityLossRatio / totalRatio) * 100 : 0;
+            
+            oeeInfoLines = [
+                `OEE Loss: <b>${totalLoss.toFixed(1)}%</b>`,
+                `Q Contrib: <b>${qualityLossContrib.toFixed(1)}%</b>`,
+                `P Contrib: <b>${performanceLossContrib.toFixed(1)}%</b>`,
+                `A Contrib: <b>${availabilityLossContrib.toFixed(1)}%</b>`
+            ];
         } else {
-            updateInfoBox("oeeInfo", [
-                `Total OEE Loss: <b>0.0%</b>`
-            ]);
+            oeeInfoLines = [
+                `OEE : <b>${(oee || 0).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</b> %`,
+                `Quality : <b>${(quality || 0).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</b> %`,
+                `Performance : <b>${(performance || 0).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</b> %`,
+                `Availability : <b>${(availability || 0).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</b> %`
+            ];
         }
-
-        updateInfoBox("qualityInfo", [
-            `FG : <b>${(parseFloat(data.fg) || 0).toLocaleString()}</b> pcs`,
-            `Defects : <b>${(parseFloat(data.defects) || 0).toLocaleString()}</b> pcs`
-        ]);
+        updateInfoBox("oeeInfo", oeeInfoLines);
+        
+        const qualityLines = [`FG : <b>${(parseFloat(data.fg) || 0).toLocaleString()}</b> pcs`];
+        if (data.ng > 0) qualityLines.push(`NG : <b>${(parseFloat(data.ng) || 0).toLocaleString()}</b> pcs`);
+        if (data.rework > 0) qualityLines.push(`Rework : <b>${(parseFloat(data.rework) || 0).toLocaleString()}</b> pcs`);
+        if (data.hold > 0) qualityLines.push(`Hold : <b>${(parseFloat(data.hold) || 0).toLocaleString()}</b> pcs`);
+        if (data.scrap > 0) qualityLines.push(`Scrap : <b>${(parseFloat(data.scrap) || 0).toLocaleString()}</b> pcs`);
+        if (data.etc > 0) qualityLines.push(`Etc : <b>${(parseFloat(data.etc) || 0).toLocaleString()}</b> pcs`);
+        updateInfoBox("qualityInfo", qualityLines);
 
         updateInfoBox("performanceInfo", [
             `Actual : <b>${(parseFloat(data.actual_output) || 0).toLocaleString()}</b> pcs`,
-            `Theo. Time : <b>${formatMinutes(data.debug_info?.total_theoretical_minutes || 0)}</b>`
+            `Theo.T : <b>${formatMinutes(data.debug_info?.total_theoretical_minutes || 0)}</b>`,
+            `Runtime : <b>${formatMinutes(data.runtime || 0)}</b>`
         ]);
 
         updateInfoBox("availabilityInfo", [
@@ -166,16 +169,8 @@ async function fetchAndRenderCharts() {
             `Runtime : <b>${formatMinutes(data.runtime || 0)}</b>`
         ]);
 
-        // You would need to add this formatMinutes function if it's not globally available
-        function formatMinutes(minutes) {
-            const h = Math.floor(minutes / 60);
-            const m = minutes % 60;
-            return `${h}h ${m}m`;
-        }
-
     } catch (err) {
         console.error("Pie chart update failed:", err);
-        // Show error messages on the UI
         ['oee', 'quality', 'performance', 'availability'].forEach(showError);
     }
 }

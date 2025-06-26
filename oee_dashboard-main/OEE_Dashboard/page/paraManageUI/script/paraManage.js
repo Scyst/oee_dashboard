@@ -3,8 +3,9 @@
 const API_ENDPOINT = '../../api/paraManage/paraManage.php';
 const ROWS_PER_PAGE = 25;
 
-let allStandardParams = [], allSchedules = [];
-let currentPage = 1;
+let allStandardParams = [], allSchedules = [], allMissingParams = [];
+let paramCurrentPage = 1;
+let healthCheckCurrentPage = 1;
 
 async function sendRequest(action, method, body = null, urlParams = {}) {
     try {
@@ -34,11 +35,6 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
     }
 }
 
-/**
- * 
- * @param {string} modalId
- * @param {object} data
- */
 function openEditModal(modalId, data) {
     const modalElement = document.getElementById(modalId);
     if (!modalElement) return;
@@ -55,7 +51,6 @@ function openEditModal(modalId, data) {
     }
     openModal(modalId);
 }
-
 
 function renderPagination(containerId, totalItems, currentPage, callback) {
     const totalPages = Math.ceil(totalItems / ROWS_PER_PAGE);
@@ -78,6 +73,7 @@ function renderPagination(containerId, totalItems, currentPage, callback) {
     pagination.appendChild(createPageItem(currentPage + 1, 'Next', currentPage >= totalPages));
 }
 
+// --- Standard Parameters Tab Functions ---
 async function loadStandardParams() {
     const result = await sendRequest('read', 'GET');
     if (result?.success) {
@@ -88,15 +84,17 @@ async function loadStandardParams() {
     }
 }
 
-function renderStandardParamsTable() {
+function getFilteredStandardParams() {
     const searchTerm = document.getElementById('searchInput').value.toUpperCase();
-    const filteredData = searchTerm 
-        ? allStandardParams.filter(row => `${row.line || ''} ${row.model || ''} ${row.part_no || ''} ${row.sap_no || ''}`.toUpperCase().includes(searchTerm))
-        : allStandardParams;
-    
+    if (!searchTerm) return allStandardParams;
+    return allStandardParams.filter(row => `${row.line || ''} ${row.model || ''} ${row.part_no || ''} ${row.sap_no || ''}`.toUpperCase().includes(searchTerm));
+}
+
+function renderStandardParamsTable() {
+    const filteredData = getFilteredStandardParams();
     const tbody = document.getElementById('paramTableBody');
     tbody.innerHTML = '';
-    const start = (currentPage - 1) * ROWS_PER_PAGE;
+    const start = (paramCurrentPage - 1) * ROWS_PER_PAGE;
     const pageData = filteredData.slice(start, start + ROWS_PER_PAGE);
 
     if (pageData.length === 0) {
@@ -126,26 +124,27 @@ function renderStandardParamsTable() {
         tbody.appendChild(tr);
     });
     
-    renderPagination('paginationControls', filteredData.length, currentPage, goToStandardParamPage);
+    renderPagination('paginationControls', filteredData.length, paramCurrentPage, goToStandardParamPage);
 }
 
 function filterAndRenderStandardParams() {
-    currentPage = 1;
+    paramCurrentPage = 1;
     renderStandardParamsTable();
 }
 
 function goToStandardParamPage(page) {
-    currentPage = page;
+    paramCurrentPage = page;
     renderStandardParamsTable();
 }
 
 async function deleteStandardParam(id) {
     if (!confirm(`Are you sure you want to delete parameter ID ${id}?`)) return;
-    const result = await sendRequest('delete', 'DELETE', { id: id }); 
+    const result = await sendRequest('delete', 'DELETE', { id });
     showToast(result.message, result.success ? '#28a745' : '#dc3545');
     if (result.success) loadStandardParams();
 }
 
+// --- Line Schedules Tab Functions ---
 async function loadSchedules() {
     const result = await sendRequest('read_schedules', 'GET');
     if (result?.success) {
@@ -189,42 +188,130 @@ function renderSchedulesTable() {
 
 async function deleteSchedule(id) {
     if (!confirm(`Are you sure you want to delete schedule ID ${id}?`)) return;
-    const result = await sendRequest('delete_schedule', 'DELETE', { id: id });
+    const result = await sendRequest('delete_schedule', 'DELETE', { id });
     showToast(result.message, result.success ? '#28a745' : '#dc3545');
     if (result.success) loadSchedules();
 }
 
-async function loadHealthCheckData(page = 1) {
-    const result = await sendRequest('health_check_parameters', 'GET', null, { page: page });
+// --- Data Health Check Tab Functions ---
+async function loadHealthCheckData() {
+    const result = await sendRequest('health_check_parameters', 'GET');
     const listBody = document.getElementById('missingParamsList');
-    listBody.innerHTML = '';
+    const paginationControls = document.getElementById('healthCheckPaginationControls');
     
-    if (result?.success) {
-        const pageData = result.data;
-        const totalRecords = result.totalRecords;
+    listBody.innerHTML = '';
+    paginationControls.innerHTML = '';
 
-        if (pageData && pageData.length > 0) {
-            pageData.forEach(item => {
-                listBody.innerHTML += `<tr><td>${item.line}</td><td>${item.model}</td><td>${item.part_no}</td></tr>`;
-            });
-        } else {
-            listBody.innerHTML = `<tr><td colspan="3" class="text-success">Excellent! No missing data found.</td></tr>`;
-        }
-        
-        renderPagination('healthCheckPaginationControls', totalRecords, page, goToHealthCheckPage);
+    if (result?.success) {
+        allMissingParams = result.data;
+        healthCheckCurrentPage = 1;
+        renderHealthCheckTable();
     } else {
         listBody.innerHTML = `<tr><td colspan="3" class="text-danger">Failed to load data.</td></tr>`;
-        renderPagination('healthCheckPaginationControls', 0, 1, goToHealthCheckPage);
     }
 }
 
-function goToHealthCheckPage(page) {
-    loadHealthCheckData(page);
+function renderHealthCheckTable() {
+    const listBody = document.getElementById('missingParamsList');
+    listBody.innerHTML = '';
+    
+    const start = (healthCheckCurrentPage - 1) * ROWS_PER_PAGE;
+    const pageData = allMissingParams.slice(start, start + ROWS_PER_PAGE);
+
+    if (allMissingParams.length === 0) {
+        listBody.innerHTML = `<tr><td colspan="3" class="text-success">Excellent! No missing data found.</td></tr>`;
+    } else {
+         pageData.forEach(item => {
+            listBody.innerHTML += `<tr><td>${item.line}</td><td>${item.model}</td><td>${item.part_no}</td></tr>`;
+        });
+    }
+    
+    renderPagination('healthCheckPaginationControls', allMissingParams.length, healthCheckCurrentPage, goToHealthCheckPage);
 }
 
+function goToHealthCheckPage(page) {
+    healthCheckCurrentPage = page;
+    renderHealthCheckTable();
+}
+
+// --- Import/Export Functions ---
+function exportToExcel() {
+    showToast('Exporting data... Please wait.', '#0dcaf0');
+    
+    const dataToExport = getFilteredStandardParams();
+
+    if (!dataToExport || dataToExport.length === 0) {
+        showToast("No data to export based on the current filter.", '#ffc107');
+        return;
+    }
+
+    const worksheetData = dataToExport.map(row => ({
+        "Line": row.line,
+        "Model": row.model,
+        "Part No": row.part_no,
+        "SAP No": row.sap_no || '',
+        "Planned Output": row.planned_output,
+        "Updated At": row.updated_at
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Parameters");
+    const fileName = `Parameters_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+}
+
+function triggerImport() {
+    document.getElementById('importFile')?.click();
+}
+
+async function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const fileData = e.target.result;
+            const workbook = XLSX.read(fileData, { type: "binary" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+            const rowsToImport = rawRows.map(row => ({
+                line: String(row["Line"] || row["line"] || '').trim().toUpperCase(),
+                model: String(row["Model"] || row["model"] || '').trim().toUpperCase(),
+                part_no: String(row["Part No"] || row["part_no"] || '').trim().toUpperCase(),
+                sap_no: String(row["SAP No"] || row["sap_no"] || '').trim().toUpperCase(),
+                planned_output: parseInt(row["Planned Output"] || row["planned_output"] || 0)
+            }));
+
+            if (rowsToImport.length > 0 && confirm(`Import ${rowsToImport.length} records?`)) {
+                const result = await sendRequest('bulk_import', 'POST', rowsToImport);
+                if (result.success) {
+                    showToast(result.message || "Import successful!", '#0d6efd');
+                    loadStandardParams();
+                } else {
+                    showToast(result.message || "Import failed.", '#dc3545');
+                }
+            }
+        } catch (error) {
+            console.error("Import process failed:", error);
+            showToast('Failed to process file.', '#dc3545');
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsBinaryString(file);
+}
+
+// --- Event Listeners and Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     loadStandardParams();
     document.getElementById('searchInput')?.addEventListener('input', filterAndRenderStandardParams);
+
+    const importInput = document.getElementById('importFile');
+    if (importInput) {
+        importInput.addEventListener('change', handleImport);
+    }
 
     const tabElms = document.querySelectorAll('button[data-bs-toggle="tab"]');
     tabElms.forEach(tabElm => {
@@ -236,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (targetTabId === '#lineSchedulesPane') {
                 loadSchedules();
             } else if (targetTabId === '#healthCheckPane') {
-                loadHealthCheckData(1);
+                loadHealthCheckData();
             }
         });
     });
