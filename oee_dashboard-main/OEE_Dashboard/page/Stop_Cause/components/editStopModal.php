@@ -38,9 +38,22 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="edit_cause" class="form-label">Cause</label>
-                        <input list="editCauseList" name="cause" id="edit_cause" class="form-control" placeholder="Select or type Cause" required>
-                        <datalist id="editCauseList"></datalist>
+                        <label for="edit_cause" class="form-label">Cause Category (5M1E)</label>
+                        <select id="edit_cause" name="cause_category" class="form-select" required>
+                            <option value="" selected disabled>-- Please select a category --</option>
+                            <option value="Man">Man (คน)</option>
+                            <option value="Machine">Machine (เครื่องจักร)</option>
+                            <option value="Method">Method (วิธีการ)</option>
+                            <option value="Material">Material (วัตถุดิบ)</option>
+                            <option value="Measurement">Measurement (การวัด)</option>
+                            <option value="Environment">Environment (สภาพแวดล้อม)</option>
+                            <option value="Other">Other (อื่นๆ)</option>
+                        </select>
+                    </div>
+
+                    <div id="editOtherCauseWrapper" class="mb-3 d-none">
+                        <label for="editCauseOther" class="form-label">Please Specify Other Cause</label>
+                        <input type="text" id="editCauseOther" name="cause" class="form-control" placeholder="Specify the cause...">
                     </div>
 
                     <div class="mb-3">

@@ -11,79 +11,8 @@
     <script src="../../utils/libs/chartjs-plugin-zoom.min.js"></script>
     <script src="../../utils/libs/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
-    <link rel="stylesheet" href="../../style/dropdown.css">
+    <link rel="stylesheet" href="../../style/style.css">
     
-    <style>
-        html {
-            scroll-behavior: smooth;
-        }
-        body {
-            background-color: #1a1a1a;
-        }
-
-        .dashboard-header-sticky {
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-            background-color: #212529;
-            padding: 1rem 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-
-        .dashboard-container {
-            height: calc(100vh - 150px);
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-        }
-
-        .dashboard-section {
-            scroll-snap-align: start;
-            padding: 1rem 2rem 0rem 2rem;
-        }
-        
-        .chart-card {
-            background-color: #2c3034;
-            border-radius: 0.75rem;
-            padding: 1.5rem 1rem 1.5rem 1.5rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .pie-chart-card {
-            flex-direction: row;
-            justify-content: space-between;
-            gap: 1rem;
-            min-height: 250px;
-        }
-
-        .pie-chart-details {
-            flex-grow: 1;
-        }
-
-        .pie-chart-card .chart-info {
-            font-size: 1rem;
-            color: #ffffff;
-            margin-top: 0.75rem;
-        }
-
-        .pie-chart-card .chart-wrapper {
-            flex-shrink: 0;
-            max-height: 190px;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .chart-card h4 { margin-bottom: 0rem; }
-        .chart-card .chart-wrapper { position: relative; flex-grow: 1; }
-        .chart-card .chart-info { font-size: 0.9rem; color: #ffffff; }
-
-        .line-chart-card .chart-wrapper { height: 400px; }
-        .bar-chart-card .chart-wrapper { height: 300px; }
-    </style>
 </head>
 
 <body class="bg-dark text-white">

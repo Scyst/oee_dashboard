@@ -32,7 +32,7 @@ function renderBarChart(chartInstance, ctx, labels, valuesOrDatasets, labelOrOpt
         }];
 
     const canvasId = ctx.canvas.id;
-    const isStacked = canvasId === 'partsBarChart';
+    const isStacked = canvasId === 'partsBarChart' || canvasId === 'stopCauseBarChart';;
 
     const chart = new Chart(ctx, {
         type: 'bar',
@@ -133,7 +133,7 @@ async function fetchAndRenderBarCharts() {
 
         const partDatasets = Object.entries(countTypes).map(([type, { label, color }]) => {
             return data.parts[type]
-                ? { label, data: data.parts[type], backgroundColor: color }
+                ? { label, data: data.parts[type], backgroundColor: color, borderRadius: 1 }
                 : null;
         }).filter(Boolean);
 
@@ -145,21 +145,52 @@ async function fetchAndRenderBarCharts() {
         );
 
         const stopCauseLabels = data.stopCause.labels;
-        const tooltipInfo = data.stopCause.tooltipInfo || {};
+        const rawDatasets = data.stopCause.datasets;
 
-        const stopCauseDatasets = data.stopCause.datasets.map(causeSet => ({
-            label: causeSet.label,
-            data: causeSet.data,
-            backgroundColor: causeSet.backgroundColor || getRandomColor(),
-            borderRadius: 1
-        }));
+        const causeColors = {
+            'Man': '#42A5F5',
+            'Machine': '#FFA726',
+            'Method': '#66BB6A',
+            'Material': '#EF5350',
+            'Measurement': '#AB47BC',
+            'Environment': '#26C6DA',
+            'Other': '#BDBDBD'  
+        };
+        const standardCauses = Object.keys(causeColors);
+        const consolidatedData = {};
+        const numLabels = stopCauseLabels.length;
+
+        standardCauses.forEach(cause => {
+            consolidatedData[cause] = {
+                label: cause,
+                data: new Array(numLabels).fill(0),
+                backgroundColor: causeColors[cause],
+                borderRadius: 1
+            };
+        });
+
+        rawDatasets.forEach(causeSet => {
+            let targetCause = 'Other';
+            const foundCause = standardCauses.find(sc => sc.toLowerCase() === causeSet.label.toLowerCase());
+
+            if (foundCause) {
+                targetCause = foundCause;
+            }
+
+            for (let i = 0; i < numLabels; i++) {
+                consolidatedData[targetCause].data[i] += causeSet.data[i] || 0;
+            }
+        });
+
+        const stopCauseDatasets = Object.values(consolidatedData)
+        .filter(dataset => dataset.data.some(d => d > 0));
 
         stopCauseBarChartInstance = renderBarChart(
             stopCauseBarChartInstance,
             document.getElementById("stopCauseBarChart").getContext("2d"),
             stopCauseLabels,
             stopCauseDatasets,
-            { tooltipInfo }
+            {}
         );
 
     } catch (err) {

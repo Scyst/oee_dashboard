@@ -1,9 +1,5 @@
 let modalTriggerElement = null;
 
-/**
- * 
- * @param {string} modalId
- */
 function showBootstrapModal(modalId) {
     const modalElement = document.getElementById(modalId);
     if (modalElement) {
@@ -33,10 +29,6 @@ function openAddStopModal(triggerEl) {
     showBootstrapModal('addStopModal');
 }
 
-/**
- * 
- * @param {number} id
- */
 async function openEditModal(id, triggerEl) {
     modalTriggerElement = triggerEl;
     try {
@@ -47,10 +39,30 @@ async function openEditModal(id, triggerEl) {
             const data = result.data;
             const modal = document.getElementById('editStopModal');
             
-            for (const key in data) {
-                const input = modal.querySelector(`#edit_${key}`);
-                if (input) input.value = data[key];
+            const causeSelect = modal.querySelector('#edit_cause');
+            const otherCauseWrapper = modal.querySelector('#editOtherCauseWrapper');
+            const otherCauseInput = modal.querySelector('#editCauseOther');
+            const standardCauses = ["Man", "Machine", "Method", "Material", "Measurement", "Environment"];
+
+            if (standardCauses.includes(data.cause)) {
+                causeSelect.value = data.cause;
+                otherCauseWrapper.classList.add('d-none');
+                otherCauseInput.value = '';
+                otherCauseInput.required = false;
+            } else {
+                causeSelect.value = 'Other';
+                otherCauseWrapper.classList.remove('d-none');
+                otherCauseInput.value = data.cause;
+                otherCauseInput.required = true;
             }
+            
+            for (const key in data) {
+                if (key !== 'cause') {
+                    const input = modal.querySelector(`#edit_${key}`);
+                    if (input) input.value = data[key];
+                }
+            }
+
             showBootstrapModal('editStopModal');
         } else {
             showToast(result.message, '#dc3545');
@@ -66,11 +78,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (addForm) {
         addForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const payload = Object.fromEntries(new FormData(addForm).entries());
-            
+
+            const formData = new FormData(addForm);
+            const payload = Object.fromEntries(formData.entries());
+
+            if (payload.cause_category === 'Other') {
+                payload.cause = payload.cause_other || 'Other';
+            } else {
+                 payload.cause = payload.cause_category;
+            }
+            delete payload.cause_category;
+            delete payload.cause_other;
+
             try {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
                 const response = await fetch(`${API_URL}?action=add_stop`, {
                     method: 'POST',
                     headers: {
@@ -88,6 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (modalInstance) {
                         modalElement.addEventListener('hidden.bs.modal', () => {
                             addForm.reset();
+                            const otherWrapper = document.getElementById('otherCauseWrapper');
+                            if(otherWrapper) otherWrapper.classList.add('d-none');
                             fetchStopData(1);
                             if (modalTriggerElement) {
                                 modalTriggerElement.focus();
@@ -106,11 +129,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editForm) {
         editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const payload = Object.fromEntries(new FormData(editForm).entries());
+            
+            const formData = new FormData(editForm);
+            const payload = Object.fromEntries(formData.entries());
+
+            if (payload.cause_category === 'Other') {
+                payload.cause = payload.cause_other || 'Other';
+            } else {
+                payload.cause = payload.cause_category;
+            }
+            delete payload.cause_category;
+            delete payload.cause_other;
 
             try {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
                 const response = await fetch(`${API_URL}?action=update_stop`, {
                     method: 'POST',
                     headers: {
@@ -140,5 +172,42 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
+    const causeSelect = document.getElementById('addCause');
+    const otherCauseWrapper = document.getElementById('otherCauseWrapper');
+    const otherCauseInput = document.getElementById('addCauseOther');
+
+    if (causeSelect) {
+        causeSelect.addEventListener('change', function() {
+            if (this.value === 'Other') {
+                otherCauseWrapper.classList.remove('d-none');
+                otherCauseInput.required = true;
+                otherCauseInput.name = 'cause_other';
+            } else {
+                otherCauseWrapper.classList.add('d-none');
+                otherCauseInput.value = '';
+                otherCauseInput.required = false;
+                otherCauseInput.name = '';
+            }
+        });
+    }
+
+    const editCauseSelect = document.getElementById('edit_cause');
+    const editOtherCauseWrapper = document.getElementById('editOtherCauseWrapper');
+    const editCauseOtherInput = document.getElementById('editCauseOther');
+
+    if (editCauseSelect) {
+        editCauseSelect.addEventListener('change', function() {
+            if (this.value === 'Other') {
+                editOtherCauseWrapper.classList.remove('d-none');
+                editCauseOtherInput.required = true;
+                editCauseOtherInput.name = 'cause_other';
+            } else {
+                editOtherCauseWrapper.classList.add('d-none');
+                editCauseOtherInput.value = '';
+                editCauseOtherInput.required = false;
+                editCauseOtherInput.name = '';
+            }
+        });
+    }
 });
