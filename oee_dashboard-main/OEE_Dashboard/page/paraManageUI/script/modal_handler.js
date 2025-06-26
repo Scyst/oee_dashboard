@@ -1,44 +1,36 @@
+"use strict";
+
 function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if(modal) modal.style.display = 'block';
+    const modalElement = document.getElementById(modalId);
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    }
 }
 
 function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if(modal) modal.style.display = 'none';
-}
-
-async function openEditModal(id) {
-    try {
-        const result = await sendRequest(`get_param_by_id&id=${id}`, 'GET');
-        if (result.success) {
-            const data = result.data;
-            const modal = document.getElementById('editParamModal');
-            for (const key in data) {
-                const input = modal.querySelector(`#edit_${key}`);
-                if (input) input.value = data[key];
-            }
-            openModal('editParamModal');
-        } else {
-            showToast(result.message, '#dc3545');
+    const modalElement = document.getElementById(modalId);
+    if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.hide();
         }
-    } catch (error) {
-        showToast('Failed to fetch parameter details.', '#dc3545');
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!canManage) return;
 
+    // --- Standard Parameter Form Handlers ---
     document.getElementById('addParamForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = Object.fromEntries(new FormData(e.target).entries());
         const result = await sendRequest('create', 'POST', payload);
         if (result.success) {
-            showToast('Parameter added successfully!');
+            showToast('Parameter added successfully!', '#28a745');
             closeModal('addParamModal');
             e.target.reset();
-            loadParameters();
+            loadStandardParams();
         } else {
             showToast(result.message || 'Failed to add parameter.', '#dc3545');
         }
@@ -49,17 +41,44 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = Object.fromEntries(new FormData(e.target).entries());
         const result = await sendRequest('update', 'POST', payload);
         if (result.success) {
-            showToast('Parameter updated successfully!');
+            showToast('Parameter updated successfully!', '#28a745');
             closeModal('editParamModal');
-            loadParameters();
+            loadStandardParams();
         } else {
             showToast(result.message || 'Failed to update parameter.', '#dc3545');
         }
     });
 
-    window.addEventListener('click', e => {
-        document.querySelectorAll('.modal').forEach(modal => {
-            if (e.target === modal) closeModal(modal.id);
-        });
+    // --- Line Schedule Form Handlers ---
+    document.getElementById('addScheduleForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = Object.fromEntries(new FormData(e.target).entries());
+        payload.id = 0;
+        payload.is_active = payload.is_active ? 1 : 0;
+        
+        const result = await sendRequest('save_schedule', 'POST', payload);
+        if (result.success) {
+            showToast('Schedule added successfully!', '#28a745');
+            closeModal('addScheduleModal');
+            e.target.reset();
+            loadSchedules();
+        } else {
+            showToast(result.message || 'Failed to add schedule.', '#dc3545');
+        }
+    });
+
+    document.getElementById('editScheduleForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = Object.fromEntries(new FormData(e.target).entries());
+        payload.is_active = payload.is_active ? 1 : 0;
+
+        const result = await sendRequest('save_schedule', 'POST', payload);
+        if (result.success) {
+            showToast('Schedule updated successfully!', '#28a745');
+            closeModal('editScheduleModal');
+            loadSchedules();
+        } else {
+            showToast(result.message || 'Failed to update schedule.', '#dc3545');
+        }
     });
 });

@@ -82,7 +82,7 @@ try {
             break;
 
         case 'delete':
-            $id = $_GET['id'] ?? 0;
+            $id = $input['id'] ?? 0;
             if (!$id) throw new Exception("Missing ID");
 
             $stmt = $pdo->prepare("DELETE FROM IOT_TOOLBOX_PARAMETER WHERE id = ?");
@@ -134,6 +134,68 @@ try {
             logAction($pdo, $currentUser, 'BULK IMPORT PARAMETER', null, "Imported $imported rows");
 
             echo json_encode(["success" => true, "imported" => $imported, "message" => "Imported $imported row(s) successfully."]);
+            break;
+
+        case 'read_schedules':
+            $stmt = $pdo->prepare("EXEC dbo.sp_GetSchedules");
+            $stmt->execute();
+            $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $schedules]);
+            break;
+
+        case 'save_schedule':
+            $stmt = $pdo->prepare("EXEC dbo.sp_SaveSchedule @id=?, @line=?, @shift_name=?, @start_time=?, @end_time=?, @planned_break_minutes=?, @is_active=?");
+            $success = $stmt->execute([
+                $input['id'] ?? 0,
+                $input['line'],
+                $input['shift_name'],
+                $input['start_time'],
+                $input['end_time'],
+                $input['planned_break_minutes'],
+                $input['is_active']
+            ]);
+            
+            if ($success) {
+                $actionType = ($input['id'] ?? 0) > 0 ? 'UPDATE SCHEDULE' : 'CREATE SCHEDULE';
+                logAction($pdo, $currentUser, $actionType, $input['id'] ?? null, "{$input['line']}-{$input['shift_name']}");
+            }
+            
+            echo json_encode(['success' => $success, 'message' => 'Schedule saved successfully.']);
+            break;
+
+        case 'delete_schedule':
+            $id = $input['id'] ?? 0;
+            if (!$id) throw new Exception("Missing Schedule ID");
+
+            $stmt = $pdo->prepare("EXEC dbo.sp_DeleteSchedule @id=?");
+            $success = $stmt->execute([(int)$id]);
+            
+            if ($success && $stmt->rowCount() > 0) {
+                 logAction($pdo, $currentUser, 'DELETE SCHEDULE', $id);
+            }
+            
+            echo json_encode(['success' => $success, 'message' => 'Schedule deleted.']);
+            break;
+
+        case 'health_check_parameters':
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            if ($page < 1) $page = 1;
+
+            $stmt = $pdo->prepare("EXEC dbo.sp_GetMissingParameters @PageNumber = ?, @PageSize = ?");
+            $stmt->execute([$page, 25]); // 25 คือ ROWS_PER_PAGE
+
+            $totalRow = $stmt->fetch(PDO::FETCH_ASSOC);
+            $totalRecords = $totalRow['TotalRecords'] ?? 0;
+
+            $stmt->nextRowset();
+
+            $pageData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true, 
+                'data' => $pageData,
+                'totalRecords' => $totalRecords
+            ]);
             break;
 
         default:
