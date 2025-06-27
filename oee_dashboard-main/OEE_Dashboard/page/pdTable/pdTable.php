@@ -5,6 +5,7 @@
         header("Location: ../OEE_Dashboard/OEE_Dashboard.php");
         exit;
     }
+
     $canManage = hasRole(['supervisor', 'admin', 'creator']);
 ?>
 
@@ -21,7 +22,7 @@
     <script src="../../utils/libs/bootstrap.bundle.min.js"></script>
 
     <link rel="stylesheet" href="../../utils/libs/bootstrap.min.css">
-    <link rel="stylesheet" href="../../style/dropdown.css">
+    <link rel="stylesheet" href="../../style/style.css">
 </head>
 
 <body class="bg-dark text-white p-4">

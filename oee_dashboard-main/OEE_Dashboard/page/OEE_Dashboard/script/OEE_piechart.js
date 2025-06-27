@@ -65,6 +65,9 @@ function renderSimplePieChart(chartName, ctx, label, rawValue, mainColor) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
+            layout: {
+                padding: 5
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
