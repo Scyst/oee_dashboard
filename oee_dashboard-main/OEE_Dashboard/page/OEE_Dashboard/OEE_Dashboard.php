@@ -97,6 +97,7 @@
         
     </div> <div id="toast"></div>
 
+    <script src="../components/auto_logout.js"></script>
     <script src="../components/datetime.js"></script>
     <script src="../components/toast.js"></script>
     <script src="script/OEE_piechart.js"></script>

@@ -163,7 +163,8 @@
     <script>
         const canManage = <?php echo json_encode($canManage ?? false); ?>;
     </script>
-
+    
+    <script src="../components/datetime.js"></script>
     <script src="../components/auto_logout.js"></script>
     <script src="../components/toast.js"></script>
     <script src="script/modal_handler.js"></script>
