@@ -1,6 +1,6 @@
 ﻿/***********************************************************************************************************************
  * SQL DEPLOYMENT SCRIPT FOR OEE APPLICATION
- * Target Version: Microsoft SQL Server 2012 (and later)
+ * Target Version: Microsoft SQL Server 2008 (and later)
  *
  * INSTRUCTIONS FOR DEPLOYMENT:
  * 1. Connect to the target SQL Server instance in SQL Server Management Studio (SSMS).
@@ -8,8 +8,7 @@
  * 3. Execute the entire script.
  *
  * The script is IDEMPOTENT, meaning it can be run multiple times without causing errors.
- * It will check for the existence of objects (Tables, Views, Procedures, Triggers) and drop them 
- * before recreating, ensuring the latest version of the schema is deployed.
+ * It will check for the existence of most objects and will not delete IOT_TOOLBOX_USERS and IOT_TOOLBOX_USER_LOGS.
  ***********************************************************************************************************************/
 
 -- ====================================================================================================================
@@ -65,40 +64,72 @@ GO
 -- ====================================================================================================================
 -- SECTION 2: TABLES
 -- ====================================================================================================================
-PRINT 'Creating Tables...';
+PRINT 'Creating/Updating Tables...';
+-- Drop other tables if they exist
 IF OBJECT_ID('dbo.IOT_TOOLBOX_PARTS', 'U') IS NOT NULL DROP TABLE dbo.IOT_TOOLBOX_PARTS;
 IF OBJECT_ID('dbo.IOT_TOOLBOX_STOP_CAUSES', 'U') IS NOT NULL DROP TABLE dbo.IOT_TOOLBOX_STOP_CAUSES;
 IF OBJECT_ID('dbo.IOT_TOOLBOX_PARAMETER', 'U') IS NOT NULL DROP TABLE dbo.IOT_TOOLBOX_PARAMETER;
-IF OBJECT_ID('dbo.IOT_TOOLBOX_USER_LOGS', 'U') IS NOT NULL DROP TABLE dbo.IOT_TOOLBOX_USER_LOGS;
-IF OBJECT_ID('dbo.IOT_TOOLBOX_USERS', 'U') IS NOT NULL DROP TABLE dbo.IOT_TOOLBOX_USERS;
 IF OBJECT_ID('dbo.IOT_TOOLBOX_LINE_SCHEDULES', 'U') IS NOT NULL DROP TABLE dbo.IOT_TOOLBOX_LINE_SCHEDULES;
 GO
+
+-- Create tables that are always safe to recreate
 CREATE TABLE [dbo].[IOT_TOOLBOX_PARTS]( [id] [int] IDENTITY(1,1) NOT NULL, [log_date] [date] NOT NULL, [log_time] [time](7) NOT NULL, [line] [varchar](50) NOT NULL, [model] [varchar](50) NOT NULL, [part_no] [varchar](50) NOT NULL, [count_value] [int] NOT NULL, [count_type] [varchar](50) NOT NULL, [note] [varchar](max) NULL, [lot_no] [nvarchar](100) NULL, CONSTRAINT [PK_IOT_TOOLBOX_PARTS] PRIMARY KEY CLUSTERED ([id] ASC));
 GO
 CREATE TABLE [dbo].[IOT_TOOLBOX_STOP_CAUSES]( [id] [int] IDENTITY(1,1) NOT NULL, [log_date] [date] NOT NULL, [stop_begin] [datetime] NOT NULL, [stop_end] [datetime] NOT NULL, [line] [nvarchar](50) NOT NULL, [machine] [nvarchar](50) NOT NULL, [cause] [nvarchar](255) NOT NULL, [note] [nvarchar](255) NOT NULL, [recovered_by] [nvarchar](100) NOT NULL, [duration] AS (datediff(minute,[stop_begin],[stop_end])) PERSISTED, CONSTRAINT [PK_IOT_TOOLBOX_STOP_CAUSES] PRIMARY KEY CLUSTERED ([id] ASC));
 GO
 CREATE TABLE [dbo].[IOT_TOOLBOX_PARAMETER]( [id] [int] IDENTITY(1,1) NOT NULL, [line] [varchar](50) NOT NULL, [model] [varchar](100) NOT NULL, [part_no] [varchar](100) NOT NULL, [planned_output] [int] NOT NULL, [updated_at] [datetime] NULL, [sap_no] [varchar](100) NULL, CONSTRAINT [PK_IOT_TOOLBOX_PARAMETER] PRIMARY KEY CLUSTERED ([id] ASC), CONSTRAINT [uc_line_model_part_sap] UNIQUE NONCLUSTERED ([line] ASC, [model] ASC, [part_no] ASC, [sap_no] ASC));
 GO
-CREATE TABLE [dbo].[IOT_TOOLBOX_USER_LOGS]( [id] [int] IDENTITY(1,1) NOT NULL, [action_by] [varchar](100) NULL, [action_type] [varchar](20) NULL, [target_user] [varchar](100) NULL, [detail] [nvarchar](255) NULL, [created_at] [datetime] NULL, CONSTRAINT [PK_IOT_TOOLBOX_USER_LOGS] PRIMARY KEY CLUSTERED ([id] ASC));
-GO
-CREATE TABLE [dbo].[IOT_TOOLBOX_USERS]( [id] [int] IDENTITY(1,1) NOT NULL, [username] [varchar](100) NOT NULL, [password] [nvarchar](255) NOT NULL, [role] [varchar](50) NULL, [created_at] [datetime] NULL, CONSTRAINT [PK_IOT_TOOLBOX_USERS] PRIMARY KEY CLUSTERED ([id] ASC), CONSTRAINT [UQ_IOT_TOOLBOX_USERS_username] UNIQUE NONCLUSTERED ([username] ASC));
-GO
 CREATE TABLE [dbo].[IOT_TOOLBOX_LINE_SCHEDULES]( [id] [int] IDENTITY(1,1) NOT NULL, [line] [varchar](50) NOT NULL, [shift_name] [varchar](50) NOT NULL, [start_time] [time](7) NOT NULL, [end_time] [time](7) NOT NULL, [planned_break_minutes] [int] NOT NULL, [is_active] [bit] NOT NULL, CONSTRAINT [PK_IOT_TOOLBOX_LINE_SCHEDULES] PRIMARY KEY CLUSTERED ([id] ASC));
 GO
-PRINT 'Tables created successfully.';
+
+-- START: MODIFICATION FOR USER TABLES
+-- Check if IOT_TOOLBOX_USER_LOGS table exists before creating
+IF OBJECT_ID('dbo.IOT_TOOLBOX_USER_LOGS', 'U') IS NULL
+BEGIN
+    PRINT 'Creating IOT_TOOLBOX_USER_LOGS table...';
+    CREATE TABLE [dbo].[IOT_TOOLBOX_USER_LOGS]( [id] [int] IDENTITY(1,1) NOT NULL, [action_by] [varchar](100) NULL, [action_type] [varchar](20) NULL, [target_user] [varchar](100) NULL, [detail] [nvarchar](255) NULL, [created_at] [datetime] NULL, CONSTRAINT [PK_IOT_TOOLBOX_USER_LOGS] PRIMARY KEY CLUSTERED ([id] ASC));
+END
+ELSE
+BEGIN
+    PRINT 'Table IOT_TOOLBOX_USER_LOGS already exists. Skipping creation.';
+END
+GO
+
+-- Check if IOT_TOOLBOX_USERS table exists before creating
+IF OBJECT_ID('dbo.IOT_TOOLBOX_USERS', 'U') IS NULL
+BEGIN
+    PRINT 'Creating IOT_TOOLBOX_USERS table...';
+    CREATE TABLE [dbo].[IOT_TOOLBOX_USERS]( [id] [int] IDENTITY(1,1) NOT NULL, [username] [varchar](100) NOT NULL, [password] [nvarchar](255) NOT NULL, [role] [varchar](50) NULL, [created_at] [datetime] NULL, CONSTRAINT [PK_IOT_TOOLBOX_USERS] PRIMARY KEY CLUSTERED ([id] ASC), CONSTRAINT [UQ_IOT_TOOLBOX_USERS_username] UNIQUE NONCLUSTERED ([username] ASC));
+END
+ELSE
+BEGIN
+    PRINT 'Table IOT_TOOLBOX_USERS already exists. Skipping creation.';
+END
+GO
+-- END: MODIFICATION FOR USER TABLES
+
+PRINT 'Tables created/updated successfully.';
 GO
 
 -- ====================================================================================================================
 -- SECTION 3: DEFAULT CONSTRAINTS
 -- ====================================================================================================================
 PRINT 'Applying Default Constraints...';
-ALTER TABLE [dbo].[IOT_TOOLBOX_PARTS] ADD CONSTRAINT [DF_parts_note] DEFAULT ('-') FOR [note];
-ALTER TABLE [dbo].[IOT_TOOLBOX_PARAMETER] ADD CONSTRAINT [DF_parameter_updated_at] DEFAULT (getdate()) FOR [updated_at];
-ALTER TABLE [dbo].[IOT_TOOLBOX_USER_LOGS] ADD CONSTRAINT [DF_user_logs_created_at] DEFAULT (getdate()) FOR [created_at];
-ALTER TABLE [dbo].[IOT_TOOLBOX_USERS] ADD CONSTRAINT [DF_users_role] DEFAULT ('user') FOR [role];
-ALTER TABLE [dbo].[IOT_TOOLBOX_USERS] ADD CONSTRAINT [DF_users_created_at] DEFAULT (getdate()) FOR [created_at];
-ALTER TABLE [dbo].[IOT_TOOLBOX_LINE_SCHEDULES] ADD CONSTRAINT [DF_schedules_planned_break] DEFAULT ((0)) FOR [planned_break_minutes];
-ALTER TABLE [dbo].[IOT_TOOLBOX_LINE_SCHEDULES] ADD CONSTRAINT [DF_schedules_is_active] DEFAULT ((1)) FOR [is_active];
+-- (These are safe to run multiple times, but adding checks is best practice)
+IF NOT EXISTS (SELECT * FROM sys.default_constraints WHERE name = 'DF_parts_note')
+    ALTER TABLE [dbo].[IOT_TOOLBOX_PARTS] ADD CONSTRAINT [DF_parts_note] DEFAULT ('-') FOR [note];
+IF NOT EXISTS (SELECT * FROM sys.default_constraints WHERE name = 'DF_parameter_updated_at')
+    ALTER TABLE [dbo].[IOT_TOOLBOX_PARAMETER] ADD CONSTRAINT [DF_parameter_updated_at] DEFAULT (getdate()) FOR [updated_at];
+IF NOT EXISTS (SELECT * FROM sys.default_constraints WHERE name = 'DF_user_logs_created_at')
+    ALTER TABLE [dbo].[IOT_TOOLBOX_USER_LOGS] ADD CONSTRAINT [DF_user_logs_created_at] DEFAULT (getdate()) FOR [created_at];
+IF NOT EXISTS (SELECT * FROM sys.default_constraints WHERE name = 'DF_users_role')
+    ALTER TABLE [dbo].[IOT_TOOLBOX_USERS] ADD CONSTRAINT [DF_users_role] DEFAULT ('user') FOR [role];
+IF NOT EXISTS (SELECT * FROM sys.default_constraints WHERE name = 'DF_users_created_at')
+    ALTER TABLE [dbo].[IOT_TOOLBOX_USERS] ADD CONSTRAINT [DF_users_created_at] DEFAULT (getdate()) FOR [created_at];
+IF NOT EXISTS (SELECT * FROM sys.default_constraints WHERE name = 'DF_schedules_planned_break')
+    ALTER TABLE [dbo].[IOT_TOOLBOX_LINE_SCHEDULES] ADD CONSTRAINT [DF_schedules_planned_break] DEFAULT ((0)) FOR [planned_break_minutes];
+IF NOT EXISTS (SELECT * FROM sys.default_constraints WHERE name = 'DF_schedules_is_active')
+    ALTER TABLE [dbo].[IOT_TOOLBOX_LINE_SCHEDULES] ADD CONSTRAINT [DF_schedules_is_active] DEFAULT ((1)) FOR [is_active];
 GO
 PRINT 'Default Constraints applied successfully.';
 GO
