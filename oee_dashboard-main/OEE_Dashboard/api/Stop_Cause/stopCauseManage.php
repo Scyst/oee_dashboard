@@ -26,14 +26,16 @@ try {
     $currentUser = $_SESSION['user']['username'] ?? 'system'; 
 
     switch ($action) {
-        case 'get_stop':
+       case 'get_stop':
             $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
             $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 50;
-            $offset = ($page - 1) * $limit;
+            $startRow = ($page - 1) * $limit;
+            $endRow = $startRow + $limit;
 
             $conditions = [];
             $params = [];
             $filters = ['startDate', 'endDate', 'line', 'machine', 'cause'];
+            $allowedFilters = ['line', 'machine', 'cause'];
 
             foreach ($filters as $filter) {
                 if (!empty($_GET[$filter])) {
@@ -42,7 +44,7 @@ try {
                         $conditions[] = "log_date >= ?";
                     } elseif ($filter === 'endDate') {
                         $conditions[] = "log_date <= ?";
-                    } else {
+                    } elseif (in_array($filter, $allowedFilters)) {
                         $conditions[] = "LOWER({$filter}) = LOWER(?)";
                     }
                     $params[] = $value;
@@ -54,26 +56,25 @@ try {
             $totalStmt = $pdo->prepare($totalSql);
             $totalStmt->execute($params);
             $total = (int)$totalStmt->fetch()['total'];
-
+            
             $dataSql = "
+                WITH NumberedRows AS (
+                    SELECT 
+                        id, log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note, duration,
+                        ROW_NUMBER() OVER (ORDER BY log_date DESC, stop_begin DESC, id DESC) AS RowNum
+                    FROM IOT_TOOLBOX_STOP_CAUSES
+                    $whereClause
+                )
                 SELECT id, log_date, stop_begin, stop_end, line, machine, cause, recovered_by, note, duration
-                FROM IOT_TOOLBOX_STOP_CAUSES
-                $whereClause
-                ORDER BY log_date DESC, stop_begin DESC, id DESC
-                OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                FROM NumberedRows
+                WHERE RowNum > ? AND RowNum <= ?
             ";
             
+            $paginationParams = array_merge($params, [$startRow, $endRow]);
             $dataStmt = $pdo->prepare($dataSql);
-            $paramIndex = 1;
-            foreach ($params as $paramValue) {
-                $dataStmt->bindValue($paramIndex++, $paramValue);
-            }
-            $dataStmt->bindValue($paramIndex++, $offset, PDO::PARAM_INT);
-            $dataStmt->bindValue($paramIndex++, $limit, PDO::PARAM_INT);
-            $dataStmt->execute();
+            $dataStmt->execute($paginationParams);
             $data = $dataStmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // จัดรูปแบบวันที่และเวลาให้สวยงาม
+  
             foreach ($data as &$row) {
                 if ($row['log_date']) $row['log_date'] = (new DateTime($row['log_date']))->format('Y-m-d');
                 if ($row['stop_begin']) $row['stop_begin'] = (new DateTime($row['stop_begin']))->format('H:i:s');

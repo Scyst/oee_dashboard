@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
         !isset($_SESSION['csrf_token']) ||
         !hash_equals($_SESSION['csrf_token'], $_SERVER['HTTP_X_CSRF_TOKEN'])
     ) {
-        http_response_code(403); // Forbidden
+        http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'CSRF token validation failed. Request rejected.']);
         exit;
     }
@@ -30,53 +30,56 @@ try {
             $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
             $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 50;
             $startRow = ($page - 1) * $limit;
+            $endRow = $startRow + $limit;
 
             $conditions = [];
             $params = [];
-            $filters = ['startDate', 'endDate', 'line', 'model', 'part_no', 'count_type', 'lot_no'];
+            
+            $all_possible_filters = ['startDate', 'endDate', 'line', 'model', 'part_no', 'count_type', 'lot_no'];
+            $allowed_string_filters = ['line', 'model', 'part_no', 'count_type', 'lot_no'];
 
-            foreach ($filters as $filter) {
+            foreach ($all_possible_filters as $filter) {
                 if (!empty($_GET[$filter])) {
                     $value = $_GET[$filter];
                     if ($filter === 'startDate') {
                         $conditions[] = "log_date >= ?";
+                        $params[] = $value;
                     } elseif ($filter === 'endDate') {
                         $conditions[] = "log_date <= ?";
-                    } else {
+                        $params[] = $value;
+                    } 
+                    elseif (in_array($filter, $allowed_string_filters)) { 
                         $conditions[] = "LOWER({$filter}) = LOWER(?)";
+                        $params[] = $value;
                     }
-                    $params[] = $value;
                 }
             }
+            
             $whereClause = $conditions ? "WHERE " . implode(" AND ", $conditions) : "";
 
-            // --- Query for Total Count ---
             $totalSql = "SELECT COUNT(*) AS total FROM IOT_TOOLBOX_PARTS $whereClause";
             $totalStmt = $pdo->prepare($totalSql);
             $totalStmt->execute($params);
             $total = (int)$totalStmt->fetch()['total'];
 
-            // --- Query for Paginated Data ---
             $dataSql = "
+                WITH NumberedRows AS (
+                    SELECT 
+                        id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note,
+                        ROW_NUMBER() OVER (ORDER BY log_date DESC, log_time DESC, id DESC) AS RowNum
+                    FROM IOT_TOOLBOX_PARTS
+                    $whereClause
+                )
                 SELECT id, log_date, log_time, line, model, part_no, lot_no, count_value, count_type, note
-                FROM IOT_TOOLBOX_PARTS
-                $whereClause
-                ORDER BY log_date DESC, log_time DESC, id DESC
-                OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                FROM NumberedRows
+                WHERE RowNum > ? AND RowNum <= ?
             ";
             
+            $paginationParams = array_merge($params, [$startRow, $endRow]);
             $dataStmt = $pdo->prepare($dataSql);
-            $paramIndex = 1;
-            foreach ($params as $paramValue) {
-                $dataStmt->bindValue($paramIndex++, $paramValue);
-            }
-            $dataStmt->bindValue($paramIndex++, $startRow, PDO::PARAM_INT);
-            $dataStmt->bindValue($paramIndex++, $limit, PDO::PARAM_INT);
-            $dataStmt->execute();
+            $dataStmt->execute($paginationParams);
             $data = $dataStmt->fetchAll();
 
-            // --- START: SQL Syntax Correction ---
-            // --- Query for Summary ---
             $summarySql = "
                 SELECT model, part_no, lot_no,
                     SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
@@ -91,8 +94,7 @@ try {
             $summaryStmt = $pdo->prepare($summarySql);
             $summaryStmt->execute($params);
             $summary = $summaryStmt->fetchAll();
-            
-            // --- Query for Grand Total ---
+
             $grandSql = "
                 SELECT
                     SUM(CASE WHEN count_type = 'FG' THEN count_value ELSE 0 END) AS FG,
@@ -105,13 +107,12 @@ try {
             $grandStmt = $pdo->prepare($grandSql);
             $grandStmt->execute($params);
             $grandTotal = $grandStmt->fetch();
-            // --- END: SQL Syntax Correction ---
 
             echo json_encode([
                 'success'     => true, 'page' => $page, 'limit' => $limit, 'total' => $total,
                 'data' => $data, 'summary' => $summary, 'grand_total' => $grandTotal
             ]);
-            break;  
+            break;
 
         case 'add_part':
             $required_fields = ['log_date', 'log_time', 'part_no', 'model', 'line', 'count_type', 'count_value'];
