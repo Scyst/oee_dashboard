@@ -82,12 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(addForm);
             const payload = Object.fromEntries(formData.entries());
 
-            if (payload.cause_category === 'Other') {
+            if (payload.cause === 'Other') {
                 payload.cause = payload.cause_other || 'Other';
-            } else {
-                 payload.cause = payload.cause_category;
             }
-            delete payload.cause_category;
             delete payload.cause_other;
 
             try {
