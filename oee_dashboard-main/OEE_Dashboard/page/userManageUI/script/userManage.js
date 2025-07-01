@@ -24,7 +24,6 @@ async function sendRequest(action, method, body = null, urlParams = {}) {
         
         const response = await fetch(url, options);
         if (!response.ok) {
-            // Handle HTTP errors like 404, 500 etc.
             const errorText = await response.text();
             throw new Error(`Server responded with ${response.status}: ${errorText}`);
         }
@@ -79,9 +78,6 @@ function renderTable() {
 
             const isSelf = (user.id === currentUserId);
 
-            // --- START: ตรรกะการแสดงผลปุ่มที่แก้ไขใหม่ ---
-            // Creator ทำได้ทุกอย่าง (ยกเว้นลบตัวเอง)
-            // Admin ทำได้เกือบทุกอย่าง (ยกเว้นแก้/ลบ creator และ admin คนอื่น)
             const canEditTarget = (currentUserRole === 'creator') || 
                                   (currentUserRole === 'admin' && user.role !== 'admin' && user.role !== 'creator') ||
                                   isSelf;
@@ -92,21 +88,19 @@ function renderTable() {
 
             if (canEditTarget) {
                 const editButton = document.createElement('button');
-                editButton.className = 'btn btn-warning flex-fill';
+                editButton.className = 'btn btn-sm btn-warning flex-fill';
                 editButton.textContent = 'Edit';
-                // เรียกใช้ฟังก์ชันเปิด Modal ที่ถูกต้อง
                 editButton.addEventListener('click', () => openEditUserModal(user));
                 buttonWrapper.appendChild(editButton);
             }
 
             if (canDeleteTarget) {
                 const deleteButton = document.createElement('button');
-                deleteButton.className = 'btn btn-danger flex-fill';
+                deleteButton.className = 'btn btn-sm btn-danger flex-fill';
                 deleteButton.textContent = 'Delete';
                 deleteButton.addEventListener('click', () => deleteUser(user.id));
                 buttonWrapper.appendChild(deleteButton);
             }
-            // --- END: ตรรกะการแสดงผลปุ่มที่แก้ไขใหม่ ---
             
             actionsTd.appendChild(buttonWrapper);
             tr.appendChild(actionsTd);
