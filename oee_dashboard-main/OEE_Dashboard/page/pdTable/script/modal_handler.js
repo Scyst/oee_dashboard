@@ -1,26 +1,31 @@
-let modalTriggerElement = null;
+//-- ตัวแปร Global สำหรับเก็บค่าคงที่และสถานะ --
+let modalTriggerElement = null; //-- เก็บ Element ที่กดเพื่อเปิด Modal (สำหรับคืน Focus) --
+const PD_API_URL = '../../api/pdTable/pdTableManage.php'; //-- API Endpoint สำหรับจัดการข้อมูล Production --
+const WIP_API_URL = '../../api/wipManage/wipManage.php'; //-- API Endpoint สำหรับจัดการข้อมูล WIP --
 
 /**
- * 
- * @param {string} modalId - 
+ * ฟังก์ชันกลางสำหรับเปิด Bootstrap Modal
+ * @param {string} modalId - ID ของ Modal ที่จะเปิด
  */
-function showBootstrapModal(modalId) {
+function showBootstrapModal(modalId) { 
     const modalElement = document.getElementById(modalId);
     if (modalElement) {
+        //-- ใช้ getOrCreateInstance เพื่อความปลอดภัยในการสร้างหรือดึง Instance ของ Modal --
         const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
         modal.show();
     }
 }
 
 /**
- * 
- * @param {HTMLElement} triggerEl 
+ * ฟังก์ชันสำหรับเปิด Modal "Add Part" และตั้งค่าวันที่/เวลาเริ่มต้น
+ * @param {HTMLElement} triggerEl - Element ที่ถูกกดเพื่อเปิด Modal
  */
 function openAddPartModal(triggerEl) {
     modalTriggerElement = triggerEl;
     const modal = document.getElementById('addPartModal');
     if (!modal) return;
 
+    //-- ตั้งค่าวันที่และเวลาปัจจุบัน (ปรับเป็น Timezone +7) --
     const now = new Date();
     const tzOffset = 7 * 60 * 60 * 1000;
     const localNow = new Date(now.getTime() + tzOffset);
@@ -35,18 +40,20 @@ function openAddPartModal(triggerEl) {
 }
 
 /**
- * 
- * @param {object} rowData 
- * @param {HTMLElement} triggerEl 
+ * ฟังก์ชันสำหรับเปิด Modal "Edit Part" และเติมข้อมูลเดิมลงในฟอร์ม
+ * @param {object} rowData - ข้อมูลของแถวที่ต้องการแก้ไข
+ * @param {HTMLElement} triggerEl - Element ที่ถูกกดเพื่อเปิด Modal
  */
 function openEditModal(rowData, triggerEl) {
     modalTriggerElement = triggerEl; 
     const modal = document.getElementById('editPartModal');
     if (!modal) return;
     
+    //-- วนลูปเพื่อเติมข้อมูลลงในทุก Input --
     for (const key in rowData) {
         const input = modal.querySelector(`#edit_${key}`);
         if (input) {
+            //-- จัดการรูปแบบเวลาให้เป็น HH:mm:ss --
             if (key === 'log_time' && typeof rowData[key] === 'string') {
                 input.value = rowData[key].substring(0, 8);
             } else {
@@ -54,24 +61,25 @@ function openEditModal(rowData, triggerEl) {
             }
         }
     }
-
     showBootstrapModal('editPartModal');
 }
 
 /**
- * 
- * @param {HTMLElement} triggerEl
+ * ฟังก์ชันสำหรับเปิด Modal "Summary" และสร้างตารางสรุปผล
+ * @param {HTMLElement} triggerEl - Element ที่ถูกกดเพื่อเปิด Modal
  */
 function openSummaryModal(triggerEl) {
     modalTriggerElement = triggerEl; 
     
     const grandTotalContainer = document.getElementById('summaryGrandTotalContainer');
     const tableContainer = document.getElementById('summaryTableContainer');
+    //-- ดึงข้อมูลที่ Cache ไว้จาก Global Variable --
     const summaryData = window.cachedSummary || [];
     const grandTotalData = window.cachedGrand || {};
 
     if (!tableContainer || !grandTotalContainer) return;
 
+    //-- สร้าง HTML สำหรับ Grand Total (แสดงเฉพาะค่าที่มากกว่า 0) --
     let grandTotalHTML = '<strong>Grand Total: </strong>';
     if (grandTotalData) {
         grandTotalHTML += Object.entries(grandTotalData)
@@ -81,6 +89,7 @@ function openSummaryModal(triggerEl) {
     }
     grandTotalContainer.innerHTML = grandTotalHTML;
 
+    //-- สร้างตารางสรุปผลแบบ Dynamic --
     tableContainer.innerHTML = '';
     if (summaryData.length === 0) {
         tableContainer.innerHTML = '<p class="text-center mt-3">No summary data to display.</p>';
@@ -102,36 +111,41 @@ function openSummaryModal(triggerEl) {
     const tbody = table.createTBody();
     summaryData.forEach(row => {
         const tr = tbody.insertRow();
-        const createCell = (text, className = '') => {
-            const td = tr.insertCell();
-            td.textContent = text;
-            if (className) td.className = className;
-        };
-        createCell(row.model);
-        createCell(row.part_no);
-        createCell(row.lot_no || '');
-        createCell(row.FG || 0, 'text-center');
-        createCell(row.NG || 0, 'text-center');
-        createCell(row.HOLD || 0, 'text-center');
-        createCell(row.REWORK || 0, 'text-center');
-        createCell(row.SCRAP || 0, 'text-center');
-        createCell(row.ETC || 0, 'text-center');
+        tr.insertCell().textContent = row.model;
+        tr.insertCell().textContent = row.part_no;
+        tr.insertCell().textContent = row.lot_no || '';
+        tr.insertCell().textContent = row.FG || 0;
+        tr.insertCell().textContent = row.NG || 0;
+        tr.insertCell().textContent = row.HOLD || 0;
+        tr.insertCell().textContent = row.REWORK || 0;
+        tr.insertCell().textContent = row.SCRAP || 0;
+        tr.insertCell().textContent = row.ETC || 0;
     });
 
     tableContainer.appendChild(table);
     showBootstrapModal('summaryModal');
 }
 
+//-- Event Listener ที่จะทำงานเมื่อหน้าเว็บโหลดเสร็จสมบูรณ์ --
 document.addEventListener('DOMContentLoaded', () => {
 
-    const handleFormSubmit = async (form, action, modalId, onSuccess) => {
+    /**
+     * ฟังก์ชันกลางสำหรับจัดการการ Submit ฟอร์มผ่าน Fetch API
+     * @param {HTMLFormElement} form - The form element.
+     * @param {string} apiUrl - The API endpoint URL.
+     * @param {string} action - The action parameter for the API.
+     * @param {string} modalId - The ID of the modal containing the form.
+     * @param {Function} onSuccess - Callback function to run on success.
+     */
+    const handleFormSubmit = async (form, apiUrl, action, modalId, onSuccess) => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = Object.fromEntries(new FormData(form).entries());
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
             try {
-                const response = await fetch(`${API_URL}?action=${action}`, {
+                //-- ส่ง Request ไปยัง API --
+                const response = await fetch(`${apiUrl}?action=${action}`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -146,33 +160,49 @@ document.addEventListener('DOMContentLoaded', () => {
                     const modalElement = document.getElementById(modalId);
                     const modalInstance = bootstrap.Modal.getInstance(modalElement);
                     if (modalInstance) {
+                        //-- รอให้ Animation การปิด Modal จบก่อน แล้วจึงค่อยเรียก onSuccess --
                         modalElement.addEventListener('hidden.bs.modal', () => {
                             onSuccess(); 
-                            if (modalTriggerElement) {
-                                modalTriggerElement.focus(); 
-                            }
-                        }, { once: true });
+                            //-- คืน Focus กลับไปที่ปุ่มที่กดเปิด Modal --
+                            if (modalTriggerElement) modalTriggerElement.focus(); 
+                        }, { once: true }); //-- ให้ Event Listener ทำงานแค่ครั้งเดียว --
                         modalInstance.hide();
                     }
                 }
             } catch (error) {
-                showToast(`An error occurred while ${action.replace('_', ' ')} data.`, '#dc3545');
+                showToast(`An error occurred while processing your request.`, '#dc3545');
             }
         });
     };
 
-    const addForm = document.getElementById('addPartForm');
-    if (addForm) {
-        handleFormSubmit(addForm, 'add_part', 'addPartModal', () => {
-            addForm.reset();
-            fetchPartsData(1); 
+    //-- ผูก Event Listener ให้กับฟอร์ม "Add Part" --
+    const addPartForm = document.getElementById('addPartForm');
+    if (addPartForm) {
+        handleFormSubmit(addPartForm, PD_API_URL, 'add_part', 'addPartModal', () => {
+            addPartForm.reset();
+            //-- โหลดข้อมูลตารางใหม่ --
+            if (typeof fetchPartsData === 'function') fetchPartsData(1); 
         });
     }
 
-    const editForm = document.getElementById('editPartForm');
-    if (editForm) {
-        handleFormSubmit(editForm, 'update_part', 'editPartModal', () => {
-            fetchPartsData(currentPage); 
+    //-- ผูก Event Listener ให้กับฟอร์ม "Edit Part" --
+    const editPartForm = document.getElementById('editPartForm');
+    if (editPartForm) {
+        handleFormSubmit(editPartForm, PD_API_URL, 'update_part', 'editPartModal', () => {
+            //-- โหลดข้อมูลตารางใหม่ในหน้าเดิม --
+            if (typeof fetchPartsData === 'function') fetchPartsData(window.currentPage || 1); 
+        });
+    }
+
+    //-- ผูก Event Listener ให้กับฟอร์ม "WIP Entry" --
+    const wipEntryForm = document.getElementById('wipEntryForm');
+    if (wipEntryForm) {
+        handleFormSubmit(wipEntryForm, WIP_API_URL, 'log_wip_entry', 'addPartModal', () => {
+            wipEntryForm.reset();
+            //-- หากอยู่บน Tab WIP ให้โหลดข้อมูล WIP ใหม่ --
+            if (document.getElementById('wip-report-pane')?.classList.contains('active')) {
+                if (typeof fetchWipReport === 'function') fetchWipReport();
+            }
         });
     }
 });

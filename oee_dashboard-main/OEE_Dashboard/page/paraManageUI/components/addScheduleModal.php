@@ -14,8 +14,8 @@
                     <div class="mb-3">
                         <label for="addScheduleShiftName" class="form-label">Shift Name:</label>
                         <select id="addScheduleShiftName" name="shift_name" class="form-select" required>
-                            <option value="DAY">DAY</option>
-                            <option value="NIGHT">NIGHT</option>
+                            <option value="Day">Day</option>
+                            <option value="Night">Night</option>
                         </select>
                     </div>
                     <div class="row">
